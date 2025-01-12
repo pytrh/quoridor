@@ -1,0 +1,25 @@
+Voici les règles traduites en français :
+
+
+L'objectif du jeu est d'être le premier à atteindre l'autre côté du plateau NxN. Chaque joueur commence au centre de sa ligne de base. 
+Un tirage au sort déterminera qui commence.
+
+Déroulement du jeu :
+
+À chaque tour, un joueur choisit soit de déplacer son pion, soit de placer l'une de ses N barrières sur le plateau.
+Lorsqu'un joueur n'a plus de barrières, il doit obligatoirement déplacer son pion.
+Les pions se déplacent d'une case à la fois, horizontalement ou verticalement, en avant ou en arrière. 
+Les pions doivent contourner les barrières, il est interdit de sauter par-dessus.
+
+Règles des barrières :
+
+Les barrières doivent être placées entre deux ensembles de deux cases.
+Elles peuvent être utilisées pour faciliter le déplacement du joueur ou pour gêner celui de l'adversaire.
+Toutefois, il doit toujours rester au moins un chemin permettant d'accéder à la ligne de but.
+Interaction entre les pions :
+
+Lorsque deux pions se font face sur des cases voisines non séparées par une barrière, le joueur dont c'est le tour peut sauter par-dessus le pion de l'adversaire (et se placer derrière lui), avançant ainsi d'une case supplémentaire (voir figure 2).
+Si une barrière se trouve derrière le pion adverse, le joueur peut placer son pion à gauche ou à droite du pion adverse (voir figure 3), sauf si une barrière bloque également ces positions (voir figure 4).
+
+Condition de victoire :
+Le premier joueur qui atteint l'une des 9 cases de la ligne de base de son adversaire remporte la partie.
