@@ -1,0 +1,22 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[project]
+name = "quoridor"
+version = "0.1.0"
+description = "Quoridor game"
+authors = [
+  {name = "Lucas Danglard", email = "lucas.danglard@etu.u-bordeaux.fr"},
+  {name = "Lucy-Jean Curtis", email = "lucy-jean.curtis@etu.u-bordeaux.fr"},
+  {name = "Mohamad Almousa", email = "mohamad.almousa@etu.u-bordeaux.fr"},
+  {name = "Bastien Rocher", email = "bastien.rocher@u-bordeaux.fr"},
+  {name = "Zhaoyuan Song", email = "zhaoyuan.song@etu.u-bordeaux.fr"},
+]
+license = {text = "BSD-2-clauses"}
+readme = "README.md"
+dependencies = [
+  "requests", # HTTP library
+  'importlib-metadata; python_version<"3.10"', # Metadata access
+  "pytest", # Testing framework
+]
