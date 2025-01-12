@@ -15,8 +15,8 @@ Elles peuvent être utilisées pour faciliter le déplacement du joueur ou pour 
 Toutefois, il doit toujours rester au moins un chemin permettant d'accéder à la ligne de but.
 Interaction entre les pions :
 
-Lorsque deux pions se font face sur des cases voisines non séparées par une barrière, le joueur dont c'est le tour peut sauter par-dessus le pion de l'adversaire (et se placer derrière lui), avançant ainsi d'une case supplémentaire (voir figure 2).
-Si une barrière se trouve derrière le pion adverse, le joueur peut placer son pion à gauche ou à droite du pion adverse (voir figure 3), sauf si une barrière bloque également ces positions (voir figure 4).
+Lorsque deux pions se font face sur des cases voisines non séparées par une barrière, le joueur dont c'est le tour peut sauter par-dessus le pion de l'adversaire (et se placer derrière lui), avançant ainsi d'une case supplémentaire .
+Si une barrière se trouve derrière le pion adverse, le joueur peut placer son pion à gauche ou à droite du pion adverse , sauf si une barrière bloque également ces positions.
 
 Condition de victoire :
 Le premier joueur qui atteint l'une des 9 cases de la ligne de base de son adversaire remporte la partie.
