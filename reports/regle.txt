@@ -1,6 +1,3 @@
-Voici les règles traduites en français :
-
-
 L'objectif du jeu est d'être le premier à atteindre l'autre côté du plateau NxN. Chaque joueur commence au centre de sa ligne de base. 
 Un tirage au sort déterminera qui commence.
 
