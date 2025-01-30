@@ -1,0 +1,2 @@
+def quoridor() -> None:
+    pass

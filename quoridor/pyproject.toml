@@ -4,7 +4,7 @@ requires = ["setuptools"]
 
 [project]
 name = "quoridor"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Quoridor game"
 authors = [
   {name = "Lucas Danglard", email = "lucas.danglard@etu.u-bordeaux.fr"},
@@ -16,7 +16,22 @@ authors = [
 license = {text = "BSD-2-clauses"}
 readme = "README.md"
 dependencies = [
-  "requests", # HTTP library
+  "requests", # HTTP library, do we need this?
   'importlib-metadata; python_version<"3.10"', # Metadata access
   "pytest", # Testing framework
+  "coverage", # Coverage
+  "pytest-cov", # Code coverage plugin
+  "argparse", # Argument parsing
+  "PyGObject", # GTK library
+]
+
+[tools.setuptools.dynamic]
+version = {attr = "quoridor.__version__"}
+
+[tool.pytest.ini_options]
+addopts = [ # Add options for pytest
+  "--cov=myproject",
+  "--cov-report=html",
+  "--cov-report=term",
+  "--cov-branch",
 ]
