@@ -1,0 +1,1 @@
+# src/quoridor/__init__.py

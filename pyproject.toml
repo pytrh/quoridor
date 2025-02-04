@@ -20,3 +20,9 @@ dependencies = [
   'importlib-metadata; python_version<"3.10"', # Metadata access
   "pytest", # Testing framework
 ]
+
+[tool.setuptools]
+packages = ["quoridor"]
+
+[project.scripts]
+quoridor = "quoridor.quoridor:main"
