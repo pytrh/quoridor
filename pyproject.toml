@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
+requires = ["setuptools","wheel","toml"] 
 
 [project]
 name = "quoridor"
@@ -15,11 +15,14 @@ authors = [
 ]
 license = {text = "BSD-2-clauses"}
 readme = "README.md"
+requires-python = ">=3.7"
 dependencies = [
   "requests", # HTTP library
-  'importlib-metadata; python_version<"3.10"', # Metadata access
+  "importlib-metadata", # Metadata access
   "pytest", # Testing framework
 ]
+
+
 
 [tool.setuptools]
 packages = ["quoridor"]

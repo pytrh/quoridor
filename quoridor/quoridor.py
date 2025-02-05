@@ -5,7 +5,7 @@ import importlib.metadata
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--version", help="affiche la version du programme", action="store_true")
+    parser.add_argument("-V", "--version", help="affiche la version du programme", action="store_true")
     args = parser.parse_args()
     if args.version :
         version = importlib.metadata.version("quoridor")
@@ -14,4 +14,3 @@ def main():
 ### Main
 if __name__ == "__main__":
     main()
-    
