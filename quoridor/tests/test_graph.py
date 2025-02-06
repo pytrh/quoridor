@@ -19,10 +19,10 @@ def test_graph():
         g.add_edge(node1, node2)
     
     # Check if nodes and edges are correctly added
-    assert g.has_node((0, 0))
-    assert g.has_node((1, 1))
-    assert g.has_edge((0, 0), (0, 1))
-    assert g.has_edge((1, 0), (1, 1))
+    assert g.node_exists((0, 0))
+    assert g.node_exists((1, 1))
+    assert g.edge_exists((0, 0), (0, 1))
+    assert g.edge_exists((1, 0), (1, 1))
 
 if __name__ == "__main__":
     pytest.main()
