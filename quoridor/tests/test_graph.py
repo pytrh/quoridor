@@ -24,5 +24,22 @@ def test_graph():
     assert g.edge_exists((0, 0), (0, 1))
     assert g.edge_exists((1, 0), (1, 1))
 
+    # Check negative case for exists function 
+    assert not g.node_exists((2,2))
+    assert not g.node_exists((-1, -1))
+    assert not g.edge_exists((1, 1), (1, 1))
+
+    # Check edges removal
+    g.remove_edge((0, 0), (0, 1))
+    assert not g.edge_exists((0, 0), (0, 1))
+    assert not g.edge_exists((0, 1), (0, 0))
+
+    # Check nodes removal
+    g.remove_node((1, 1))
+    assert not g.node_exists((1, 1))
+    assert not g.edge_exists((0, 0), (1, 1))
+    assert not g.edge_exists((0, 1), (1, 1))
+    assert not g.edge_exists((1, 0), (1, 1))
+
 if __name__ == "__main__":
     pytest.main()
