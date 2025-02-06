@@ -36,8 +36,6 @@ addopts = [ # Add options for pytest
   "--cov-branch",
 ]
 
-
-
 [tool.setuptools]
 packages = ["src"]
 
