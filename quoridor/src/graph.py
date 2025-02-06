@@ -34,6 +34,15 @@ class Graph:
             self._graph[node2].remove(node1)
 
     """
+    A* Search to find the shortest path between two nodes
+    """
+    def manhattan_distance(self, node1, node2):
+        return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
+    
+    def a_star(self, node1, node2):
+        pass
+    
+    """
     Breadth-First Search to find the shortest path between two nodes
     """
     def BFS(self, node1, node2):
