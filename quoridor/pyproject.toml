@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
+requires = ["setuptools","wheel","toml"] 
 
 [project]
 name = "quoridor"
@@ -15,9 +15,9 @@ authors = [
 ]
 license = {text = "BSD-2-clauses"}
 readme = "README.md"
+requires-python = ">=3.7"
 dependencies = [
-  "requests", # HTTP library, do we need this?
-  'importlib-metadata; python_version<"3.10"', # Metadata access
+  'importlib-metadata; python_version<"3.7"', # Metadata access
   "pytest", # Testing framework
   "coverage", # Coverage
   "pytest-cov", # Code coverage plugin
@@ -25,8 +25,8 @@ dependencies = [
   "PyGObject", # GTK library
 ]
 
-[tools.setuptools.dynamic]
-version = {attr = "quoridor.__version__"}
+[tool.setuptools.dynamic]
+version = {attr = "src.__version__"}
 
 [tool.pytest.ini_options]
 addopts = [ # Add options for pytest
@@ -35,3 +35,9 @@ addopts = [ # Add options for pytest
   "--cov-report=term",
   "--cov-branch",
 ]
+
+[tool.setuptools]
+packages = ["src"]
+
+[project.scripts]
+quoridor = "src.main:main"
