@@ -1,5 +1,3 @@
-# TODO: exceptions
-
 class Read_write_history:
     def read_history(input_file_path : str) -> None:
         # Open file
