@@ -1,16 +1,21 @@
-class Read_write_history:
+class ReadWriteHistory:
+    @staticmethod
     def read_history(input_file_path : str) -> None:
         # Open file
         try :
             with open(input_file_path, "r") as input_file:
-                history_array = [line for line in input_file if not line.startswith("#") and line.strip()]
+                history_array = [line for line in input_file
+                                                    if not line.startswith("#") and line.strip()]
             if not history_array:
                 print("Input file path is empty.")
                 return None
             # Get game info
-            game_info : tuple[str, dict[int, list[str]], int, int] = Read_write_history.get_game_info_from_file(history_array)
+            game_info : tuple = ReadWriteHistory.get_game_info_from_file(history_array)
             # Print game info
-            Read_write_history.print_game_info(len(game_info[1]), game_info[0], game_info[2], game_info[3], game_info[1].items()) # NOTE: is just passing in tuple better ?
+            ReadWriteHistory.print_game_info(len(game_info[1]), game_info[0],
+                                                   game_info[2], game_info[3],
+                                                   game_info[1].items())
+                                                    # NOTE: passing tuple better?
 
         except FileNotFoundError:
             print(f"Error: The file '{input_file_path}' was not found.")
@@ -18,10 +23,11 @@ class Read_write_history:
             print(ve)
         except Exception as e:
             print(f"An unexpected error occurred while reading the file: {e}")
-        
+
 
     @staticmethod
-    def get_game_info_from_file(history_array : list[str]) -> tuple[str, dict[int, list[str]], int, int]:
+    def get_game_info_from_file(history_array : list[str]) -> tuple[str, dict[int, list[str]],
+                                                                     int, int]:
         moves_per_player: dict[int, list[str]] = {}
         nb_vert_wall : int = 0
         nb_horz_wall : int = 0
@@ -41,7 +47,7 @@ class Read_write_history:
                         player_id = int(line_sections[i])
                         move = line_sections[i + 1]
                         moves_per_player.setdefault(player_id, []).append(move)
-                        if (move == "skip"):
+                        if move == "skip":
                             print(f"  Player {player_id} SKIPPED their turn.")
                         elif move.endswith("v"): # Vertical wall
                             print(f"  Player {player_id} placed a vertical wall: {move}")
@@ -49,9 +55,9 @@ class Read_write_history:
                         elif move.endswith("h"): # Horizontal wall
                             print(f"  Player {player_id} placed a horizontal wall: {move}")
                             nb_horz_wall += 1
-                        else: 
+                        else:
                             print(f"  Player {player_id} moved: {move}")
-                    
+
                     except (IndexError, ValueError):
                         print(f"Warning: Skipping invalid move {move} at turn {turn}")
                         continue
@@ -64,22 +70,24 @@ class Read_write_history:
 
 
     @staticmethod
-    def print_game_info(nb_players : int, turn_nb : int, nb_vert_wall : int, nb_horz_wall : int, players_moves : dict) -> None:
-            try:
-                print(f"\nNumber of players: {nb_players}")
-                print(f"Number of turns: {turn_nb}")
-                print(f"Number of vertical walls placed: {nb_vert_wall}")
-                print(f"Number of horizontal walls placed: {nb_horz_wall}")
-                print("\nMove Summary:")
-                for player, moves in players_moves:
-                    print(f"Player {player} made these moves: {', '.join(moves)}")
-                print("\n")
+    def print_game_info(nb_players : int, turn_nb : int, nb_vert_wall : int, nb_horz_wall : int,
+                        players_moves : dict) -> None:
+        try:
+            print(f"\nNumber of players: {nb_players}")
+            print(f"Number of turns: {turn_nb}")
+            print(f"Number of vertical walls placed: {nb_vert_wall}")
+            print(f"Number of horizontal walls placed: {nb_horz_wall}")
+            print("\nMove Summary:")
+            for player, moves in players_moves:
+                print(f"Player {player} made these moves: {', '.join(moves)}")
+            print("\n")
 
-            except Exception as e:
-                print(f"An error occurred while printing game info: {e}")
+        except Exception as e:
+            print(f"An error occurred while printing game info: {e}")
 
 
-    def writeHistory(turns):
+    @staticmethod
+    def write_history(turns):
         try:
             output_file_path : str = "outputHistory.txt"
             with open(output_file_path, "w+") as history_file:
@@ -97,21 +105,25 @@ class Read_write_history:
 
 # Testing read_history
 print("##########TEST 1##########")
-Read_write_history.read_history("testHistory1.txt")
+ReadWriteHistory.read_history("test_history1.txt")
 
 print("##########TEST 2##########")
-Read_write_history.read_history("testHistory2.txt")
+ReadWriteHistory.read_history("test_history2.txt")
 
 print("######TEST TWO PLAYER######")
-Read_write_history.read_history("testHistoryTwoPlayer.txt")
+ReadWriteHistory.read_history("test_history_two_player.txt")
 
 print("######TEST SKIP######")
-Read_write_history.read_history("testHistorySkip.txt")
+ReadWriteHistory.read_history("test_history_skip.txt")
 
 # Testing writeHistory
-turnsTest1 = [["e1-e2", "a10-a9", "e2-e3", "a9v"], ["a6v", "a9-a8", "e4-e5", "a8-a7"], ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
+turnsTest1 = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
+              ["a6v", "a9-a8", "e4-e5", "a8-a7"],
+              ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
 # Read_write_history
 #.writeHistory(turnsTest1)
 
-turnsTestSkip = [["e1-e2", "a10-a9", "e2-e3", "a9v"], ["a6v", "a9-a8", "skip", "a8-a7"], ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
-Read_write_history.writeHistory(turnsTestSkip)
+turnsTestSkip = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
+                 ["a6v", "a9-a8", "skip", "a8-a7"],
+                 ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
+ReadWriteHistory.write_history(turnsTestSkip)
