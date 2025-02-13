@@ -1,4 +1,5 @@
 import pytest
+import re
 from unittest import mock
 from src.main import main
 
@@ -7,14 +8,33 @@ from src.main import main
 def test_version_option(capsys):
     with mock.patch('sys.argv', ['src.main.py', '--version']):
         with mock.patch("importlib.metadata.version", return_value="0.2.0"):
-            return_code = main()
+            with pytest.raises(SystemExit) as exitinfo:
+                main()
 
             captured = capsys.readouterr()
             assert captured.out.strip() == "Quoridor : version 0.2.0"
-            assert return_code == 0  
+            assert exitinfo.value.code == 10
+
+def test_version_verbose(capsys):
+    with mock.patch('sys.argv', ['src.main.py', '--verbose']):
+         with pytest.raises(SystemExit):
+            main()
+
+            captured = capsys.readouterr()
+            assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} - INFO - Mode verbose activé : Affichage des informations supplémentaires',
+                captured.out.strip())
+
+def test_version_debug(capsys):
+    with mock.patch('sys.argv', ['src.main.py', '--debug']):
+         with pytest.raises(SystemExit):
+            main()
+
+            captured = capsys.readouterr()
+            assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} - DEBUG - Mode debug activé : Affichage des logs détaillés (dev)',
+                captured.out.strip())
 
 
-def test_init():
+def test_init(capsys):
     from src import main
     with mock.patch.object(main, "main", return_value=42):
         with mock.patch.object(main, "__name__", "__main__"):
