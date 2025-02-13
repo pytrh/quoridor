@@ -1,6 +1,6 @@
-"""Main module for quoridor"""
+"""src package"""
 
-import src.quoridor
+import src.main
 import src.graph
 
 __version__ = "0.1.0"
