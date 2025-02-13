@@ -51,13 +51,16 @@ def main():
 
     if args.file:
         logging.debug("Fichier en argument trouvé")
+        # game = GameState.load_game(file)     
 
-    
+    size = 9
+    num_players = 2
+    blitz_time = 0
+    walls = 20
     if args.walls:
-       # GameState.setWalls(args.walls)
-       print("walls modified")
+       walls = args.walls
     
-    # game = GameState.build()     
+    #game = GameState.start_Game(size, num_players, blitz_time, walls)     
     sys.exit(0)
 
 def init():
