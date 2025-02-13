@@ -2,14 +2,18 @@ import time
 from graph import Graph
 
 class GameState:
-    def __init__(self, size=9, num_players=2, blitz_time=None, walls_num = 20 ):
+
+    
+    def __init__(self, size, num_players, blitz_time, num_walls ):
         self.size = size
         self.num_players = num_players
         self.current_player = 1
-        self.time_remaining = {i: blitz_time * 60 for i in range(1, num_players + 1)} if blitz_time else None
+        self.time_remaining = {i: blitz_time * 60 for i in range(1, num_players + 1)} if blitz_time==0 else None
         self.board = self._init_board()
         self.history = []
-        self.players_walls_num = { walls_num//num_players for _ in range(num_players)} if num_players == 2 else { 5 for _ in range(num_players)}
+        self.players_walls_num = { num_walls for _ in range(num_players)}
+        
+
         
         
         
@@ -58,3 +62,14 @@ class GameState:
 
     def display_board(self):
         pass
+
+
+    def start_Game(self, size, num_players, blitz_time, walls_num ):
+        self.set_size(self, size, num_players, blitz_time, walls_num )
+        
+
+    def load_game_from_file(self):
+        pass
+        
+
+    
