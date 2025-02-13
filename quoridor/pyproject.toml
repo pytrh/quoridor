@@ -30,7 +30,7 @@ version = {attr = "src.__version__"}
 
 [tool.pytest.ini_options]
 addopts = [ # Add options for pytest
-  "--cov=myproject",
+  "--cov=quoridor",
   "--cov-report=html",
   "--cov-report=term",
   "--cov-branch",
