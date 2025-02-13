@@ -2,22 +2,25 @@ class ReadWriteHistory:
     @staticmethod
     def read_history(input_file_path : str) -> None:
         try :
-            with open(input_file_path, "r") as input_file:
+            with open(input_file_path, "r", encoding="utf-8") as input_file:
                 history_array = [line for line in input_file
                                                     if not line.startswith("#") and line.strip()]
             if not history_array:
                 print("Input file path is empty.")
-                return None
+                return []
 
             game_info : list[list] = ReadWriteHistory.get_game_info_from_file(history_array)
             return game_info
-        
+
         except FileNotFoundError:
             print(f"Error: The file '{input_file_path}' was not found.")
-        except ValueError as ve:
-            print(ve)
-        except Exception as e:
-            print(f"An unexpected error occurred while reading the file: {e}")
+            return []
+        except ValueError as value_error:
+            print(value_error)
+            return []
+        except IOError as io_error:
+            print(f"An unexpected error occurred while reading the file: {io_error}")
+            return []
 
 
     @staticmethod
@@ -49,25 +52,25 @@ class ReadWriteHistory:
 
             return game_info
 
-        except Exception as e:
-            print(f"An error occurred while processing game data: {e}")
+        except (ValueError, IndexError, TypeError) as error:
+            print(f"Error processing game data: {error}")
             return []
 
 
     @staticmethod
     def write_history(output_file_path : str, turns : list[list[str]]):
         try:
-            with open(output_file_path, "a") as history_file:
-                history_file.write("# Quoridor Game History")
+            with open(output_file_path, "a", encoding="utf-8") as history_file:
+                history_file.write("# Quoridor Game History") # EOF should be positioned new line
                 for turn_nb, turn in enumerate(turns):
                     turn_str = " ".join(f"{player + 1} {move}" for player, move in enumerate(turn))
                     history_file.write(f"\n{turn_nb + 1}. {turn_str} ")
+
+                history_file.write("\n") # Add a new line for futur writing
             print(f"History successfully written to {output_file_path}")
 
         except IOError:
             print(f"Error: Could not write to file '{output_file_path}'.")
-        except Exception as e:
-            print(f"An unexpected error occurred while writing the history: {e}")
 
 
 turns_test_skip : list[list[str]] = ReadWriteHistory.read_history("test_history_skip.txt")
