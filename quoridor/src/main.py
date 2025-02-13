@@ -19,7 +19,13 @@ def main():
     if args.version :
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
-    sys.exit(0)
+        return 0
 
-if __name__ == "__main__":
-    main()
+def init():
+    """
+    Fonction initial
+    """
+    if __name__ == "__main__":
+        sys.exit(main())
+
+init()

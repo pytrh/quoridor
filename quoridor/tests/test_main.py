@@ -1,32 +1,34 @@
 import pytest
+from unittest import mock
 from src.main import main
 
 # Test Positif
 
-def test_version_option(capsys, monkeypatch):
-    monkeypatch.setattr('sys.argv', ['src.main.py', '--version'])
-    monkeypatch.setattr("importlib.metadata.version", lambda _: "0.1.0")  # Simule la version
+def test_version_option(capsys):
+    with mock.patch('sys.argv', ['src.main.py', '--version']):
+        with mock.patch("importlib.metadata.version", return_value="0.2.0"):
+            return_code = main()
 
-    with pytest.raises(SystemExit) as exitinfo:
-        main()
-
-    captured = capsys.readouterr()
-    assert captured.out.strip() == "Quoridor : version 0.1.0"
-    assert exitinfo.value.code == 0
+            captured = capsys.readouterr()
+            assert captured.out.strip() == "Quoridor : version 0.2.0"
+            assert return_code == 0  
 
 
-def test_no_argument_exit_success():
-    with pytest.raises(SystemExit) as exitinfo:
-        main()
-    assert exitinfo.value.code == 0
+def test_init():
+    from src import main
+    with mock.patch.object(main, "main", return_value=42):
+        with mock.patch.object(main, "__name__", "__main__"):
+            with mock.patch.object(main.sys, 'exit') as mock_exit:
+                main.init()         
+                assert mock_exit.call_args[0][0] == 42
 
-# Test Negatif
+# Test Négatif
 
-def test_invalid_argument(capsys, monkeypatch):
-    monkeypatch.setattr('sys.argv', ['src.main.py', '--invalid'])
-    with pytest.raises(SystemExit) as exitinfo:
-        main()
-    
-    captured = capsys.readouterr()
-    assert "error:" in captured.err or "unrecognized arguments" in captured.err
-    assert exitinfo.value.code != 0
+def test_invalid_argument(capsys):
+    with mock.patch('sys.argv', ['src.main.py', '--invalid']):
+        with pytest.raises(SystemExit) as exitinfo:
+            main()
+        
+        captured = capsys.readouterr()
+        assert "error:" in captured.err or "unrecognized arguments" in captured.err
+        assert exitinfo.value.code == 2
