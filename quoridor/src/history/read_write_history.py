@@ -71,7 +71,3 @@ class ReadWriteHistory:
 
         except IOError:
             print(f"Error: Could not write to file '{output_file_path}'.")
-
-
-turns_test_skip : list[list[str]] = ReadWriteHistory.read_history("test_history_skip.txt")
-ReadWriteHistory.write_history("output.txt", turns_test_skip)
