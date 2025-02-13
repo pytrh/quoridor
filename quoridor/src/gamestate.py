@@ -1,22 +1,18 @@
 import time
-from graph import Graph
+from src.graph import Graph
 
 class GameState:
 
-    
-    def __init__(self, size, num_players, blitz_time, num_walls ):
+    def __init__(self, size, num_players, blitz_time, num_walls):
         self.size = size
         self.num_players = num_players
         self.current_player = 1
-        self.time_remaining = {i: blitz_time * 60 for i in range(1, num_players + 1)} if blitz_time==0 else None
+        self.time_remaining = {i: blitz_time * 60 for i in range(1,
+            num_players + 1)} if blitz_time==0 else None
         self.board = self._init_board()
         self.history = []
         self.players_walls_num = { num_walls for _ in range(num_players)}
-        
 
-        
-        
-        
     def _init_board(self):
         board_graph = Graph()
         for x in range(self.size):
@@ -32,8 +28,6 @@ class GameState:
     def switch_player(self):
         self.current_player = (self.current_player % self.num_players) + 1
 
-    
-
     def switch_time(self):
         pass
 
@@ -47,15 +41,12 @@ class GameState:
         if direction == 'H' and self.players_walls_num[self.current_player-1] > 0:  # Mur horizontal
             if self.board.edge_exists((x, y), (x+1, y)) :
                 self.board.remove_edge((x, y), (x+1, y))
-
             if self.board.edge_exists((x, y+1), (x+1, y+1)) :
                 self.board.remove_edge((x, y+1), (x+1, y+1))
             self.update_wall(self)
-            
         elif direction == 'V' and self.players_walls_num[self.current_player-1] > 0:  # Mur vertical
             if self.board.edge_exists((x, y), (x, y+1)):
                 self.board.remove_edge((x, y), (x, y+1))
-
             if self.board.edge_exists((x+1, y), (x+1, y+1)):
                 self.board.remove_edge((x+1, y), (x+1, y+1))
             self.update_wall(self)
@@ -63,11 +54,9 @@ class GameState:
     def display_board(self):
         pass
 
-
-    def start_Game(self, size, num_players, blitz_time, walls_num ):
-        self.set_size(self, size, num_players, blitz_time, walls_num )
+    def start_Game(size, num_players, blitz_time, walls_num):
+        return GameState(size, num_players, blitz_time, walls_num)
         
-
     def load_game_from_file(self):
         pass
         

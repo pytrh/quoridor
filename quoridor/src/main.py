@@ -8,6 +8,8 @@ import importlib.metadata
 import logging
 import sys
 
+from src.gamestate import GameState
+
 def setup_logging(verbose, debug):
     """
     Configure le système de logger en fonction des options --verbose et --debug.
@@ -51,16 +53,16 @@ def main():
 
     if args.file:
         logging.debug("Fichier en argument trouvé")
-        # game = GameState.load_game(file)     
+        game = GameState.load_game(args.file)     
 
     size = 9
     num_players = 2
     blitz_time = 0
-    walls = 20
+    num_walls = 20
     if args.walls:
-       walls = args.walls
+       num_walls = args.walls
     
-    #game = GameState.start_Game(size, num_players, blitz_time, walls)     
+    game = GameState.start_Game(size, num_players, blitz_time, num_walls)     
     sys.exit(0)
 
 def init():
