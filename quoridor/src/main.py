@@ -30,6 +30,7 @@ def main():
     Gestion des arguments avec argparse
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('file', default=None, nargs='?')
     parser.add_argument("-V", "--version", help="affiche la version du programme",
         action="store_true")
     parser.add_argument("-v", "--verbose", help="active le mode verbose",
@@ -37,11 +38,17 @@ def main():
     parser.add_argument("-d", "--debug", help="active le mode debug (dev)",
         action="store_true")
     args = parser.parse_args()
+
+    setup_logging(verbose=args.verbose, debug=args.debug)
+
     if args.version :
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
         sys.exit(10)
-    setup_logging(verbose=args.verbose, debug=args.debug)
+
+    if args.file:
+        logging.debug("Fichier en argument trouvé")
+
     sys.exit(0)
 
 def init():
