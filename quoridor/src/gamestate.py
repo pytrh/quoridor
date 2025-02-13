@@ -9,8 +9,8 @@ class GameState:
         self.time_remaining = {i: blitz_time * 60 for i in range(1, num_players + 1)} if blitz_time else None
         self.board = self._init_board()
         self.history = []
-        self.player_one_walls_num = walls_num // num_players
-        self.player_two_wall_num = walls_num // num_players
+        self.players_walls_num = { walls_num//num_players for _ in range(num_players)} if num_players == 2 else { 5 for _ in range(num_players)}
+        
         
         
     def _init_board(self):
@@ -40,7 +40,7 @@ class GameState:
         if direction == 'H':  # Mur horizontal
             if self.board.edge_exists((x, y), (x+1, y)):
                 self.board.remove_edge((x, y), (x+1, y))
-                update_wall(self)
+                
         elif direction == 'V':  # Mur vertical
             if self.board.edge_exists((x, y), (x, y+1)):
                 self.board.remove_edge((x, y), (x, y+1))
