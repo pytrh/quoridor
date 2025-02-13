@@ -53,7 +53,7 @@ def main():
 
     if args.file:
         logging.debug("Fichier en argument trouvé")
-        game = GameState.load_game(args.file)     
+        game = GameState.load_game_from_file(args.file)     
 
     size = 9
     num_players = 2
