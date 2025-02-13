@@ -9,3 +9,7 @@
 
 # Ignore Python egg info
 quoridor.egg-info/
+
+__pycache__
+
+build
