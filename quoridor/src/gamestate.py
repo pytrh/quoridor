@@ -27,23 +27,34 @@ class GameState:
 
     def switch_player(self):
         self.current_player = (self.current_player % self.num_players) + 1
+
+    
+
     def switch_time(self):
         pass
 
     def update_wall(self):
-        pass
+        self.players_walls_num[self.current_player-1] = self.players_walls_num[self.current_player-1] -1
 
     def record_move(self, move):
         self.history.append(move)
         
     def place_wall(self, x, y, direction):
-        if direction == 'H':  # Mur horizontal
-            if self.board.edge_exists((x, y), (x+1, y)):
+        if direction == 'H' and self.players_walls_num[self.current_player-1] > 0:  # Mur horizontal
+            if self.board.edge_exists((x, y), (x+1, y)) :
                 self.board.remove_edge((x, y), (x+1, y))
-                
-        elif direction == 'V':  # Mur vertical
+
+            if self.board.edge_exists((x, y+1), (x+1, y+1)) :
+                self.board.remove_edge((x, y+1), (x+1, y+1))
+            self.update_wall(self)
+            
+        elif direction == 'V' and self.players_walls_num[self.current_player-1] > 0:  # Mur vertical
             if self.board.edge_exists((x, y), (x, y+1)):
                 self.board.remove_edge((x, y), (x, y+1))
+
+            if self.board.edge_exists((x+1, y), (x+1, y+1)):
+                self.board.remove_edge((x+1, y), (x+1, y+1))
+            self.update_wall(self)
 
     def display_board(self):
         pass
