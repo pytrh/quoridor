@@ -1,44 +1,49 @@
+import time
+from graph import Graph
+
 class GameState:
-    def __init__(self, num_players=2, board_size=9, num_walls=20, blitz_time=None):
-
+    def __init__(self, size=9, num_players=2, blitz_time=None, walls_num = 20 ):
+        self.size = size
         self.num_players = num_players
-        self.current_player = 1  
-        self.board_size = board_size
-        self.num_walls = {i: num_walls for i in range(1, num_players + 1)}
-        self.board = self._initialize_board()
-        self.history = []  
-        self.time_left = {i: blitz_time * 60 for i in range(1, num_players + 1)} if blitz_time else None
+        self.current_player = 1
+        self.time_remaining = {i: blitz_time * 60 for i in range(1, num_players + 1)} if blitz_time else None
+        self.board = self._init_board()
+        self.history = []
+        self.player_one_walls_num = walls_num // num_players
+        self.player_two_wall_num = walls_num // num_players
+        
+        
+    def _init_board(self):
+        board_graph = Graph()
+        for x in range(self.size):
+            for y in range(self.size):
+                node = (x, y)
+                board_graph.add_node(node)
+                if x > 0: board_graph.add_edge(node, (x-1, y))  # Nord
+                if x < self.size - 1: board_graph.add_edge(node, (x+1, y))  # Sud
+                if y > 0: board_graph.add_edge(node, (x, y-1))  # Ouest
+                if y < self.size - 1: board_graph.add_edge(node, (x, y+1))  # Est
+        return board_graph
 
-    def _initialize_board(self):
-
-        board = [["_" for _ in range(self.board_size)] for _ in range(self.board_size)]
-        middle = self.board_size // 2
-        if self.num_players == 2:
-            board[0][middle] = "1" 
-            board[-1][middle] = "2"
-
-        if self.num_players == 3:
-            board[0][middle] = "1" 
-            board[-1][middle] = "2"
-            board[middle][0] = "3"
-
-        if self.num_players == 4:
-            board[0][middle] = "1" 
-            board[-1][middle] = "2"
-            board[middle][0] = "3"
-            board[middle][-1] = "4"
-
-        return board
-
-    def make_move(self, player, move):
-        self.history.append((player, move))  # Ajout à l'historique
-        # TODO: Appliquer le coup au plateau
-
-        # Passer au joueur suivant
+    def switch_player(self):
         self.current_player = (self.current_player % self.num_players) + 1
+    def switch_time(self):
+        pass
 
-    def print_board(self):
-       return
+    def update_wall(self):
+        pass
 
+    def record_move(self, move):
+        self.history.append(move)
+        
+    def place_wall(self, x, y, direction):
+        if direction == 'H':  # Mur horizontal
+            if self.board.edge_exists((x, y), (x+1, y)):
+                self.board.remove_edge((x, y), (x+1, y))
+                update_wall(self)
+        elif direction == 'V':  # Mur vertical
+            if self.board.edge_exists((x, y), (x, y+1)):
+                self.board.remove_edge((x, y), (x, y+1))
 
-
+    def display_board(self):
+        pass
