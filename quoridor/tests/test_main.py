@@ -13,7 +13,7 @@ def test_version_option(capsys):
 
             captured = capsys.readouterr()
             assert captured.out.strip() == "Quoridor : version 0.2.0"
-            assert exitinfo.value.code == 10
+            assert exitinfo.value.code == 0
 
 def test_version_verbose(capsys):
     with mock.patch('sys.argv', ['src.main.py', '--verbose']):

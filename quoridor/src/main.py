@@ -37,6 +37,9 @@ def main():
         action="store_true")
     parser.add_argument("-d", "--debug", help="active le mode debug (dev)",
         action="store_true")
+
+    parser.add_argument("-w", "--walls", help="parametrer le nombre de mur par joueur", type=int)
+    
     args = parser.parse_args()
 
     setup_logging(verbose=args.verbose, debug=args.debug)
@@ -44,11 +47,17 @@ def main():
     if args.version :
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
-        sys.exit(10)
+        sys.exit(0)
 
     if args.file:
         logging.debug("Fichier en argument trouvé")
 
+    
+    if args.walls:
+       # GameState.setWalls(args.walls)
+       print("walls modified")
+    
+    # game = GameState.build()     
     sys.exit(0)
 
 def init():
@@ -58,4 +67,5 @@ def init():
     if __name__ == "__main__":
         sys.exit(main())
 
-init()
+init()  
+
