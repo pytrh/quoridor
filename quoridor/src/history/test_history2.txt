@@ -1,0 +1,4 @@
+# Commentaire
+# Puis les tours joués
+1. 1 e1-e2 2 a10-a9 3 e2-e3 4 a9v
+2. 1 a6h 2 a9-a8 3 e4-e5 4 a8-a7
