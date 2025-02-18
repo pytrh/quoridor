@@ -8,4 +8,5 @@
 .coverage
 
 # Ignore Python egg info
-quoridor.egg-info/
+quoridor.egg-info/build/
+build/
