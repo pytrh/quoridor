@@ -1,8 +1,8 @@
-import os
+import pytest
 from unittest.mock import patch, mock_open
 from src.history.read_write_history import ReadWriteHistory
 
-path_to_history_dir = "quoridor/src/history/"
+path_to_history_dir = "src/history/"
 
 def test_load_file():
     pass
@@ -35,7 +35,7 @@ def test_read_history_from_file():
     assert expected == history
 
 def test_write_history_into_file():
-    filename = path_to_history_dir+"test_write_history.txt"
+    filename = 'outputHistory.txt'
     expectedTurns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "e4-e5", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
@@ -44,34 +44,21 @@ def test_write_history_into_file():
     history = ReadWriteHistory.read_history(filename)
     assert expectedTurns == history
 
-    filenameSkip = path_to_history_dir+"test_write_history_skip.txt"
     expectedTurns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
                  ["a6v", "a9-a8", "skip", "a8-a7"],
                  ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
-    ReadWriteHistory.write_history(filenameSkip, expectedTurns)
+    ReadWriteHistory.write_history(filename, expectedTurns)
 
-    history = ReadWriteHistory.read_history(filenameSkip)
+    history = ReadWriteHistory.read_history(filename)
     assert expectedTurns == history
-
-    try:
-        os.remove(filename)
-        os.remove(filenameSkip)
-    except FileNotFoundError:
-        pass
 
 # Test Négatif
 
 def test_read_history_from_empty_file():
-    filename = path_to_history_dir + "test_empty_file.txt"
-    history = ReadWriteHistory.write_history(filename, [])
+    history = ReadWriteHistory.write_history("empty_file.txt", [])
     expected = None
 
     assert history == expected
-
-    try:
-        os.remove(filename)
-    except FileNotFoundError:
-        pass
 
 def test_file_not_found_read(capsys):
     ReadWriteHistory.read_history("invalid_file.txt")
