@@ -28,11 +28,11 @@ class ReadWriteHistory:
         game_info : list[list[str]] = []
         max_players = 0
         try:
-            for turn in history_array:
+            for turn_nb, turn in enumerate(history_array):
                 line_sections = turn.split()
                 # Check there are lines and all start with turn number
                 if line_sections == [] or not line_sections[0].endswith("."):
-                    print(f"Invalid line for turn: {turn}")
+                    print(f"Invalid line for turn: {turn_nb + 1}")
                     continue # Skip invalid line
 
                 turn_nb = int(line_sections[0][:-1])
