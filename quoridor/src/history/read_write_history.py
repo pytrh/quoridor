@@ -5,7 +5,7 @@ class ReadWriteHistory:
             with open(input_file_path, "r", encoding="utf-8") as input_file:
                 history_array = [line for line in input_file
                                                     if not line.startswith("#") and line.strip()]
-            if not history_array:
+            if history_array == []:
                 print("Input file path is empty.")
                 return []
 
@@ -31,7 +31,7 @@ class ReadWriteHistory:
             for turn in history_array:
                 line_sections = turn.split()
                 # Check there are lines and all start with turn number
-                if not line_sections or not line_sections[0].endswith("."):
+                if line_sections == [] or not line_sections[0].endswith("."):
                     print(f"Invalid line for turn: {turn}")
                     continue # Skip invalid line
 
