@@ -1,0 +1,22 @@
+class Player:
+    """
+    Player class to represent a player in the game.
+    """
+    def __init__(self, id: int, position: tuple[int, int], fences_remaining: int = 10,
+                  time_remaining: int = None) -> None:
+        """
+        Initialize a new player.
+
+        :param id: The id of the player either 1 or 2 or 3 or 4.
+        :type id: int
+        :param position: The position of the player represented as a tuple of two integers.
+        :type position: tuple[int, int]
+        :param fences: The number of fences the player has, default is 10.
+        :type fences: int
+        :param time_remaining: The time remaining in seconds for the player in blitz mode, default is None.
+        :type time_remaining: int
+        """
+        self.id = id
+        self.position = position
+        self.fences_remaining = fences_remaining
+        self.time_remaining = time_remaining

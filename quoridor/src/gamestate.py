@@ -1,64 +1,52 @@
-import time
+"""
+GameState module.
+"""
 from src.graph import Graph
+from src.player import Player
 
 class GameState:
+    """
+    GameState class encapsulating the current player,
+    the board, the players and the history of moves.
+    """
+    def __init__(self, size: int = 9, current_player: int = None, players: list[Player] = [[]],
+                 blitz_mode: bool = False, history: list[list[str]] = [[]]):
+        """
+        Initialize a new game state.
+        :param size: The size of the board, default is 9.
+        :type size: int
+        :param current_player: The current player, default is None.
+        :type current_player: int
+        :param players: The players in the game, default is an empty list.
+        :type players: list[Player]
+        :param blitz_mode: Whether the game is in blitz mode, default is False.
+        :type blitz_mode: bool
+        :param history: The history of moves, default is an empty list.
+        :type history: list[list[str]]
+        """
+        self.board = self.create_board(size)
+        self.current_player = current_player
+        self.players = players
+        self.blitz_mode = blitz_mode
+        self.history = history
+        self.move_count = 0
 
-    def __init__(self, size, num_players, blitz_time, num_walls):
-        self.size = size
-        self.num_players = num_players
-        self.current_player = 1
-        self.time_remaining = {i: blitz_time * 60 for i in range(1,
-            num_players + 1)} if blitz_time==0 else None
-        self.board = self._init_board()
-        self.history = []
-        self.players_walls_num = { num_walls for _ in range(num_players)}
-
-    def _init_board(self):
-        board_graph = Graph()
-        for x in range(self.size):
-            for y in range(self.size):
-                node = (x, y)
-                board_graph.add_node(node)
-                if x > 0: board_graph.add_edge(node, (x-1, y))  # Nord
-                if x < self.size - 1: board_graph.add_edge(node, (x+1, y))  # Sud
-                if y > 0: board_graph.add_edge(node, (x, y-1))  # Ouest
-                if y < self.size - 1: board_graph.add_edge(node, (x, y+1))  # Est
-        return board_graph
-
-    def switch_player(self):
-        self.current_player = (self.current_player % self.num_players) + 1
-
-    def switch_time(self):
-        pass
-
-    def update_wall(self):
-        self.players_walls_num[self.current_player-1] = self.players_walls_num[self.current_player-1] -1
-
-    def record_move(self, move):
-        self.history.append(move)
-        
-    def place_wall(self, x, y, direction):
-        if direction == 'H' and self.players_walls_num[self.current_player-1] > 0:  # Mur horizontal
-            if self.board.edge_exists((x, y), (x+1, y)) :
-                self.board.remove_edge((x, y), (x+1, y))
-            if self.board.edge_exists((x, y+1), (x+1, y+1)) :
-                self.board.remove_edge((x, y+1), (x+1, y+1))
-            self.update_wall(self)
-        elif direction == 'V' and self.players_walls_num[self.current_player-1] > 0:  # Mur vertical
-            if self.board.edge_exists((x, y), (x, y+1)):
-                self.board.remove_edge((x, y), (x, y+1))
-            if self.board.edge_exists((x+1, y), (x+1, y+1)):
-                self.board.remove_edge((x+1, y), (x+1, y+1))
-            self.update_wall(self)
-
-    def display_board(self):
-        pass
-
-    def start_Game(size, num_players, blitz_time, walls_num):
-        return GameState(size, num_players, blitz_time, walls_num)
-        
-    def load_game_from_file(self):
-        pass
-        
-
-    
+    def create_board(self, size: int = 9) -> Graph:
+        """
+        Create a board represented by an undirected graph.
+        :param size: The size of the board, default is 9.
+        :type size: int
+        :return: The board as an undirected graph.
+        :rtype: Graph
+        """
+        board = Graph()
+        for i in range(size):
+            for j in range(size):
+                board.add_node((i, j))
+        for i in range(size):
+            for j in range(size):
+                if i < size - 1:
+                    board.add_edge((i, j), (i + 1, j))
+                if j < size - 1:
+                    board.add_edge((i, j), (i, j + 1))
+        return board
