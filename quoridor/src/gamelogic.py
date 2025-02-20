@@ -13,6 +13,9 @@ class GameLogic:
     def switch_player(self):
         self.state.current_player = (self.state.current_player + 1) % self.state.num_players
 
+    def update_wall(self):
+        self.state.players[self.state.current_player].fences_remaining = self.state.players[self.state.current_player].fences_remaining-1
+
     def temp_board(self) -> Graph:
         board = copy.deepcopy(self.state.board)
         p=[(),(),(),()]
@@ -53,11 +56,12 @@ class GameLogic:
             self.switch_player()
     
     def place_wall(self, x, y, direction):
+        if(self.state.players[self.state.current_player].fences_remaining == 0):
+            raise InvalidMoveError
         if direction == 'h' and self.state.players[self.state.current_player].fences_remaining > 0:  # Mur horizontal
             if self.state.board.edge_exists((x, y), (x+1, y)) and self.state.board.edge_exists((x, y+1), (x+1, y+1)):
                 self.state.board.remove_edge((x, y), (x+1, y))
                 self.state.board.remove_edge((x, y+1), (x+1, y+1))
-           # self.state.update_wall(self)
             else:
                 raise InvalidMoveError
             
@@ -65,7 +69,8 @@ class GameLogic:
             if self.state.board.edge_exists((x, y), (x, y+1)) and self.state.board.edge_exists((x+1, y), (x+1, y+1)):
                 self.state.board.remove_edge((x, y), (x, y+1))
                 self.state.board.remove_edge((x+1, y), (x+1, y+1))
-           # self.update_wall(self)
             else:
                 raise InvalidMoveError
+        self.update_wall()
+        self.switch_player()
 

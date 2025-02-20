@@ -70,6 +70,7 @@ class TerminalView:
         self.print_board()
         while(True):
             try:
+                print("Remaining fences: "+str(self.state.players[self.state.current_player].fences_remaining))
                 move = input("Player "+str(self.state.current_player+1)+" will play?")
                 if(len(move)==3):
                     x, y , direction = TerminalView.translate_wall(move)
