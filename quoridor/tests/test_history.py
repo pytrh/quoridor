@@ -1,41 +1,41 @@
+import os
 from unittest.mock import patch, mock_open
 from src.history.read_write_history import ReadWriteHistory
 
-path_to_history_dir = "src/history/"
-
-def test_load_file():
-    pass
+from pathlib import Path
+current_dir = Path(__file__).resolve().parent
+path_to_history_dir = current_dir / "../src/history"
 
 def test_read_history_from_file():
-    history = ReadWriteHistory.read_history(path_to_history_dir + "test_history1.txt")
+    history = ReadWriteHistory.read_history(path_to_history_dir / "test_history1.txt")
     expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "e4-e5", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
 
     assert expected == history
 
-    history = ReadWriteHistory.read_history(path_to_history_dir +"test_history2.txt")
+    history = ReadWriteHistory.read_history(path_to_history_dir /"test_history2.txt")
     expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6h", "a9-a8", "e4-e5", "a8-a7"]]
 
     assert expected == history
 
-    history = ReadWriteHistory.read_history(path_to_history_dir + "test_history_skip.txt")
+    history = ReadWriteHistory.read_history(path_to_history_dir / "test_history_skip.txt")
     expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "skip", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
 
     assert expected == history
 
-    history = ReadWriteHistory.read_history(path_to_history_dir + "test_history_two_player.txt")
+    history = ReadWriteHistory.read_history(path_to_history_dir / "test_history_two_player.txt")
     expected = [["e1-e2", "a10-a9"],
               ["a6v", "a9-a8"]]
 
     assert expected == history
 
 def test_write_history_into_file():
-    filename = 'outputHistory.txt'
-    expected_turns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
+    filename = 'output_history.txt'
+    expectedTurns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "e4-e5", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
     ReadWriteHistory.write_history(filename, expected_turns)
@@ -51,10 +51,15 @@ def test_write_history_into_file():
     history = ReadWriteHistory.read_history(filename)
     assert expected_turns == history
 
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass
+
 # Test Négatif
 
 def test_read_history_from_empty_file():
-    history = ReadWriteHistory.read_history("empty_file.txt")
+    history = ReadWriteHistory.read_history(path_to_history_dir / "empty_file.txt")
     expected = []
 
     assert history == expected
