@@ -9,6 +9,7 @@ import logging
 import sys
 
 from src.gamestate import GameState
+from src.config import *
 
 def setup_logging(verbose, debug):
     """
@@ -39,9 +40,9 @@ def main():
         action="store_true")
     parser.add_argument("-d", "--debug", help="active le mode debug (dev)",
         action="store_true")
-
+    parser.add_argument("-s", "--size", help="fixer la taille du plateau: size*size", type=int)
     parser.add_argument("-w", "--walls", help="parametrer le nombre de mur par joueur", type=int)
-    
+
     args = parser.parse_args()
 
     setup_logging(verbose=args.verbose, debug=args.debug)
@@ -53,16 +54,30 @@ def main():
 
     if args.file:
         logging.debug("Fichier en argument trouvé")
-        # game = GameState.load_game_from_file(args.file)     
+        # game = GameState.load_game_from_file(args.file)
 
-    size = 9
-    num_players = 2
-    blitz_time = 0
-    num_walls = 20
     if args.walls:
-       num_walls = args.walls
+       num_walls = args.walls 
+    # game = GameState.start_Game(size, num_players, blitz_time, num_walls)
+
+    if args.size:
+        error = False
+        if args.size not in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
+            print("ERROR: grid size must be between 3 and 15")
+            error = True
+        if args.size % 2 == 0:
+            print("ERROR: size must be an odd number")
+            error = True
+        if error:
+            sys.exit(1)
+        size = args.size
+
+    # DEFAULT
+    size = DEFAULT_GRID_SIZE
+    num_players = DEFAULT_NUM_PLAYERS
+    blitz_time = DEFAULT_BLITZ_TIME
+    num_walls = DEFAULT_NUM_WALLS
     
-    # game = GameState.start_Game(size, num_players, blitz_time, num_walls)     
     sys.exit(0)
 
 def init():
