@@ -35,14 +35,18 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('file', default=None, nargs='?')
-    parser.add_argument("-V", "--version", help="affiche la version du programme",
+    parser.add_argument("-V", "--version", help="displays the current program version",
         action="store_true")
-    parser.add_argument("-v", "--verbose", help="active le mode verbose",
+    parser.add_argument("-v", "--verbose", help="activates the VERBOSE mode",
         action="store_true")
-    parser.add_argument("-d", "--debug", help="active le mode debug (dev)",
+    parser.add_argument("-d", "--debug", help="activates the DEBUG mode (dev)",
         action="store_true")
-    parser.add_argument("-s", "--size", help="fixer la taille du plateau: size*size", type=int)
-    parser.add_argument("-w", "--walls", help="parametrer le nombre de mur par joueur", type=int)
+    parser.add_argument("-s", "--size", help="sets the grid size: SIZE*SIZE. Default: 9. "
+                                            "Must be an odd nmber between 3 and 15.", type=int)
+    parser.add_argument("-w", "--walls", help="sets the number of walls per player. "
+                                            "Default: 20. Negative: unlimited.", type=int)
+    parser.add_argument("-p", "--players", help="sets the number of players. Default: 2. "
+                                            "Must be 2, 3 or 4. 3 is not recommended.", type=int)
 
     args = parser.parse_args()
 
@@ -56,6 +60,12 @@ def main():
     if args.file:
         logging.debug("Fichier en argument trouvé")
         # game = GameState.load_game_from_file(args.file)
+
+    # DEFAULT
+    size = DEFAULT_GRID_SIZE
+    num_players = DEFAULT_NUM_PLAYERS
+    blitz_time = DEFAULT_BLITZ_TIME
+    num_walls = DEFAULT_NUM_WALLS
 
     if args.walls:
         num_walls = args.walls
@@ -73,11 +83,6 @@ def main():
             sys.exit(1)
         size = args.size
 
-    # DEFAULT
-    size = DEFAULT_GRID_SIZE
-    num_players = DEFAULT_NUM_PLAYERS
-    blitz_time = DEFAULT_BLITZ_TIME
-    num_walls = DEFAULT_NUM_WALLS
     sys.exit(0)
 
 def init():

@@ -1,5 +1,3 @@
-__version__ = "0.2.0"
-
 MIN_GRID_SIZE = 3
 MAX_GRID_SIZE = 15
 
