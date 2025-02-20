@@ -55,8 +55,8 @@ def test_write_history_into_file():
 # Test Négatif
 
 def test_read_history_from_empty_file():
-    history = ReadWriteHistory.write_history("empty_file.txt", [])
-    expected = None
+    history = ReadWriteHistory.read_history("empty_file.txt")
+    expected = []
 
     assert history == expected
 
@@ -65,8 +65,8 @@ def test_file_not_found_read(capsys):
     captured = capsys.readouterr()
     assert "Error: The file 'invalid_file.txt' was not found." in captured.out
 
-def test_value_error_read(capsys):
-    mock_data = "invalid data"
+def test_read_value_error(capsys):
+    mock_data = "random data"
 
     with patch("builtins.open", mock_open(read_data=mock_data)):
         with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file", side_effect=ValueError("Invalid file format")):
@@ -74,3 +74,52 @@ def test_value_error_read(capsys):
 
     captured = capsys.readouterr()
     assert "Invalid file format" in captured.out
+
+def test_read_io_error(capsys):
+    mock_data = "random data"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)):
+        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file", side_effect=IOError("IO Error")):
+            ReadWriteHistory.read_history("fake_file.txt")
+
+    captured = capsys.readouterr()
+    assert "IO Error" in captured.out
+
+def test_write_io_error(capsys):
+    mock_data = "random data"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)) as mock_file:
+            mock_file.return_value.write.side_effect = IOError("IO Error")
+            ReadWriteHistory.write_history("fake_file.txt", [])
+
+    captured = capsys.readouterr()
+    assert "Error: Could not write to file 'fake_file.txt'" in captured.out
+
+def test_error_read_invalid_format(capsys):
+    mock_data = "invalid data"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)):
+        ReadWriteHistory.read_history("fake_file.txt")
+
+    captured = capsys.readouterr()
+    assert "Invalid line for turn: 1" in captured.out
+
+def test_get_game_info_indexerror_valueerror(capsys):
+    mock_data = "1. 2"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)):
+        game_info = ReadWriteHistory.read_history("fake_file.txt")
+
+    captured = capsys.readouterr()
+    assert "Warning: Skipping invalid move None at turn 1" in captured.out
+    assert game_info == [[]]
+
+def test_get_game_info_valueerror(capsys):
+    mock_data = "TurnOne. 1 A"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)):
+        game_info = ReadWriteHistory.read_history("fake_file.txt")
+
+    captured = capsys.readouterr()
+    assert "Error processing game data" in captured.out
+    assert game_info == []
