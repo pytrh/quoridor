@@ -96,7 +96,7 @@ def main():
         if players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
     
-    game = GameState(size, num_players, blitz_mode, num_walls)
+    game = GameState(size, num_players, False, num_walls)
     terminal = TerminalView(game)
     terminal.start_game()
     sys.exit(0)
