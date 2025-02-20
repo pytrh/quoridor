@@ -10,6 +10,7 @@ import sys
 
 from src.gamestate import GameState
 from src.config import MIN_GRID_SIZE, MAX_GRID_SIZE
+from src.config import MIN_NUM_PLAYERS, MAX_NUM_PLAYERS, NOT_RECOMMENDED_NUM_PLAYERS
 from src.config import DEFAULT_GRID_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_BLITZ_TIME, DEFAULT_NUM_WALLS
 
 def setup_logging(verbose, debug):
@@ -35,18 +36,19 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('file', default=None, nargs='?')
-    parser.add_argument("-V", "--version", help="displays the current program version",
+    parser.add_argument("-V", "--version", help="Display the current program version.",
         action="store_true")
-    parser.add_argument("-v", "--verbose", help="activates the VERBOSE mode",
+    parser.add_argument("-v", "--verbose", help="Enable verbose mode for detailed output.",
         action="store_true")
-    parser.add_argument("-d", "--debug", help="activates the DEBUG mode (dev)",
+    parser.add_argument("-d", "--debug", help="Enable debug mode (for development).",
         action="store_true")
-    parser.add_argument("-s", "--size", help="sets the grid size: SIZE*SIZE. Default: 9. "
+    parser.add_argument("-s", "--size", help="Set the grid size (SIZE × SIZE). Default: 9. "
                                             "Must be an odd nmber between 3 and 15.", type=int)
-    parser.add_argument("-w", "--walls", help="sets the number of walls per player. "
-                                            "Default: 20. Negative: unlimited.", type=int)
-    parser.add_argument("-p", "--players", help="sets the number of players. Default: 2. "
-                                            "Must be 2, 3 or 4. 3 is not recommended.", type=int)
+    parser.add_argument("-w", "--walls", help="Set the number of walls per player. Default: 20. "
+                                            "Use a negative value for unlimited walls.", type=int)
+    parser.add_argument("-p", "--players", help="Set the number of players (2, 3, or 4). "
+                                            "Default: 2. Note: 3-player mode is not recommended.",
+                                            type=int)
 
     args = parser.parse_args()
 
@@ -73,15 +75,27 @@ def main():
 
     if args.size:
         error = False
-        if args.size not in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
-            print("ERROR: grid size must be between 3 and 15")
+        size = args.size
+        if size not in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
+            logging.error("grid size must be between 3 and 15.")
             error = True
-        if args.size % 2 == 0:
-            print("ERROR: size must be an odd number")
+        if size % 2 == 0:
+            logging.error("size must be an odd number.")
             error = True
         if error:
             sys.exit(1)
-        size = args.size
+
+
+    if args.players:
+        error = False
+        players = args.players
+        if players not in range(MIN_NUM_PLAYERS, MAX_NUM_PLAYERS + 1):
+            logging.error("can only have 2, 3 or 4 players.")
+            sys.exit(1)
+        if players == NOT_RECOMMENDED_NUM_PLAYERS:
+            logging.warning("it is not recommended to play by 3. Unfair advantage.")
+
+
 
     sys.exit(0)
 
