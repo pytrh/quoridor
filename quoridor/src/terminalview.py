@@ -4,6 +4,7 @@ GameView module.
 from src.gamestate import GameState
 from src.gamelogic import GameLogic
 from src.exceptions import InvalidMoveError
+from src.direction import Direction
 
 class TerminalView:
 
@@ -11,25 +12,57 @@ class TerminalView:
     columns = "123456789"
 
     def __init__(self, gamestate: GameState):
+        """
+        TerminalClient manage the application from the terminal.
+        Parse the terminal input and update the board by printing it on
+        the terminal.
+        :param gamestate: The current state of the board.
+        :type gamestate: GameState
+        """
         self.state = gamestate
         self.logic = GameLogic(gamestate)
 
     def translate_move(self, case: str) -> tuple[int,int]:
-        x = TerminalView.rows.rfind(case[0])
-        y = int(case[1])-1
-        return (x,y)
-    
-    def translate_wall(case: str) -> tuple[int,int, str]:
+        """
+        Transform a string input into a position tuple that can be read
+        by GameLogic
+        :param case: String in format 'letter''number'
+        :type case: str
+        :return: a position
+        :rytpe: tuple[int,int]
+        """
         x = TerminalView.rows.rfind(case[0])
         y = TerminalView.columns.rfind(case[1])
-        z = case[2]
-        if(x==-1 or y == -1 or not (z == 'v' or z == 'h')):
+        if(x == -1 or y == -1):
             raise InvalidMoveError
-        return (x,y,z)
+        return (x,y)
+    
+    def translate_wall(case: str) -> tuple[int,int, Direction]:
+        """
+        Transform a string input into a position tuple + a direction
+        that can be read by GameLogic
+        :param case: String in format 'letter''number''direction'
+        :type case: str
+        :return: a position + a direction
+        :rytpe: tuple[int,int, Direction]
+        """
+        x = TerminalView.rows.rfind(case[0])
+        y = TerminalView.columns.rfind(case[1])
+        direction = None
+        if case[2] == 'v':
+            direction = Direction.V
+        elif case[2] == 'h':
+            direction = Direction.H
+        if(x==-1 or y == -1 or direction == None):
+            raise InvalidMoveError
+        return (x,y,direction)
 
     def invalid_move(start,end) -> bool:
         if(len(start)==2 and len(end)==2):
-                if(TerminalView.rows.rfind(start[0])==-1 or TerminalView.rows.rfind(end[0])==-1 or TerminalView.columns.rfind(start[1])==-1 or TerminalView.columns.rfind(end[1])==-1):
+                if(TerminalView.rows.rfind(start[0])==-1 or \
+                   TerminalView.rows.rfind(end[0])==-1 or \
+                   TerminalView.columns.rfind(start[1])==-1 or \
+                   TerminalView.columns.rfind(end[1])==-1):
                     return True
                 return False
         return True
