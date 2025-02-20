@@ -35,7 +35,7 @@ def test_read_history_from_file():
 
 def test_write_history_into_file():
     filename = 'output_history.txt'
-    expectedTurns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
+    expected_turns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "e4-e5", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
     ReadWriteHistory.write_history(filename, expected_turns)
