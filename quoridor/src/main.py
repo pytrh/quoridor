@@ -9,6 +9,8 @@ import logging
 import sys
 
 from src.gamestate import GameState
+from src.gamelogic import GameLogic
+from src.terminalview import TerminalView
 
 def setup_logging(verbose, debug):
     """
@@ -57,12 +59,14 @@ def main():
 
     size = 9
     num_players = 2
-    blitz_time = 0
+    blitz_mode = False
     num_walls = 20
     if args.walls:
        num_walls = args.walls
     
-    # game = GameState.start_Game(size, num_players, blitz_time, num_walls)     
+    game = GameState(size, num_players, blitz_mode, num_walls)
+    terminal = TerminalView(game)
+    terminal.start_game()
     sys.exit(0)
 
 def init():
