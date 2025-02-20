@@ -3,6 +3,7 @@ Unit tests for the graph module
 """
 import pytest
 from src.graph import Graph
+from src.exceptions import NodeNotFoundError, EdgeNotFoundError, PathNotFoundError
 
 def test_graph():
     """
@@ -38,13 +39,18 @@ def test_graph():
     assert not g.edge_exists((0, 0), (0, 1))
     assert not g.edge_exists((0, 1), (0, 0))
 
+    # # Check negative case for edge removal
+    with pytest.raises(EdgeNotFoundError):
+        g.remove_edge((0, 0), (1, 1))
+    with pytest.raises(EdgeNotFoundError):
+        g.remove_edge((1, 1), (1, 1))
+
     # # Check nodes removal
     g.remove_node((1, 1))
-    # assert not g.node_exists((1, 1))
-    # assert not g.edge_exists((0, 0), (1, 1))
-    # assert not g.edge_exists((0, 1), (1, 1))
-    # assert not g.edge_exists((1, 0), (1, 1))
-
+    with pytest.raises(NodeNotFoundError):
+        g.remove_node((1, 1))
+    with pytest.raises(NodeNotFoundError):
+        g.remove_node((2, 2))
 
 def test_a_star():
     """
