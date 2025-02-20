@@ -77,5 +77,10 @@ def test_a_star():
     assert path == [(0, 0), (0, 1), (1, 1)] or path == [(0, 0), (1, 0), (1, 1)]
     assert len(path) == 3
 
+    # Check negative case for A*
+    graph.add_node((2, 2))
+    with pytest.raises(PathNotFoundError):
+        graph.a_star((0, 0), (2, 2))
+
 if __name__ == "__main__":
     pytest.main()
