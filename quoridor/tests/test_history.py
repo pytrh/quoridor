@@ -103,3 +103,23 @@ def test_error_read_invalid_format(capsys):
 
     captured = capsys.readouterr()
     assert "Invalid line for turn: 1" in captured.out
+
+def test_get_game_info_indexerror_valueerror(capsys):
+    mock_data = "1. 2"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)):
+        game_info = ReadWriteHistory.read_history("fake_file.txt")
+
+    captured = capsys.readouterr()
+    assert "Warning: Skipping invalid move None at turn 1" in captured.out
+    assert game_info == [[]]
+
+def test_get_game_info_valueerror(capsys):
+    mock_data = "TurnOne. 1 A"
+
+    with patch("builtins.open", mock_open(read_data=mock_data)):
+        game_info = ReadWriteHistory.read_history("fake_file.txt")
+
+    captured = capsys.readouterr()
+    assert "Error processing game data" in captured.out
+    assert game_info == []
