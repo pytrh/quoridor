@@ -1,6 +1,6 @@
 """
-Point d'entrée principal du programme
-Gestion des arguments en ligne de commande
+Entry point for the Quoridor game
+Handles command line arguments
 """
 
 import argparse
@@ -55,7 +55,7 @@ def main():
 
     if args.file:
         logging.debug("Fichier en argument trouvé")
-        game = GameState.load_game_from_file(args.file)     
+        # game = GameState.load_game_from_file(args.file)     
 
     size = 9
     num_players = 2
