@@ -28,11 +28,11 @@ class ReadWriteHistory:
         game_info : list[list[str]] = []
         max_players = 0
         try:
-            for turn in history_array:
+            for turn_nb, turn in enumerate(history_array):
                 line_sections = turn.split()
                 # Check there are lines and all start with turn number
                 if line_sections == [] or not line_sections[0].endswith("."):
-                    print(f"Invalid line for turn: {turn}")
+                    print(f"Invalid line for turn: {turn_nb + 1}")
                     continue # Skip invalid line
 
                 turn_nb = int(line_sections[0][:-1])
@@ -41,18 +41,19 @@ class ReadWriteHistory:
                     game_info.append([""] * max_players)  # Initialize turn with empty moves
 
                 for i in range(1, len(line_sections), 2):
+                    move = None
                     try:
                         player_id = int(line_sections[i])
                         move = line_sections[i + 1]
                         game_info[turn_nb - 1][player_id - 1] = move
 
-                    except (IndexError, ValueError) as err:
-                        print(f"Warning: Skipping invalid move {move} at turn {turn}: {err}")
+                    except (IndexError, ValueError) as error:
+                        print(f"Warning: Skipping invalid move {move} at turn {turn}: {error}")
                         continue
 
             return game_info
 
-        except (ValueError, IndexError, TypeError) as error:
+        except (ValueError, IndexError) as error:
             print(f"Error processing game data: {error}")
             return []
 
