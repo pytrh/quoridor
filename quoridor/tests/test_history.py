@@ -11,26 +11,26 @@ def test_read_history_from_file():
     expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "e4-e5", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
-    
+
     assert expected == history
 
     history = ReadWriteHistory.read_history(path_to_history_dir /"test_history2.txt")
     expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6h", "a9-a8", "e4-e5", "a8-a7"]]
-    
+
     assert expected == history
 
     history = ReadWriteHistory.read_history(path_to_history_dir / "test_history_skip.txt")
     expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "skip", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
-    
+
     assert expected == history
 
     history = ReadWriteHistory.read_history(path_to_history_dir / "test_history_two_player.txt")
     expected = [["e1-e2", "a10-a9"],
               ["a6v", "a9-a8"]]
-    
+
     assert expected == history
 
 def test_write_history_into_file():
@@ -38,18 +38,18 @@ def test_write_history_into_file():
     expectedTurns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
               ["a6v", "a9-a8", "e4-e5", "a8-a7"],
               ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
-    ReadWriteHistory.write_history(filename, expectedTurns)
+    ReadWriteHistory.write_history(filename, expected_turns)
 
     history = ReadWriteHistory.read_history(filename)
-    assert expectedTurns == history
+    assert expected_turns == history
 
-    expectedTurns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
+    expected_turns = [["e1-e2", "a10-a9", "e2-e3", "a9v"],
                  ["a6v", "a9-a8", "skip", "a8-a7"],
                  ["e3-e4", "a7-a6", "e5-e6", "a6-a5"]]
-    ReadWriteHistory.write_history(filename, expectedTurns)
+    ReadWriteHistory.write_history(filename, expected_turns)
 
     history = ReadWriteHistory.read_history(filename)
-    assert expectedTurns == history
+    assert expected_turns == history
 
     try:
         os.remove(filename)
@@ -73,7 +73,8 @@ def test_read_value_error(capsys):
     mock_data = "random data"
 
     with patch("builtins.open", mock_open(read_data=mock_data)):
-        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file", side_effect=ValueError("Invalid file format")):
+        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file",
+                    side_effect=ValueError("Invalid file format")):
             ReadWriteHistory.read_history("fake_file.txt")
 
     captured = capsys.readouterr()
@@ -83,7 +84,8 @@ def test_read_io_error(capsys):
     mock_data = "random data"
 
     with patch("builtins.open", mock_open(read_data=mock_data)):
-        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file", side_effect=IOError("IO Error")):
+        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file",
+                   side_effect=IOError("IO Error")):
             ReadWriteHistory.read_history("fake_file.txt")
 
     captured = capsys.readouterr()
@@ -93,8 +95,8 @@ def test_write_io_error(capsys):
     mock_data = "random data"
 
     with patch("builtins.open", mock_open(read_data=mock_data)) as mock_file:
-            mock_file.return_value.write.side_effect = IOError("IO Error")
-            ReadWriteHistory.write_history("fake_file.txt", [])
+        mock_file.return_value.write.side_effect = IOError("IO Error")
+        ReadWriteHistory.write_history("fake_file.txt", [])
 
     captured = capsys.readouterr()
     assert "Error: Could not write to file 'fake_file.txt'" in captured.out
@@ -126,4 +128,4 @@ def test_get_game_info_valueerror(capsys):
 
     captured = capsys.readouterr()
     assert "Error processing game data" in captured.out
-    assert game_info == []
+    assert not game_info
