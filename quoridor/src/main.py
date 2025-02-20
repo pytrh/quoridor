@@ -9,7 +9,8 @@ import logging
 import sys
 
 from src.gamestate import GameState
-from src.config import *
+from src.config import MIN_GRID_SIZE, MAX_GRID_SIZE
+from src.config import DEFAULT_GRID_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_BLITZ_TIME, DEFAULT_NUM_WALLS
 
 def setup_logging(verbose, debug):
     """
@@ -57,7 +58,7 @@ def main():
         # game = GameState.load_game_from_file(args.file)
 
     if args.walls:
-       num_walls = args.walls 
+        num_walls = args.walls
     # game = GameState.start_Game(size, num_players, blitz_time, num_walls)
 
     if args.size:
@@ -77,7 +78,6 @@ def main():
     num_players = DEFAULT_NUM_PLAYERS
     blitz_time = DEFAULT_BLITZ_TIME
     num_walls = DEFAULT_NUM_WALLS
-    
     sys.exit(0)
 
 def init():
@@ -87,5 +87,4 @@ def init():
     if __name__ == "__main__":
         sys.exit(main())
 
-init()  
-
+init()
