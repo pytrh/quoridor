@@ -1,3 +1,6 @@
+"""
+Configuration data.
+"""
 MIN_GRID_SIZE = 3
 MAX_GRID_SIZE = 15
 
