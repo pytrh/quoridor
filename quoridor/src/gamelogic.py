@@ -4,7 +4,6 @@ GameLogic module.
 import copy
 from src.gamestate import GameState
 from src.graph import Graph
-from src.player import Player
 from src.exceptions import InvalidMoveError
 
 class GameLogic:
@@ -18,7 +17,7 @@ class GameLogic:
         board = copy.deepcopy(self.state.board)
         p=[(),(),(),()]
         for i in range(self.state.num_players):
-            p[i] = self.state.players[i].get_node()
+            p[i] = self.state.players[i].position
         directions = [(1,0), (-1,0), (0,1), (0,-1)]
 
         
@@ -44,13 +43,29 @@ class GameLogic:
         
 
     def make_move(self, start: tuple[int, int], end: tuple[int, int]):
-        if(not (self.state.players[self.state.current_player][0] == start[0] and self.state.players[self.state.current_player][1] == start[1])):
+        if(not (self.state.players[self.state.current_player].position[0] == start[0] and self.state.players[self.state.current_player].position[1] == start[1])):
             raise InvalidMoveError
         else:
             board_temp = self.temp_board()
             if(not board_temp.edge_exists(start, end)):
                 raise InvalidMoveError
-            self.state.players[self.state.current_player][0]=end[0]
-            self.state.players[self.state.current_player][1]=end[1]
+            self.state.players[self.state.current_player].position=end
             self.switch_player()
-            return True
+    
+    def place_wall(self, x, y, direction):
+        if direction == 'h' and self.state.players[self.state.current_player].fences_remaining > 0:  # Mur horizontal
+            if self.state.board.edge_exists((x, y), (x+1, y)) and self.state.board.edge_exists((x, y+1), (x+1, y+1)):
+                self.state.board.remove_edge((x, y), (x+1, y))
+                self.state.board.remove_edge((x, y+1), (x+1, y+1))
+           # self.state.update_wall(self)
+            else:
+                raise InvalidMoveError
+            
+        elif direction == 'v' and self.state.players[self.state.current_player].fences_remaining > 0:  # Mur vertical
+            if self.state.board.edge_exists((x, y), (x, y+1)) and self.state.board.edge_exists((x+1, y), (x+1, y+1)):
+                self.state.board.remove_edge((x, y), (x, y+1))
+                self.state.board.remove_edge((x+1, y), (x+1, y+1))
+           # self.update_wall(self)
+            else:
+                raise InvalidMoveError
+
