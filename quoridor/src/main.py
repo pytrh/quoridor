@@ -12,6 +12,8 @@ from src.gamestate import GameState
 from src.config import MIN_GRID_SIZE, MAX_GRID_SIZE
 from src.config import MIN_NUM_PLAYERS, MAX_NUM_PLAYERS, NOT_RECOMMENDED_NUM_PLAYERS
 from src.config import DEFAULT_GRID_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_BLITZ_TIME, DEFAULT_NUM_WALLS
+from src.gamelogic import GameLogic
+from src.terminalview import TerminalView
 
 def setup_logging(verbose, debug):
     """
@@ -71,7 +73,6 @@ def main():
 
     if args.walls:
         num_walls = args.walls
-    # game = GameState.start_Game(size, num_players, blitz_time, num_walls)
 
     if args.size:
         error = False
@@ -94,9 +95,10 @@ def main():
             sys.exit(1)
         if players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
-
-
-
+    
+    game = GameState(size, num_players, blitz_mode, num_walls)
+    terminal = TerminalView(game)
+    terminal.start_game()
     sys.exit(0)
 
 def init():

@@ -9,23 +9,28 @@ class GameState:
     GameState class encapsulating the current player,
     the board, the players and the history of moves.
     """
-    def __init__(self, size: int = 9, current_player: int = None, players: list[Player] = [[]],
-                 blitz_mode: bool = False, history: list[list[str]] = [[]]):
+    def __init__(self, size: int = 9, num_players: int = 2,
+                 blitz_mode: bool = False, num_walls: int = 10, history: list[list[str]] = [[]]):
         """
         Initialize a new game state.
         :param size: The size of the board, default is 9.
         :type size: int
-        :param current_player: The current player, default is None.
-        :type current_player: int
-        :param players: The players in the game, default is an empty list.
-        :type players: list[Player]
+        :param num_players: The number of players, default is 2.
+        :type num_players: int
         :param blitz_mode: Whether the game is in blitz mode, default is False.
         :type blitz_mode: bool
         :param history: The history of moves, default is an empty list.
         :type history: list[list[str]]
         """
         self.board = self.create_board(size)
-        self.current_player = current_player
+        self.size = size
+        self.current_player = 0
+        self.num_players = num_players
+        players = [Player(0,(4,0),num_walls),Player(1,(4,8),num_walls)]
+        if(num_players>2):
+            players.append(Player(2,(0,4),num_walls))
+        if(num_players>3):
+            players.append(Player(3,(4,8),num_walls))
         self.players = players
         self.blitz_mode = blitz_mode
         self.history = history
