@@ -6,7 +6,7 @@ from src.gamelogic import GameLogic
 from src.gamestate import GameState
 
 def test_create_game():
-    """Test that the board is created correctly"""
+    """Test that the game is created correctly"""
     game = GameState()
     for i in range(game.size):
         for j in range(game.size):
