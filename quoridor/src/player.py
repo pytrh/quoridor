@@ -29,7 +29,14 @@ class Player:
         self.time_remaining = time_remaining
         self.winning_position = self.__list_winning_position(size)
 
-    def __list_winning_position(self, size):
+    def __list_winning_position(self, size: int) -> list[(int, int)]:
+        """
+        Create a list of winning position for the player using the size of the board
+        :param size: size of the board
+        :type size: int
+        :return: list of winning position
+        :rtype: list(int, int)]
+        """
         list = []
         posX_win = 0
         posY_win = 0

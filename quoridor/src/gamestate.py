@@ -16,7 +16,7 @@ class GameState:
     def __init__(
         self,
         size: int = 9,
-        num_players: int = 4,
+        num_players: int = 2,
         blitz_mode: bool = False,
         num_walls: int = 10,
         history: list[list[str]] = [[]],
@@ -74,6 +74,18 @@ class GameState:
         return board
 
     def wall_exist(self, x: int, y: int, direction: Direction) -> bool:
+        """
+        Check if a wall exist in this position (that both path that should be
+        blocked by that wall does not exist)
+        :param x: Horizontal position.
+        :type x: int
+        :param y: Vertical position.
+        :type y: int
+        :param direction: The orientation of the wall
+        :type direction: Direction
+        :return: Whether or not the wall exist
+        :rtype: bool
+        """
         if direction == Direction.H:
             edges = [((x, y), (x + 1, y)), ((x, y + 1), (x + 1, y + 1))]
         elif direction == Direction.V:
@@ -84,6 +96,11 @@ class GameState:
         )
 
     def game_over(self) -> bool:
+        """
+        Check if the game is in a winning position for a player
+        :return: Is the game finished?
+        :rtype: bool
+        """
         match self.current_player:
             case 0:
                 if self.players[self.current_player].position[1] == self.size - 1:

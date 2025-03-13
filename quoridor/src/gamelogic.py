@@ -94,8 +94,7 @@ class GameLogic:
 
     def place_wall(self, x: int, y: int, direction: Direction):
         """
-        Try to make the current player do the movement between two position.
-        Raise an exception if the move is impossible.
+        Try to place a wall in the given position and direction
         :param x: The row of the wall placement
         :type x: int
         :param y: The column of the wall placement
@@ -105,14 +104,22 @@ class GameLogic:
         :raises InvalidMoveError: if the parameters lead to an impossible
         wall placement
         """
+
+        # Check that the current player still has wall remaining
         if self.state.players[self.state.current_player].fences_remaining == 0:
             raise InvalidMoveError
+
+        # Check that the wall is placed within the board
         if x >= self.state.size - 1 or y >= self.state.size - 1:
             raise InvalidMoveError
+
         # Check if we are trying to put a wall inside of another wall
         if self.state.wall_exist(x, y, direction.inverse()):
             raise InvalidMoveError
+
+        # Create a temporary board
         temp_board = self.state.board
+
         if (
             direction == Direction.H
             and self.state.players[self.state.current_player].fences_remaining > 0
@@ -153,5 +160,6 @@ class GameLogic:
             if path == False:
                 raise PathNotFoundError
 
+        # If the temporary board is valid, update the original
         self.state.board = temp_board
         self.update_wall()
