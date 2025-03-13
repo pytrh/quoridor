@@ -118,7 +118,7 @@ class GameLogic:
             raise InvalidMoveError
 
         # Create a temporary board
-        temp_board = self.state.board
+        temp_board = copy.deepcopy(self.state.board)
 
         if (
             direction == Direction.H
