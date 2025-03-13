@@ -1,16 +1,26 @@
 """
 GameState module.
 """
+
 from src.graph import Graph
 from src.player import Player
+from src.direction import Direction
+
 
 class GameState:
     """
     GameState class encapsulating the current player,
     the board, the players and the history of moves.
     """
-    def __init__(self, size: int = 9, num_players: int = 2,
-                 blitz_mode: bool = False, num_walls: int = 10, history: list[list[str]] = [[]]):
+
+    def __init__(
+        self,
+        size: int = 9,
+        num_players: int = 2,
+        blitz_mode: bool = False,
+        num_walls: int = 10,
+        history: list[list[str]] = [[]],
+    ):
         """
         Initialize a new game state.
         :param size: The size of the board, default is 9.
@@ -26,11 +36,11 @@ class GameState:
         self.size = size
         self.current_player = 0
         self.num_players = num_players
-        players = [Player(0,(4,0),num_walls),Player(1,(4,8),num_walls)]
-        if(num_players>2):
-            players.append(Player(2,(0,4),num_walls))
-        if(num_players>3):
-            players.append(Player(3,(4,8),num_walls))
+        players = [Player(0, (4, 0), num_walls), Player(1, (4, 8), num_walls)]
+        if num_players > 2:
+            players.append(Player(2, (0, 4), num_walls))
+        if num_players > 3:
+            players.append(Player(3, (4, 8), num_walls))
         self.players = players
         self.blitz_mode = blitz_mode
         self.history = history
@@ -55,3 +65,13 @@ class GameState:
                 if j < size - 1:
                     board.add_edge((i, j), (i, j + 1))
         return board
+
+    def wall_exist(self, x: int, y: int, direction: Direction) -> bool:
+        if direction == Direction.H:
+            edges = [((x, y), (x + 1, y)), ((x, y + 1), (x + 1, y + 1))]
+        elif direction == Direction.V:
+            edges = [((x, y), (x, y + 1)), ((x + 1, y), (x + 1, y + 1))]
+        return not (
+            self.board.edge_exists(edges[0][0], edges[0][1])
+            or self.board.edge_exists(edges[1][0], edges[1][1])
+        )

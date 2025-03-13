@@ -110,6 +110,9 @@ class GameLogic:
             raise InvalidMoveError
         if x >= self.state.size - 1 or y >= self.state.size - 1:
             raise InvalidMoveError
+        # Check if we are trying to put a wall inside of another wall
+        if self.state.wall_exist(x, y, direction.inverse()):
+            raise InvalidMoveError
         if (
             direction == Direction.H
             and self.state.players[self.state.current_player].fences_remaining > 0
