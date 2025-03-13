@@ -73,7 +73,7 @@ def test_read_value_error(capsys):
     mock_data = "random data"
 
     with patch("builtins.open", mock_open(read_data=mock_data)):
-        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file",
+        with patch("src.history.read_write_history.ReadWriteHistory._get_game_info_from_file",
                     side_effect=ValueError("Invalid file format")):
             ReadWriteHistory.read_history("fake_file.txt")
 
@@ -84,7 +84,7 @@ def test_read_io_error(capsys):
     mock_data = "random data"
 
     with patch("builtins.open", mock_open(read_data=mock_data)):
-        with patch("src.history.read_write_history.ReadWriteHistory.get_game_info_from_file",
+        with patch("src.history.read_write_history.ReadWriteHistory._get_game_info_from_file",
                    side_effect=IOError("IO Error")):
             ReadWriteHistory.read_history("fake_file.txt")
 
