@@ -7,9 +7,9 @@ class Player:
         self,
         id: int,
         position: tuple[int, int],
+        size: int,
         fences_remaining: int = 10,
         time_remaining: int = None,
-        size: int = 9,
     ) -> None:
         """
         Initialize a new player.

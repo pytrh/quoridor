@@ -41,13 +41,13 @@ class GameState:
         middle_board = size // 2
         print(middle_board)
         players = [
-            Player(0, (middle_board, 0), num_walls, size),
-            Player(1, (middle_board, size - 1), num_walls, size),
+            Player(0, (middle_board, 0), size, num_walls),
+            Player(1, (middle_board, size - 1), size, num_walls),
         ]
         if num_players > 2:
-            players.append(Player(2, (0, middle_board), num_walls, size))
+            players.append(Player(2, (0, middle_board), size, num_walls))
         if num_players > 3:
-            players.append(Player(3, (size - 1, middle_board), num_walls, size))
+            players.append(Player(3, (size - 1, middle_board), size, num_walls))
         self.players = players
         self.blitz_mode = blitz_mode
         self.history = history
