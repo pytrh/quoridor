@@ -1,13 +1,16 @@
 """
 Graph module.
 """
+
 import heapq
 from src.exceptions import NodeNotFoundError, EdgeNotFoundError, PathNotFoundError
+
 
 class Graph:
     """
     Graph class to represent the game board.
     """
+
     def __init__(self) -> None:
         """
         Initialize a new graph, a dictionary of nodes and their adjacent nodes.
@@ -39,7 +42,7 @@ class Graph:
         if node2 not in self._graph:
             raise NodeNotFoundError(f"Node {node2} not found in graph")
         self._graph[node1].add(node2)
-        self._graph[node2].add(node1) 
+        self._graph[node2].add(node1)
 
     def edge_exists(self, node1: tuple[int, int], node2: tuple[int, int]) -> bool:
         """
@@ -56,7 +59,7 @@ class Graph:
         if node2 not in self._graph:
             raise NodeNotFoundError(f"Node {node2} not found in graph")
         return node2 in self._graph[node1]
-    
+
     def node_exists(self, node: tuple[int, int]) -> bool:
         """
         Check if a node exists in the graph.
@@ -67,7 +70,7 @@ class Graph:
         :rtype: bool
         """
         return node in self._graph
-    
+
     def remove_node(self, node: tuple[int, int]) -> None:
         """
         Remove a node from the graph.
@@ -117,8 +120,10 @@ class Graph:
         if node2 not in self._graph:
             raise NodeNotFoundError(f"Node {node2} not found in graph")
         return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
-    
-    def a_star(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]]:
+
+    def a_star(
+        self, start: tuple[int, int], goal: tuple[int, int]
+    ) -> list[tuple[int, int]]:
         """
         A* Search to find the shortest path between two nodes.
 
@@ -127,6 +132,7 @@ class Graph:
         :param goal: The goal node.
         :type goal: tuple[int, int]
         :raises NodeNotFoundError: If either node is not found in the graph.
+        :raises PathNotFoundError: No path exist between the two nodes
         """
         if start not in self._graph:
             raise NodeNotFoundError(f"Node {start} not found in graph")
@@ -154,11 +160,16 @@ class Graph:
                     if adjacent not in visited:
                         previous[adjacent] = node
                         costs[adjacent] = new_cost
-                        heapq.heappush(priority_queue, (score + self.manhattan_distance(adjacent, goal), adjacent))
+                        heapq.heappush(
+                            priority_queue,
+                            (score + self.manhattan_distance(adjacent, goal), adjacent),
+                        )
                 visited.add(node)
         raise PathNotFoundError(f"No path found between {start} and {goal}")
 
-    def breadth_first_search(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]]:
+    def breadth_first_search(
+        self, start: tuple[int, int], goal: tuple[int, int]
+    ) -> list[tuple[int, int]]:
         """
         Breadth-First Search to find the shortest path between two nodes.
 
@@ -187,8 +198,10 @@ class Graph:
                     queue.append(new_path)
                 visited.add(node)
         raise PathNotFoundError(f"No path found between {start} and {goal}")
-    
-    def depth_first_search(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]]:
+
+    def depth_first_search(
+        self, start: tuple[int, int], goal: tuple[int, int]
+    ) -> list[tuple[int, int]]:
         """
         Depth-First Search to find a pseudo-random path between two nodes.
 
@@ -217,4 +230,3 @@ class Graph:
                     stack.append(new_path)
                 visited.add(node)
         raise PathNotFoundError(f"No path found between {start} and {goal}")
-

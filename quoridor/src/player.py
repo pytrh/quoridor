@@ -2,8 +2,15 @@ class Player:
     """
     Player class to represent a player in the game.
     """
-    def __init__(self, id: int, position: tuple[int, int], fences_remaining: int = 10,
-                  time_remaining: int = None) -> None:
+
+    def __init__(
+        self,
+        id: int,
+        position: tuple[int, int],
+        fences_remaining: int = 10,
+        time_remaining: int = None,
+        size: int = 9,
+    ) -> None:
         """
         Initialize a new player.
 
@@ -20,3 +27,23 @@ class Player:
         self.position = position
         self.fences_remaining = fences_remaining
         self.time_remaining = time_remaining
+        self.winning_position = self.__list_winning_position(size)
+
+    def __list_winning_position(self, size):
+        list = []
+        posX_win = 0
+        posY_win = 0
+        if self.id == 1:
+            posX_win = size - 1
+        if self.id in (0, 1):
+            for i in range(size):
+                list.append((posX_win, i))
+            return list
+
+        if self.id == 3:
+            posY_win = size - 1
+        if self.id in (2, 3):
+            for i in range(size):
+                list.append((i, posY_win))
+            return list
+        return list

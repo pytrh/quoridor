@@ -16,7 +16,7 @@ class GameState:
     def __init__(
         self,
         size: int = 9,
-        num_players: int = 2,
+        num_players: int = 4,
         blitz_mode: bool = False,
         num_walls: int = 10,
         history: list[list[str]] = [[]],
@@ -36,11 +36,18 @@ class GameState:
         self.size = size
         self.current_player = 0
         self.num_players = num_players
-        players = [Player(0, (4, 0), num_walls), Player(1, (4, 8), num_walls)]
+
+        # Players placement
+        middle_board = size // 2
+        print(middle_board)
+        players = [
+            Player(0, (middle_board, 0), num_walls, size),
+            Player(1, (middle_board, size - 1), num_walls, size),
+        ]
         if num_players > 2:
-            players.append(Player(2, (0, 4), num_walls))
+            players.append(Player(2, (0, middle_board), num_walls, size))
         if num_players > 3:
-            players.append(Player(3, (4, 8), num_walls))
+            players.append(Player(3, (size - 1, middle_board), num_walls, size))
         self.players = players
         self.blitz_mode = blitz_mode
         self.history = history
@@ -75,3 +82,19 @@ class GameState:
             self.board.edge_exists(edges[0][0], edges[0][1])
             or self.board.edge_exists(edges[1][0], edges[1][1])
         )
+
+    def game_over(self) -> bool:
+        match self.current_player:
+            case 0:
+                if self.players[self.current_player].position[1] == self.size - 1:
+                    return True
+            case 1:
+                if self.players[self.current_player].position[1] == 0:
+                    return True
+            case 2:
+                if self.players[self.current_player].position[0] == self.size - 1:
+                    return True
+            case 3:
+                if self.players[self.current_player].position[0] == 0:
+                    return True
+        return False
