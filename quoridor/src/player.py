@@ -37,20 +37,20 @@ class Player:
         :return: list of winning position
         :rtype: list(int, int)]
         """
-        list = []
+        winning_position = []
         posX_win = 0
         posY_win = 0
         if self.id == 1:
             posX_win = size - 1
         if self.id in (0, 1):
             for i in range(size):
-                list.append((posX_win, i))
-            return list
+                winning_position.append((posX_win, i))
+            return winning_position
 
         if self.id == 3:
             posY_win = size - 1
         if self.id in (2, 3):
             for i in range(size):
-                list.append((i, posY_win))
-            return list
-        return list
+                winning_position.append((i, posY_win))
+            return winning_position
+        return winning_position
