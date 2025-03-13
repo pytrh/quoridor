@@ -1,17 +1,20 @@
 """
 GameLogic module.
 """
+
 import copy
 from src.gamestate import GameState
 from src.graph import Graph
 from src.exceptions import InvalidMoveError
 from src.direction import Direction
 
+
 class GameLogic:
     """
     GameLogic manage the functionnality of the application:
     the treatment that can be applied to the board
     """
+
     def __init__(self, gamestate: GameState):
         self.state = gamestate
 
@@ -21,13 +24,16 @@ class GameLogic:
         If current player is the last one, the next one will the first
         """
         self.state.current_player = (
-            self.state.current_player + 1) % self.state.num_players
+            self.state.current_player + 1
+        ) % self.state.num_players
 
     def update_wall(self):
         """
         Remove one fence to the fences counter of the current player
         """
-        self.state.players[self.state.current_player].fences_remaining = self.state.players[self.state.current_player].fences_remaining-1
+        self.state.players[self.state.current_player].fences_remaining = (
+            self.state.players[self.state.current_player].fences_remaining - 1
+        )
 
     def temp_board(self) -> Graph:
         """
@@ -41,34 +47,32 @@ class GameLogic:
         :rtype: Graph
         """
         board = copy.deepcopy(self.state.board)
-        p=[(),(),(),()]
+        p = [(), (), (), ()]
         for i in range(self.state.num_players):
             p[i] = self.state.players[i].position
-        directions = [(1,0), (-1,0), (0,1), (0,-1)]
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-        
         x, y = p[self.state.current_player]
         for dx, dy in directions:
-            adj = (x+dx, y+dy)
-            jump = (x+2*dx, y+2*dy)
-            
-            if adj in p and board.edge_exists((x,y),adj):
-                board.remove_edge((x,y),adj)
-                
-                if(board.node_exists(jump) and board.edge_exists(adj,jump)):
-                    #Straight jump
-                    board.add_edge((x,y), jump)
+            adj = (x + dx, y + dy)
+            jump = (x + 2 * dx, y + 2 * dy)
+
+            if adj in p and board.edge_exists((x, y), adj):
+                board.remove_edge((x, y), adj)
+
+                if board.node_exists(jump) and board.edge_exists(adj, jump):
+                    # Straight jump
+                    board.add_edge((x, y), jump)
                 else:
-                    #Diagonal jump
-                    side_directions = [(dy,dx), (-dy,-dx)]
-                    
+                    # Diagonal jump
+                    side_directions = [(dy, dx), (-dy, -dx)]
+
                     for pdx, pdy in side_directions:
-                        side_jump = (x+dx+pdx, y+dy+pdy)
+                        side_jump = (x + dx + pdx, y + dy + pdy)
                         if board.edge_exists(side_jump, adj):
-                            board.add_edge((x,y), side_jump)
+                            board.add_edge((x, y), side_jump)
 
         return board
-        
 
     def make_move(self, start: tuple[int, int], end: tuple[int, int]):
         """
@@ -80,15 +84,15 @@ class GameLogic:
         :type end: tuple[int, int]
         :raises InvalidMoveError: if the parameters lead to an invalid move
         """
-        if(not (self.state.players[self.state.current_player].position == start)):
+        if not (self.state.players[self.state.current_player].position == start):
             raise InvalidMoveError
         else:
             board_temp = self.temp_board()
-            if(not board_temp.edge_exists(start, end)):
+            if not board_temp.edge_exists(start, end):
                 raise InvalidMoveError
-            self.state.players[self.state.current_player].position=end
+            self.state.players[self.state.current_player].position = end
             self.switch_player()
-    
+
     def place_wall(self, x: int, y: int, direction: Direction):
         """
         Try to make the current player do the movement between two position.
@@ -102,25 +106,32 @@ class GameLogic:
         :raises InvalidMoveError: if the parameters lead to an impossible
         wall placement
         """
-        if(self.state.players[self.state.current_player].fences_remaining == 0):
+        if self.state.players[self.state.current_player].fences_remaining == 0:
             raise InvalidMoveError
-        if(x>= self.state.size or y>= self.state.size or 
-           (direction == Direction.H and x+1>= self.state.size) or
-           (direction == Direction.V and y+1>= self.state.size)):
+        if x >= self.state.size - 1 or y >= self.state.size - 1:
             raise InvalidMoveError
-        if direction == Direction.H and self.state.players[self.state.current_player].fences_remaining > 0:  # Horizontal wall
-            if self.state.board.edge_exists((x, y), (x+1, y)) and self.state.board.edge_exists((x, y+1), (x+1, y+1)):
-                self.state.board.remove_edge((x, y), (x+1, y))
-                self.state.board.remove_edge((x, y+1), (x+1, y+1))
+        if (
+            direction == Direction.H
+            and self.state.players[self.state.current_player].fences_remaining > 0
+        ):  # Horizontal wall
+            if self.state.board.edge_exists(
+                (x, y), (x + 1, y)
+            ) and self.state.board.edge_exists((x, y + 1), (x + 1, y + 1)):
+                self.state.board.remove_edge((x, y), (x + 1, y))
+                self.state.board.remove_edge((x, y + 1), (x + 1, y + 1))
             else:
                 raise InvalidMoveError
-            
-        elif direction == Direction.V and self.state.players[self.state.current_player].fences_remaining > 0:  # Vertical wall
-            if self.state.board.edge_exists((x, y), (x, y+1)) and self.state.board.edge_exists((x+1, y), (x+1, y+1)):
-                self.state.board.remove_edge((x, y), (x, y+1))
-                self.state.board.remove_edge((x+1, y), (x+1, y+1))
+
+        elif (
+            direction == Direction.V
+            and self.state.players[self.state.current_player].fences_remaining > 0
+        ):  # Vertical wall
+            if self.state.board.edge_exists(
+                (x, y), (x, y + 1)
+            ) and self.state.board.edge_exists((x + 1, y), (x + 1, y + 1)):
+                self.state.board.remove_edge((x, y), (x, y + 1))
+                self.state.board.remove_edge((x + 1, y), (x + 1, y + 1))
             else:
                 raise InvalidMoveError
         self.update_wall()
         self.switch_player()
-
