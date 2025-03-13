@@ -4,7 +4,7 @@ GameView module.
 
 from src.gamestate import GameState
 from src.gamelogic import GameLogic
-from src.exceptions import InvalidMoveError
+from src.exceptions import InvalidMoveError, PathNotFoundError
 from src.direction import Direction
 
 
@@ -150,5 +150,13 @@ class TerminalView:
                     end = self.translate_move(move[1])
                     self.logic.make_move(start, end)
                 self.print_board()
-            except InvalidMoveError:
+                if self.state.game_over():
+                    print(
+                        "Player "
+                        + str(self.state.current_player + 1)
+                        + " has won the game!"
+                    )
+                    exit()
+                self.logic.switch_player()
+            except (InvalidMoveError, PathNotFoundError):
                 print("Invalid move!")
