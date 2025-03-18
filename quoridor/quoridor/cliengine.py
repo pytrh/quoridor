@@ -4,7 +4,7 @@ CLI Game Engine.
 
 from quoridor.gameengine import GameEngine
 from quoridor.gamestate import GameState
-from quoridor.gamelogic import GameStateManager
+from quoridor.gamestatemanager import GameStateManager
 from quoridor.exceptions import InvalidMoveError, PathNotFoundError
 from quoridor.direction import Direction
 

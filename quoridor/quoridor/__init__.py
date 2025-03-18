@@ -14,19 +14,25 @@ from quoridor.gamestate import GameState
 from quoridor.gamestatemanager import GameStateManager
 from quoridor.player import Player
 from quoridor.graph import Graph
+from quoridor.gameengine import GameEngine
+from quoridor.cliengine import CLIEngine
 from quoridor.exceptions import (
-    InvalidMoveError,
-    GameOverError,
-    InvalidWallPlacementError
+    NodeNotFoundError,
+    EdgeNotFoundError,
+    PathNotFoundError,
+    InvalidMoveError
 )
 
 # Define what should be available when someone does 'from src import *'
 __all__ = [
     'GameState',
     'GameStateManager',
+    'GameEngine',
+    'CLIEngine',
     'Player',
     'Graph',
+    'NodeNotFoundError',
+    'EdgeNotFoundError',
+    'PathNotFoundError',
     'InvalidMoveError',
-    'GameOverError',
-    'InvalidWallPlacementError',
 ]
