@@ -172,12 +172,14 @@ class GameStateManager:
         """
         Save the current game state to a file.
         """
+        # TODO: Implement save game
         pass
 
     def load_game(self):
         """
         Load the game state from a file.
         """
+        # TODO: Implement load game
         pass
 
     def undo(self):
@@ -185,6 +187,7 @@ class GameStateManager:
         @Bastien: Do what you want with history formatting but it has to be good.
         Undo the last move.
         """
+        # TODO: Implement undo
         pass
 
     def redo(self):
@@ -192,6 +195,7 @@ class GameStateManager:
         @Bastien: Do what you want with history formatting but it has to be good.
         Redo the last undone move.
         """
+        # TODO: Implement redo
         pass
 
     def start_game(self):
