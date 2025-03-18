@@ -92,6 +92,7 @@ def main():
         logging.debug("File found in arguments")
         # game = GameState.load_game_from_file(args.file)
 
+    # TODO: Read the defaults from .quoridorrc
     # DEFAULT VALUES
     MIN_GRID_SIZE = 3
     MAX_GRID_SIZE = 15
