@@ -8,6 +8,8 @@ from quoridor.graph import Graph
 from quoridor.exceptions import InvalidMoveError, PathNotFoundError
 from quoridor.direction import Direction
 from quoridor.cliengine import CLIEngine
+from quoridor.command import CommandType, Command
+from quoridor.exceptions import InvalidCommandError
 
 class GameStateManager:
     """
@@ -166,39 +168,70 @@ class GameStateManager:
         self.state.board = temp_board
         self.update_wall()
 
+    def save_game(self):
+        """
+        Save the current game state to a file.
+        """
+        pass
+
+    def load_game(self):
+        """
+        Load the game state from a file.
+        """
+        pass
+
+    def undo(self):
+        """
+        @Bastien: Do what you want with history formatting but it has to be good.
+        Undo the last move.
+        """
+        pass
+
+    def redo(self):
+        """
+        @Bastien: Do what you want with history formatting but it has to be good.
+        Redo the last undone move.
+        """
+        pass
+
     def start_game(self):
-        self.print_board()
+        self.engine.render_board()
         while True:
             try:
-                print(
-                    "Remaining fences: "
-                    + str(
-                        self.state.players[self.state.current_player].fences_remaining
-                    )
-                )
-                move = input(
-                    "Player " + str(self.state.current_player + 1) + " will play?"
-                )
-                if len(move) == 3:
-                    x, y, direction = CLIEngine.translate_wall(move)
-                    self.place_wall(x, y, direction)
-                else:
-                    move = move.split("-")
-                    if len(move) != 2:
-                        raise InvalidMoveError
-                    if CLIEngine.invalid_move(move[0], move[1]):
-                        raise InvalidMoveError
-                    start = self.translate_move(move[0])
-                    end = self.translate_move(move[1])
-                    self.make_move(start, end)
-                self.print_board()
+                self.engine.print_remaining_fences()
+                command = self.engine.get_command_from_human_player()
+                if command.type == CommandType.MOVE_PAWN:
+                    self.make_move(command.from_position, command.to_position)
+                elif command.type == CommandType.PLACE_WALL:
+                    self.place_wall(command.wall_position[0], command.wall_position[1], command.wall_orientation)
+                elif command.type == CommandType.UNDO:
+                    self.undo()
+                elif command.type == CommandType.REDO:
+                    self.redo()
+                elif command.type == CommandType.QUIT:
+                    self.save_game()
+                    exit()
+                elif command.type == CommandType.RESTART:
+                    self.restart()
+
+                # Legacy code, to be removed after checking pawn move format
+                # if len(move) == 3:
+                #     x, y, direction = CLIEngine.translate_wall(move)
+                #     self.place_wall(x, y, direction)
+                # else:
+                #     move = move.split("-")
+                #     if len(move) != 2:
+                #         raise InvalidMoveError
+                #     if CLIEngine.invalid_move(move[0], move[1]):
+                #         raise InvalidMoveError
+                #     start = self.translate_move(move[0])
+                #     end = self.translate_move(move[1])
+                #     self.make_move(start, end)
+
+                self.engine.render_board()
                 if self.state.game_over():
-                    print(
-                        "Player "
-                        + str(self.state.current_player + 1)
-                        + " has won the game!"
-                    )
+                    self.engine.render_game_over()
                     exit()
                 self.switch_player()
-            except (InvalidMoveError, PathNotFoundError):
+            except (InvalidMoveError, PathNotFoundError, InvalidCommandError):
                 print("Invalid move!")

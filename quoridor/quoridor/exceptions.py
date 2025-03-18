@@ -25,3 +25,7 @@ class PathNotFoundError(Exception):
 class InvalidMoveError(Exception):
     """Exception raised when an invalid move is attempted in the game."""
     pass 
+
+class InvalidCommandError(Exception):
+    """Exception raised when an invalid command is attempted in the game."""
+    pass

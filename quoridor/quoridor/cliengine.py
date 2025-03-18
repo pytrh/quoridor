@@ -5,7 +5,8 @@ CLI Game Engine.
 from quoridor.gameengine import GameEngine
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError
+from quoridor.exceptions import InvalidMoveError, InvalidCommandError
+from quoridor.command import Command, CommandType
 
 
 class CLIEngine(GameEngine):
@@ -84,7 +85,7 @@ class CLIEngine(GameEngine):
             return False
         return True
 
-    def print_board(self):
+    def render_board(self):
         """
         Print the board on the terminal
         """
@@ -127,3 +128,53 @@ class CLIEngine(GameEngine):
                     print(horizontal_space, end="")
                 print(interstice, end="")
             print("")
+
+    def print_remaining_fences(self):
+        """
+        Print the remaining fences for each player.
+        """
+        print("Remaining fences: " + str(self.state.players[self.state.current_player].fences_remaining))
+
+    def get_input_from_human_player(self) -> str:
+        """
+        Get an input from the human player.
+        """
+        return input("Player " + str(self.state.current_player + 1) + " will play?")
+
+    def well_formed_pawn_move(self, input: str) -> bool:
+        """
+        Check if the input is a well-formed pawn move.
+        """
+        return len(input) == 2 and input[0] in self.rows and input[1] in self.columns
+    
+    def well_formed_wall_placement(self, input: str) -> bool:
+        """
+        Check if the input is a well-formed wall placement.
+        """
+        return len(input) == 3 and input[0] in self.rows and input[1] in self.columns and input[2] in ["v", "h"]
+
+    def get_command_from_human_player(self) -> Command:
+        """
+        Get a command from the human player.
+        """
+        input = self.get_input_from_human_player()
+        if input == "undo":
+            return Command.create_simple_command(CommandType.UNDO)
+        elif input == "redo":
+            return Command.create_simple_command(CommandType.REDO)
+        elif input == "quit":
+            return Command.create_simple_command(CommandType.QUIT)
+        elif input == "restart":
+            return Command.create_simple_command(CommandType.RESTART)
+        elif self.well_formed_pawn_move(input):
+            return Command.create_move_command(self.translate_move(input))
+        elif self.well_formed_wall_placement(input):
+            return Command.create_wall_command(self.translate_wall(input))
+        else:
+            raise InvalidCommandError
+
+    def render_game_over(self):
+        """
+        Render the game over screen.
+        """
+        print(f"Player {self.state.current_player + 1} has won the game!")
