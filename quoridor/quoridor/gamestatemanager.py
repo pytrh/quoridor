@@ -17,6 +17,7 @@ class GameStateManager:
 
     def __init__(self, gamestate: GameState, engine: CLIEngine):
         self.state = gamestate
+        self.initial_state = copy.deepcopy(gamestate)
         self.engine = engine
 
     def switch_player(self):

@@ -9,23 +9,23 @@ import logging
 import sys
 
 from quoridor.gamestate import GameState
-from quoridor.gamelogic import GameStateManager
+from quoridor.gamestatemanager import GameStateManager
 from quoridor.cliengine import CLIEngine
 
 
 def setup_logging(verbose, debug):
     """
-    Configure le système de logger en fonction des options --verbose et --debug.
+    Configure the logging system based on the verbose and debug flags.
     """
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"  # Format par défaut
-    date_format = "%Y-%m-%d %H:%M:%S"  #
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"  # Default format
+    date_format = "%Y-%m-%d %H:%M:%S"  # Default date format
 
     if debug:
         logging.basicConfig(level=logging.DEBUG, format=log_format, datefmt=date_format)
-        logging.debug("Mode debug activé : Affichage des logs détaillés (dev)")
+        logging.debug("Debug mode activated: Detailed logs (dev)")
     elif verbose:
         logging.basicConfig(level=logging.INFO, format=log_format, datefmt=date_format)
-        logging.info("Mode verbose activé : Affichage des informations supplémentaires")
+        logging.info("Verbose mode activated: Additional information")
     else:
         logging.basicConfig(
             level=logging.WARNING, format=log_format, datefmt=date_format
@@ -34,8 +34,8 @@ def setup_logging(verbose, debug):
 
 def main():
     """
-    Fonction principal
-    Gestion des arguments avec argparse
+    Main function
+    Handles command line arguments with argparse
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("file", default=None, nargs="?")
@@ -89,10 +89,22 @@ def main():
         sys.exit(0)
 
     if args.file:
-        logging.debug("Fichier en argument trouvé")
+        logging.debug("File found in arguments")
         # game = GameState.load_game_from_file(args.file)
 
-    # DEFAULT
+    # DEFAULT VALUES
+    MIN_GRID_SIZE = 3
+    MAX_GRID_SIZE = 15
+
+    MIN_NUM_PLAYERS = 2
+    MAX_NUM_PLAYERS = 4
+    NOT_RECOMMENDED_NUM_PLAYERS = 3
+
+    DEFAULT_GRID_SIZE = 9
+    DEFAULT_NUM_PLAYERS = 2
+    DEFAULT_BLITZ_TIME = 0
+    DEFAULT_NUM_WALLS = 20
+
     size = DEFAULT_GRID_SIZE
     num_players = DEFAULT_NUM_PLAYERS
     blitz_time = DEFAULT_BLITZ_TIME
@@ -123,8 +135,9 @@ def main():
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
 
     game = GameState(size, num_players, False, num_walls)
-    terminal = TerminalView(game)
-    terminal.start_game()
+    cli_engine = CLIEngine(game)
+    game_state_manager = GameStateManager(game, cli_engine)
+    game_state_manager.start_game()
     sys.exit(0)
 
 
