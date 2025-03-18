@@ -13,8 +13,6 @@ class CLIEngine(GameEngine):
     """
     CLIEngine handles the CLI interface of the quoridor game.
     """
-    rows = "abcdefghi"
-    columns = "123456789"
 
     def __init__(self, gamestate: GameState):
         """
@@ -26,7 +24,8 @@ class CLIEngine(GameEngine):
         """
         self.state = gamestate
         self.size = gamestate.size
-        self.logic = GameStateManager(gamestate, self)
+        self.rows = "abcdefghi"
+        self.columns = "123456789"
 
     def translate_move(self, case: str) -> tuple[int, int]:
         """
@@ -127,40 +126,3 @@ class CLIEngine(GameEngine):
                     print(horizontal_space, end="")
                 print(interstice, end="")
             print("")
-
-    def start_game(self):
-        self.print_board()
-        while True:
-            try:
-                print(
-                    "Remaining fences: "
-                    + str(
-                        self.state.players[self.state.current_player].fences_remaining
-                    )
-                )
-                move = input(
-                    "Player " + str(self.state.current_player + 1) + " will play?"
-                )
-                if len(move) == 3:
-                    x, y, direction = CLIEngine.translate_wall(move)
-                    self.logic.place_wall(x, y, direction)
-                else:
-                    move = move.split("-")
-                    if len(move) != 2:
-                        raise InvalidMoveError
-                    if CLIEngine.invalid_move(move[0], move[1]):
-                        raise InvalidMoveError
-                    start = self.translate_move(move[0])
-                    end = self.translate_move(move[1])
-                    self.logic.make_move(start, end)
-                self.print_board()
-                if self.state.game_over():
-                    print(
-                        "Player "
-                        + str(self.state.current_player + 1)
-                        + " has won the game!"
-                    )
-                    exit()
-                self.logic.switch_player()
-            except (InvalidMoveError, PathNotFoundError):
-                print("Invalid move!")
