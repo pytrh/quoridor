@@ -4,13 +4,15 @@ CLI Game Engine.
 
 from quoridor.gameengine import GameEngine
 from quoridor.gamestate import GameState
-from quoridor.gamelogic import GameLogic
+from quoridor.gamelogic import GameStateManager
 from quoridor.exceptions import InvalidMoveError, PathNotFoundError
 from quoridor.direction import Direction
 
 
 class CLIEngine(GameEngine):
-
+    """
+    CLIEngine handles the CLI interface of the quoridor game.
+    """
     rows = "abcdefghi"
     columns = "123456789"
 
@@ -23,7 +25,8 @@ class CLIEngine(GameEngine):
         :type gamestate: GameState
         """
         self.state = gamestate
-        self.logic = GameLogic(gamestate)
+        self.size = gamestate.size
+        self.logic = GameStateManager(gamestate, self)
 
     def translate_move(self, case: str) -> tuple[int, int]:
         """
@@ -34,8 +37,8 @@ class CLIEngine(GameEngine):
         :return: a position
         :rytpe: tuple[int,int]
         """
-        x = TerminalView.rows.rfind(case[0])
-        y = TerminalView.columns.rfind(case[1])
+        x = CLIEngine.rows.rfind(case[0])
+        y = CLIEngine.columns.rfind(case[1])
         if x == -1 or y == -1:
             raise InvalidMoveError
         return (x, y)
@@ -49,8 +52,8 @@ class CLIEngine(GameEngine):
         :return: a position + a direction
         :rytpe: tuple[int,int, Direction]
         """
-        x = TerminalView.rows.rfind(case[0])
-        y = TerminalView.columns.rfind(case[1])
+        x = CLIEngine.rows.rfind(case[0])
+        y = CLIEngine.columns.rfind(case[1])
         direction = None
         if case[2] == "v":
             direction = Direction.V
@@ -72,10 +75,10 @@ class CLIEngine(GameEngine):
         """
         if len(start) == 2 and len(end) == 2:
             if (
-                TerminalView.rows.rfind(start[0]) == -1
-                or TerminalView.rows.rfind(end[0]) == -1
-                or TerminalView.columns.rfind(start[1]) == -1
-                or TerminalView.columns.rfind(end[1]) == -1
+                CLIEngine.rows.rfind(start[0]) == -1
+                or CLIEngine.rows.rfind(end[0]) == -1
+                or CLIEngine.columns.rfind(start[1]) == -1
+                or CLIEngine.columns.rfind(end[1]) == -1
             ):
                 return True
             return False
@@ -98,7 +101,7 @@ class CLIEngine(GameEngine):
         )
         print(big_space + interstice + (horizontal_wall + interstice) * self.state.size)
         for row in range(self.state.size):
-            print(f"{TerminalView.rows[row]}" + small_space + vertical_wall, end="")
+            print(f"{CLIEngine.rows[row]}" + small_space + vertical_wall, end="")
             for columns in range(self.state.size):
                 case = "   "
                 for player in range(self.state.num_players):
@@ -139,13 +142,13 @@ class CLIEngine(GameEngine):
                     "Player " + str(self.state.current_player + 1) + " will play?"
                 )
                 if len(move) == 3:
-                    x, y, direction = TerminalView.translate_wall(move)
+                    x, y, direction = CLIEngine.translate_wall(move)
                     self.logic.place_wall(x, y, direction)
                 else:
                     move = move.split("-")
                     if len(move) != 2:
                         raise InvalidMoveError
-                    if TerminalView.invalid_move(move[0], move[1]):
+                    if CLIEngine.invalid_move(move[0], move[1]):
                         raise InvalidMoveError
                     start = self.translate_move(move[0])
                     end = self.translate_move(move[1])

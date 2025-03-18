@@ -9,15 +9,7 @@ import logging
 import sys
 
 from quoridor.gamestate import GameState
-from quoridor.config import MIN_GRID_SIZE, MAX_GRID_SIZE
-from quoridor.config import MIN_NUM_PLAYERS, MAX_NUM_PLAYERS, NOT_RECOMMENDED_NUM_PLAYERS
-from quoridor.config import (
-    DEFAULT_GRID_SIZE,
-    DEFAULT_NUM_PLAYERS,
-    DEFAULT_BLITZ_TIME,
-    DEFAULT_NUM_WALLS,
-)
-from quoridor.gamelogic import GameLogic
+from quoridor.gamelogic import GameStateManager
 from quoridor.cliengine import CLIEngine
 
 

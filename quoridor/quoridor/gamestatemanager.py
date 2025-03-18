@@ -1,5 +1,5 @@
 """
-GameLogic module.
+GameStateManager module.
 """
 
 import copy
@@ -7,16 +7,17 @@ from quoridor.gamestate import GameState
 from quoridor.graph import Graph
 from quoridor.exceptions import InvalidMoveError, PathNotFoundError
 from quoridor.direction import Direction
+from quoridor.cliengine import CLIEngine
 
-
-class GameLogic:
+class GameStateManager:
     """
-    GameLogic manage the functionnality of the application:
+    GameStateManager manage the functionnality of the application:
     the treatment that can be applied to the board
     """
 
-    def __init__(self, gamestate: GameState):
+    def __init__(self, gamestate: GameState, engine: CLIEngine):
         self.state = gamestate
+        self.engine = engine
 
     def switch_player(self):
         """
