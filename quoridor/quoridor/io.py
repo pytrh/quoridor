@@ -1,5 +1,5 @@
 """
-Module: read_write_history
+IO module.
 ==========================
 
 Provides functionality for reading and writing game history files for a Quoridor game.
@@ -14,7 +14,15 @@ game_history = ReadWriteHistory.read_history("history.txt")
 turns = [["e2", "e3"], ["d4", "d5"]]
 ReadWriteHistory.write_history("output_history.txt", turns)
 """
+from quoridor.graph import Graph
 
+def parse_graph(string: str) -> Graph:
+    """
+    Parse the graph from a string.
+    """
+    pass
+
+# TODO: Change legacy code to adopt a modular approach
 class ReadWriteHistory:
     """
     Reading and writing Quoridor game history.
