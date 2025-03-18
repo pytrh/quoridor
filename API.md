@@ -1,5 +1,6 @@
 Questions for E Fleury:
 What is contest mode?
+Acutally really simple, just load a GameState from a file and suggest a move.
 
 Tests for gamestatemanager
 1. Move pawn out of bound
