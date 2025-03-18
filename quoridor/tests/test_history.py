@@ -1,6 +1,6 @@
 import os
 from unittest.mock import patch, mock_open
-from src.history.read_write_history import ReadWriteHistory
+from quoridor.history.read_write_history import ReadWriteHistory
 
 from pathlib import Path
 current_dir = Path(__file__).resolve().parent

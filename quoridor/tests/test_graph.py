@@ -2,8 +2,8 @@
 Unit tests for the graph module
 """
 import pytest
-from src.graph import Graph
-from src.exceptions import NodeNotFoundError, EdgeNotFoundError, PathNotFoundError
+from quoridor.graph import Graph
+from quoridor.exceptions import NodeNotFoundError, EdgeNotFoundError, PathNotFoundError
 
 def test_graph():
     """

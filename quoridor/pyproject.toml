@@ -26,18 +26,18 @@ dependencies = [
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "src.__version__"}
+version = {attr = "quoridor.__version__"}
 
 [tool.pytest.ini_options]
 addopts = [ # Add options for pytest
-  "--cov=src",
+  "--cov=quoridor",
   "--cov-report=html",
   "--cov-report=term",
   "--cov-branch",
 ]
 
 [tool.setuptools]
-packages = ["src"]
+packages = ["quoridor"]
 
 [project.scripts]
-quoridor = "src.main:main"
+quoridor = "quoridor.main:main"

@@ -3,8 +3,8 @@ Unit tests for the gamelogic module
 """
 
 import pytest
-from src.gamelogic import GameLogic
-from src.gamestate import GameState
+from quoridor.gamelogic import GameLogic
+from quoridor.gamestate import GameState
 
 
 def test_create_game():

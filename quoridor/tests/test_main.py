@@ -1,7 +1,7 @@
 import pytest
 import re
 from unittest import mock
-from src.main import main
+from quoridor.main import main
 
 # Test Positif
 
