@@ -178,8 +178,9 @@ class CLIEngine(GameEngine):
         elif input == "restart":
             return RestartCommand(self.state, self.game_manager.initial_state)
         elif self.well_formed_pawn_move(input):
-            destination = self.translate_move(input)
-            return MovePawnCommand(self.state, destination)
+            x, y = self.translate_move(input)
+            a, b = self.state.players[self.state.current_player].position
+            return MovePawnCommand(self.state, (a,b), (x,y))
         elif self.well_formed_wall_placement(input):
             x, y, direction = self.translate_wall(input)
             return PlaceWallCommand(self.state, (x, y), direction)

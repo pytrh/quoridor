@@ -14,6 +14,10 @@ from quoridor.gamestate import GameState
 class Command(ABC):
     """Abstract base class for all commands in the game."""
     
+    def __init__(self, state: GameState):
+        """Initialize the command with the game state."""
+        self.state = state
+    
     @abstractmethod
     def execute(self) -> bool:
         """Execute the command."""
@@ -172,11 +176,11 @@ class PlaceWallCommand(Command):
 class MovePawnCommand(Command):
     """Command to move a player's pawn on the board."""
     
-    def __init__(self, state: GameState, destination: Tuple[int, int]):
+    def __init__(self, state: GameState, from_position: Tuple[int, int], to_position: Tuple[int, int]):
         super().__init__(state)
         self.player = self.state.players[self.state.current_player]
-        self.from_position = self.player.position
-        self.to_position = destination
+        self.from_position = from_position
+        self.to_position = to_position
     
     def execute(self) -> bool:
         """Move the current player's pawn in the specified direction."""
