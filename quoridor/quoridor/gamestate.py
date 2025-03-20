@@ -101,17 +101,16 @@ class GameState:
         :return: Is the game finished?
         :rtype: bool
         """
-        match self.current_player:
-            case 0:
-                if self.players[self.current_player].position[1] == self.size - 1:
-                    return True
-            case 1:
-                if self.players[self.current_player].position[1] == 0:
-                    return True
-            case 2:
-                if self.players[self.current_player].position[0] == self.size - 1:
-                    return True
-            case 3:
-                if self.players[self.current_player].position[0] == 0:
-                    return True
+        if self.current_player == 0:
+            if self.players[self.current_player].position[1] == self.size - 1:
+                return True
+        elif self.current_player == 1:
+            if self.players[self.current_player].position[1] == 0:
+                return True
+        elif self.current_player == 2:
+            if self.players[self.current_player].position[0] == self.size - 1:
+                return True
+        elif self.current_player == 3:
+            if self.players[self.current_player].position[0] == 0:
+                return True
         return False

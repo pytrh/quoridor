@@ -137,8 +137,7 @@ def main():
 
     game = GameState(size, num_players, False, num_walls)
     cli_engine = CLIEngine(game)
-    game_state_manager = GameStateManager(game, cli_engine)
-    game_state_manager.start_game()
+    cli_engine.start_game()
     sys.exit(0)
 
 
