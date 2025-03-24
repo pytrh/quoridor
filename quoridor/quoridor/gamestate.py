@@ -6,6 +6,7 @@ from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.direction import Direction
+from quoridor.main import DEFAULT_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_NUM_WALLS
 
 if TYPE_CHECKING:
     from quoridor.command import Command
@@ -19,27 +20,35 @@ class GameState:
 
     def __init__(
         self,
-        size: int = 9,
-        num_players: int = 2,
+        size: int = DEFAULT_SIZE,
+        current_player: Player,
+        players: list[Player],
+        board: Graph,
         blitz_mode: bool = False,
-        num_walls: int = 10,
+        num_walls: int = DEFAULT_NUM_WALLS,
         history: List['Command'] = None,
     ):
         """
         Initialize a new game state.
         :param size: The size of the board, default is 9.
         :type size: int
-        :param num_players: The number of players, default is 2.
-        :type num_players: int
+        :param current_player: The current player, default is Player(0, (0, 0), 0, 0).
+        :type current_player: Player
+        :param players: The list of players, default is [Player(0, (0, 0), 0, 0), Player(1, (0, 0), 0, 0)].
+        :type players: list[Player]
+        :param board: The board, default is a new Graph().
+        :type board: Graph
         :param blitz_mode: Whether the game is in blitz mode, default is False.
         :type blitz_mode: bool
+        :param num_walls: The number of walls, default is 10.
+        :type num_walls: int
         :param history: The history of moves, default is an empty list.
        :type history: list[Command]
         """
-        self.board = self.create_board(size)
+        self.board = board if board is not None else self.create_board(size)
         self.size = size
-        self.current_player = 0
-        self.num_players = num_players
+        self.current_player = current_player
+        self.players = players
 
         # Players placement
         middle_board = size // 2
@@ -57,7 +66,6 @@ class GameState:
         self.history = [] if history is None else history
         self.redo_stack = []
         self.move_count = 0
-        # self.winner = None
 
     def create_board(self, size: int = 9) -> Graph:
         """
