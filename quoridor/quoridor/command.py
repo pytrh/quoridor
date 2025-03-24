@@ -46,6 +46,7 @@ class Command(ABC):
         """Return a string representation of the command."""
         pass
 
+    # TODO: Very ugly code, fix these 2 functions below
     def switch_player(self):
         """
         Change the current player to the next one

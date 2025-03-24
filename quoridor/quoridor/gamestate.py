@@ -34,7 +34,7 @@ class GameState:
         :param blitz_mode: Whether the game is in blitz mode, default is False.
         :type blitz_mode: bool
         :param history: The history of moves, default is an empty list.
-        :type history: list[Command]
+       :type history: list[Command]
         """
         self.board = self.create_board(size)
         self.size = size
