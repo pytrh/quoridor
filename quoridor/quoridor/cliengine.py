@@ -2,15 +2,15 @@
 Run the quoridor game in the terminal.
 """
 
+import copy
 from quoridor.gameengine import GameEngine
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
-from quoridor.gamestatemanager import GameStateManager
 from quoridor.command import (
     Command, PlaceWallCommand, MovePawnCommand, UndoCommand, 
-    RedoCommand, RestartCommand, QuitCommand
+    RedoCommand, RestartCommand, QuitCommand, AbandonCommand
 )
-from quoridor.exceptions import InvalidMoveError, InvalidCommandError, PathNotFoundError
+from quoridor.exceptions import InvalidMoveError, InvalidCommandError, PathNotFoundError, GameOver
 
 
 class CLIEngine(GameEngine):
@@ -28,11 +28,21 @@ class CLIEngine(GameEngine):
         """
         self.state = gamestate
         self.size = gamestate.size
-        self.game_manager = GameStateManager(gamestate)
+        self.initial_state = copy.deepcopy(gamestate)
 
         # Create rows and columns based on the board size (from 3 to 15)
         self.rows = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'][:self.size]
         self.columns = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'][:self.size]
+
+    def execute_command(self, command: Command) -> bool:
+        """
+        Execute a command and add it to the command history.
+        """
+        result = command.execute()
+        if result:
+            self.state.history.append(command)
+            self.state.redo_stack.clear()  # Clear redo stack when new command is executed
+        return result
 
     def translate_move(self, case: str) -> tuple[int, int]:
         """
@@ -170,13 +180,15 @@ class CLIEngine(GameEngine):
         """
         input = self.get_input_from_human_player()
         if input == "undo":
-            return UndoCommand(self.state, self.game_manager.command_history)
+            return UndoCommand(self.state, self.state.history)
         elif input == "redo":
-            return RedoCommand(self.state, self.game_manager.command_history)
+            return RedoCommand(self.state, self.state.redo_stack)
         elif input == "quit":
             return QuitCommand(self.state)
         elif input == "restart":
-            return RestartCommand(self.state, self.game_manager.initial_state)
+            return RestartCommand(self.state, self.initial_state)
+        elif input == "abandon":
+            return AbandonCommand(self.state)
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)
             a, b = self.state.players[self.state.current_player].position
@@ -197,13 +209,17 @@ class CLIEngine(GameEngine):
                 self.print_remaining_fences()
                 command = self.get_command_from_human_player()
                 
-                # Execute the command through game manager
-                self.game_manager.execute_command(command)
+                # Execute the command directly
+                self.execute_command(command)
                 
                 self.render_board()
                 if self.state.game_over():
-                    self.render_game_over()
-                    exit()
+                    raise GameOver
+                    # self.render_game_over()
+                    # exit()
                     
             except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
                 print(f"Invalid move: {str(e)}")
+            except GameOver:
+                self.render_game_over()
+                exit()

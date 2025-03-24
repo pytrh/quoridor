@@ -3,18 +3,20 @@ Command module handling both game operations and undo/redo/restart/quit etc.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, TYPE_CHECKING
 from copy import deepcopy
 
 from quoridor.graph import Graph
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, PathNotFoundError
-from quoridor.gamestate import GameState
+from quoridor.exceptions import InvalidMoveError, PathNotFoundError, GameOver
+
+if TYPE_CHECKING:
+    from quoridor.gamestate import GameState
 
 class Command(ABC):
     """Abstract base class for all commands in the game."""
     
-    def __init__(self, state: GameState):
+    def __init__(self, state: 'GameState'):
         """Initialize the command with the game state."""
         self.state = state
     
@@ -65,7 +67,7 @@ class Command(ABC):
 class PlaceWallCommand(Command):
     """Command to place a wall on the board."""
     
-    def __init__(self, state: GameState, position: Tuple[int, int], orientation: Direction):
+    def __init__(self, state: 'GameState', position: Tuple[int, int], orientation: Direction):
         super().__init__(state)
         self.position = position
         self.orientation = orientation
@@ -176,7 +178,7 @@ class PlaceWallCommand(Command):
 class MovePawnCommand(Command):
     """Command to move a player's pawn on the board."""
     
-    def __init__(self, state: GameState, from_position: Tuple[int, int], to_position: Tuple[int, int]):
+    def __init__(self, state: 'GameState', from_position: Tuple[int, int], to_position: Tuple[int, int]):
         super().__init__(state)
         self.player = self.state.players[self.state.current_player]
         self.from_position = from_position
@@ -264,17 +266,18 @@ class MovePawnCommand(Command):
 class UndoCommand(Command):
     """Command to undo the last game action."""
     
-    def __init__(self, state: GameState, history: List[Command]):
+    def __init__(self, state: 'GameState', history: List[Command]=None):
         super().__init__(state)
-        self.history = history
+        # Allow an external history to be passed, but default to using state's history
+        self.history = history if history is not None else state.history
     
     def execute(self) -> bool:
         """Undo the last command in the command history."""
         if self.history:
             last_command = self.history.pop()
             last_command.undo()
-            self.history.append(last_command)
-            return False
+            self.state.redo_stack.append(last_command)
+            return True
         return False
     
     def __str__(self) -> str:
@@ -284,17 +287,19 @@ class UndoCommand(Command):
 class RedoCommand(Command):
     """Command to redo a previously undone action."""
     
-    def __init__(self, state: GameState, history: List[Command]):
+    def __init__(self, state: 'GameState', redo_stack: List[Command]=None):
         super().__init__(state)
-        self.history = history
+        # Allow an external redo_stack to be passed, but default to using state's redo_stack
+        self.redo_stack = redo_stack if redo_stack is not None else state.redo_stack
     
     def execute(self) -> bool:
         """Redo the last undone command."""
-        if self.history:
-            command = self.history.pop()
-            command.execute()
-            self.history.append(command)
-            return True
+        if self.redo_stack:
+            command = self.redo_stack.pop()
+            result = command.execute()
+            if result:
+                self.state.history.append(command)
+            return result
         return False
     
     def __str__(self) -> str:
@@ -304,7 +309,7 @@ class RedoCommand(Command):
 class RestartCommand(Command):
     """Command to restart the game."""
     
-    def __init__(self, state: GameState, initial_state: GameState):
+    def __init__(self, state: 'GameState', initial_state: 'GameState'):
         super().__init__(state)
         self.initial_state = deepcopy(initial_state)
     
@@ -320,13 +325,17 @@ class RestartCommand(Command):
 class AbandonCommand(Command):
     """Command to abandon the current game."""
     
-    def __init__(self, state: GameState):
+    def __init__(self, state: 'GameState'):
         super().__init__(state)
     
     def execute(self) -> bool:
-        """Abandon the current game, declaring the opponent as winner."""
-        opponent = self.state.players[1 if self.state.current_player == 0 else 0]
-        self.state.winner = opponent
+        """Abandon the current game, declaring the opponent as winner if only one player is left"""
+        if len(self.state.players) == 1:
+            self.state.winner = self.state.players[1 if self.state.current_player == 0 else 0]
+            raise GameOver
+        else:
+            """Simply remove the current player from the game"""
+            self.state.players.pop(self.state.current_player)
         return True
     
     def __str__(self) -> str:
@@ -336,7 +345,7 @@ class AbandonCommand(Command):
 class QuitCommand(Command):
     """Command to quit the application."""
     
-    def __init__(self, state: GameState):
+    def __init__(self, state: 'GameState'):
         super().__init__(state)
     
     def execute(self) -> bool:

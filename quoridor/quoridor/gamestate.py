@@ -2,9 +2,13 @@
 GameState module.
 """
 
+from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.direction import Direction
+
+if TYPE_CHECKING:
+    from quoridor.command import Command
 
 
 class GameState:
@@ -19,7 +23,7 @@ class GameState:
         num_players: int = 2,
         blitz_mode: bool = False,
         num_walls: int = 10,
-        history: list[list[str]] = [[]],
+        history: List['Command'] = None,
     ):
         """
         Initialize a new game state.
@@ -30,7 +34,7 @@ class GameState:
         :param blitz_mode: Whether the game is in blitz mode, default is False.
         :type blitz_mode: bool
         :param history: The history of moves, default is an empty list.
-        :type history: list[list[str]]
+        :type history: list[Command]
         """
         self.board = self.create_board(size)
         self.size = size
@@ -50,8 +54,10 @@ class GameState:
             players.append(Player(3, (size - 1, middle_board), size, num_walls))
         self.players = players
         self.blitz_mode = blitz_mode
-        self.history = history
+        self.history = [] if history is None else history
+        self.redo_stack = []
         self.move_count = 0
+        # self.winner = None
 
     def create_board(self, size: int = 9) -> Graph:
         """

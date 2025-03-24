@@ -1,5 +1,5 @@
 """
-GameStateManager module.
+Deprecated GameStateManager module.
 """
 
 import copy
@@ -18,14 +18,3 @@ class GameStateManager:
 
     def __init__(self, gamestate: GameState):
         self.state = gamestate
-        self.initial_state = copy.deepcopy(gamestate)
-        self.history = []
-        self.redo_stack = []
-
-    def execute_command(self, command: Command) -> None:
-        """
-        Execute a command and add it to the command history.
-        """
-        if command.execute():
-            self.history.append(command)
-            self.redo_stack.clear()  # Clear redo stack when new command is executed
