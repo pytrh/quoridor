@@ -9,9 +9,18 @@ import logging
 import sys
 
 from quoridor.gamestate import GameState
-from quoridor.gamestatemanager import GameStateManager
 from quoridor.cliengine import CLIEngine
-
+from quoridor.config import (
+    MIN_GRID_SIZE,
+    MAX_GRID_SIZE,
+    MIN_NUM_PLAYERS,
+    MAX_NUM_PLAYERS,
+    NOT_RECOMMENDED_NUM_PLAYERS,
+    DEFAULT_SIZE,
+    DEFAULT_NUM_PLAYERS,
+    DEFAULT_BLITZ_TIME,
+    DEFAULT_NUM_WALLS,
+)
 
 def setup_logging(verbose, debug):
     """
@@ -92,21 +101,8 @@ def main():
         logging.debug("File found in arguments")
         # game = GameState.load_game_from_file(args.file)
 
-    # TODO: Parse the defaults from .quoridorrc
-    # DEFAULT VALUES
-    MIN_GRID_SIZE = 3
-    MAX_GRID_SIZE = 15
 
-    MIN_NUM_PLAYERS = 2
-    MAX_NUM_PLAYERS = 4
-    NOT_RECOMMENDED_NUM_PLAYERS = 3
-
-    DEFAULT_GRID_SIZE = 9
-    DEFAULT_NUM_PLAYERS = 2
-    DEFAULT_BLITZ_TIME = 0
-    DEFAULT_NUM_WALLS = 20
-
-    size = DEFAULT_GRID_SIZE
+    size = DEFAULT_SIZE
     num_players = DEFAULT_NUM_PLAYERS
     blitz_time = DEFAULT_BLITZ_TIME
     num_walls = DEFAULT_NUM_WALLS
@@ -135,8 +131,12 @@ def main():
         if num_players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
 
-    game = GameState(size, num_players, False, num_walls)
-    cli_engine = CLIEngine(game)
+    initial_state = GameState(
+        size=size,
+        num_players=num_players,
+        num_walls=num_walls
+    )
+    cli_engine = CLIEngine(initial_state)
     cli_engine.start_game()
     sys.exit(0)
 

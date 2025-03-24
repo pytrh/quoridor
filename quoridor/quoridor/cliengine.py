@@ -3,7 +3,6 @@ Run the quoridor game in the terminal.
 """
 
 import copy
-from quoridor.gameengine import GameEngine
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
 from quoridor.command import (
@@ -12,8 +11,7 @@ from quoridor.command import (
 )
 from quoridor.exceptions import InvalidMoveError, InvalidCommandError, PathNotFoundError, GameOver
 
-
-class CLIEngine(GameEngine):
+class CLIEngine():
     """
     Handles the CLI interface and launches the quoridor game.
     """
@@ -125,7 +123,8 @@ class CLIEngine(GameEngine):
                         self.state.players[player].position[0] == row
                         and self.state.players[player].position[1] == columns
                     ):
-                        case = " " + str(self.state.players[player].id + 1) + " "
+                        # case = " " + str(self.state.players[player].id + 1) + " "
+                        case = " " + str(player + 1) + " "
                 if columns == self.size - 1 or not self.state.board.edge_exists(
                     (row, columns), (row, columns + 1)
                 ):
@@ -148,13 +147,13 @@ class CLIEngine(GameEngine):
         """
         Print the remaining fences for each player.
         """
-        print("Remaining fences: " + str(self.state.players[self.state.current_player].fences_remaining))
+        print("Remaining fences: " + str(self.state.players[self.state.current_player.id].fences_remaining))
 
     def get_input_from_human_player(self) -> str:
         """
         Get an input from the human player.
         """
-        return input("Player " + str(self.state.current_player + 1) + " will play?")
+        return input("Player " + str(self.state.current_player.id + 1) + " will play?")
 
     def well_formed_pawn_move(self, input: str) -> bool:
         """
@@ -172,7 +171,7 @@ class CLIEngine(GameEngine):
         """
         Render the game over screen.
         """
-        print(f"Player {self.state.current_player + 1} has won the game!")
+        print(f"Player {self.state.current_player.id + 1} has won the game!")
 
     def get_command_from_human_player(self) -> Command:
         """
@@ -191,7 +190,7 @@ class CLIEngine(GameEngine):
             return AbandonCommand(self.state)
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)
-            a, b = self.state.players[self.state.current_player].position
+            a, b = self.state.players[self.state.current_player.id].position
             return MovePawnCommand(self.state, (a,b), (x,y))
         elif self.well_formed_wall_placement(input):
             x, y, direction = self.translate_wall(input)

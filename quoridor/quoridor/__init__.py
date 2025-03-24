@@ -5,10 +5,8 @@ __version__ = "0.2.0"
 
 # Import main classes/functions that should be available at package level
 from quoridor.gamestate import GameState
-from quoridor.gamestatemanager import GameStateManager
 from quoridor.player import Player
 from quoridor.graph import Graph
-from quoridor.gameengine import GameEngine
 from quoridor.cliengine import CLIEngine
 from quoridor.exceptions import (
     NodeNotFoundError,

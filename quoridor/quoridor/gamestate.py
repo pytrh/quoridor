@@ -6,7 +6,11 @@ from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.direction import Direction
-from quoridor.main import DEFAULT_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_NUM_WALLS
+from quoridor.config import (
+    DEFAULT_SIZE,
+    DEFAULT_NUM_PLAYERS,
+    DEFAULT_NUM_WALLS,
+)
 
 if TYPE_CHECKING:
     from quoridor.command import Command
@@ -21,10 +25,11 @@ class GameState:
     def __init__(
         self,
         size: int = DEFAULT_SIZE,
-        current_player: Player,
-        players: list[Player],
-        board: Graph,
-        blitz_mode: bool = False,
+        current_player_id: int = 0,
+        players: list[Player] = None,
+        num_players: int = DEFAULT_NUM_PLAYERS,
+        board: Graph = None,
+        blitz: bool = False,
         num_walls: int = DEFAULT_NUM_WALLS,
         history: List['Command'] = None,
     ):
@@ -32,8 +37,8 @@ class GameState:
         Initialize a new game state.
         :param size: The size of the board, default is 9.
         :type size: int
-        :param current_player: The current player, default is Player(0, (0, 0), 0, 0).
-        :type current_player: Player
+        :param current_player_id: The current player, default is 0.
+        :type current_player_id: int
         :param players: The list of players, default is [Player(0, (0, 0), 0, 0), Player(1, (0, 0), 0, 0)].
         :type players: list[Player]
         :param board: The board, default is a new Graph().
@@ -47,25 +52,26 @@ class GameState:
         """
         self.board = board if board is not None else self.create_board(size)
         self.size = size
-        self.current_player = current_player
-        self.players = players
-
-        # Players placement
-        middle_board = size // 2
-        print(middle_board)
-        players = [
-            Player(0, (middle_board, 0), size, num_walls),
-            Player(1, (middle_board, size - 1), size, num_walls),
-        ]
-        if num_players > 2:
-            players.append(Player(2, (0, middle_board), size, num_walls))
-        if num_players > 3:
-            players.append(Player(3, (size - 1, middle_board), size, num_walls))
-        self.players = players
-        self.blitz_mode = blitz_mode
+        self.num_players = num_players
+        if players is None:
+            middle_board = size // 2
+            # print(middle_board)
+            
+            self.players = [
+                Player(0, (middle_board, 0), size, num_walls),
+                Player(1, (middle_board, size - 1), size, num_walls),
+            ]
+            if self.num_players > 2:
+                self.players.append(Player(2, (0, middle_board), size, num_walls))
+            if self.num_players > 3:
+                self.players.append(Player(3, (size - 1, middle_board), size, num_walls))
+        else:
+            self.players = players
+        self.current_player = self.players[0] if current_player_id is None else self.players[current_player_id]
+        self.blitz = blitz
         self.history = [] if history is None else history
         self.redo_stack = []
-        self.move_count = 0
+        # self.move_count = 0
 
     def create_board(self, size: int = 9) -> Graph:
         """

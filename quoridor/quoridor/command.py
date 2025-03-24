@@ -52,16 +52,16 @@ class Command(ABC):
         Change the current player to the next one
         If current player is the last one, the next one will the first
         """
-        self.state.current_player = (
-            self.state.current_player + 1
+        self.state.current_player.id = (
+            self.state.current_player.id + 1
         ) % self.state.num_players
 
     def update_wall(self):
         """
         Remove one fence to the fences counter of the current player
         """
-        self.state.players[self.state.current_player].fences_remaining = (
-            self.state.players[self.state.current_player].fences_remaining - 1
+        self.state.players[self.state.current_player.id].fences_remaining = (
+            self.state.players[self.state.current_player.id].fences_remaining - 1
         )
 
 
@@ -72,7 +72,7 @@ class PlaceWallCommand(Command):
         super().__init__(state)
         self.position = position
         self.orientation = orientation
-        self.player = self.state.players[self.state.current_player]
+        self.player = self.state.players[self.state.current_player.id]
     
     def execute(self) -> bool:
         """Execute the command to place a wall."""
@@ -104,7 +104,7 @@ class PlaceWallCommand(Command):
         """
 
         # Check that the current player still has wall remaining
-        if self.state.players[self.state.current_player].fences_remaining == 0:
+        if self.state.players[self.state.current_player.id].fences_remaining == 0:
             raise InvalidMoveError
 
         # Check that the wall is placed within the board
@@ -120,7 +120,7 @@ class PlaceWallCommand(Command):
 
         if (
             direction == Direction.H
-            and self.state.players[self.state.current_player].fences_remaining > 0
+            and self.state.players[self.state.current_player.id].fences_remaining > 0
         ):  # Horizontal wall
             if temp_board.edge_exists((x, y), (x + 1, y)) and temp_board.edge_exists(
                 (x, y + 1), (x + 1, y + 1)
@@ -132,7 +132,7 @@ class PlaceWallCommand(Command):
 
         elif (
             direction == Direction.V
-            and self.state.players[self.state.current_player].fences_remaining > 0
+            and self.state.players[self.state.current_player.id].fences_remaining > 0
         ):  # Vertical wall
             if temp_board.edge_exists((x, y), (x, y + 1)) and temp_board.edge_exists(
                 (x + 1, y), (x + 1, y + 1)
@@ -181,7 +181,7 @@ class MovePawnCommand(Command):
     
     def __init__(self, state: 'GameState', from_position: Tuple[int, int], to_position: Tuple[int, int]):
         super().__init__(state)
-        self.player = self.state.players[self.state.current_player]
+        self.player = self.state.players[self.state.current_player.id]
         self.from_position = from_position
         self.to_position = to_position
     
@@ -211,7 +211,7 @@ class MovePawnCommand(Command):
             p[i] = self.state.players[i].position
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-        x, y = p[self.state.current_player]
+        x, y = p[self.state.current_player.id]
         for dx, dy in directions:
             adj = (x + dx, y + dy)
             jump = (x + 2 * dx, y + 2 * dy)
@@ -243,13 +243,13 @@ class MovePawnCommand(Command):
         :type end: tuple[int, int]
         :raises InvalidMoveError: if the parameters lead to an invalid move
         """
-        if not (self.state.players[self.state.current_player].position == start):
+        if not (self.state.players[self.state.current_player.id].position == start):
             raise InvalidMoveError
         else:
             board_temp = self.temp_board()
             if not board_temp.edge_exists(start, end):
                 raise InvalidMoveError
-            self.state.players[self.state.current_player].position = end
+            self.state.players[self.state.current_player.id].position = end
 
     def undo(self) -> None:
         """Move the pawn back to its previous position."""
@@ -332,15 +332,15 @@ class AbandonCommand(Command):
     def execute(self) -> bool:
         """Abandon the current game, declaring the opponent as winner if only one player is left"""
         if len(self.state.players) == 1:
-            self.state.winner = self.state.players[1 if self.state.current_player == 0 else 0]
+            self.state.winner = self.state.players[1 if self.state.current_player.id == 0 else 0]
             raise GameOver
         else:
             """Simply remove the current player from the game"""
-            self.state.players.pop(self.state.current_player)
+            self.state.players.pop(self.state.current_player.id)
         return True
     
     def __str__(self) -> str:
-        return f"Abandon game (Player {self.state.current_player} surrenders)"
+        return f"Abandon game (Player {self.state.current_player.id} surrenders)"
 
 
 class QuitCommand(Command):
