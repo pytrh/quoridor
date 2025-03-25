@@ -1,5 +1,6 @@
 class Player:
     """
+    TODO: Find a less ugly way to access size of the board. Maybe import from config.py something
     IMPORTANT: Blitz time is interpreted as the traditional sense ie total time for the game.
     Different from E Fleury's requirements. Will justify in the report.
     Player class to represent a player in the game.
@@ -13,6 +14,8 @@ class Player:
         :type id: int
         :param position: The position of the player represented as a tuple of two integers.
         :type position: tuple[int, int]
+        :param size: The size of the board. Find a less ugly way to do this.
+        :type size: int
         :param walls: The number of walls the player has, default is 10.
         :type walls: int
         :param time_remaining_blitz: The time remaining in seconds for the player in blitz mode, default is None.
