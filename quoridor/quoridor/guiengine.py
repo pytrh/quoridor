@@ -722,7 +722,7 @@ class MainWindow(Gtk.ApplicationWindow):
 class MyApplication(Gtk.Application):
     def __init__(self, state: GameState, **kwargs):
         super().__init__(**kwargs)
-        self.connect("activates", self.on_activate)
+        self.connect("activate", self.on_activate)
 
         from pathlib import Path
 
