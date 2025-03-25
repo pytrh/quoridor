@@ -28,7 +28,7 @@ def test_create_game():
     assert game.move_count == 0
     assert game.players[0].position == (4, 0)
     assert game.players[1].position == (4, 8)
-    assert game.players[0].fences_remaining == 10
-    assert game.players[1].fences_remaining == 10
+    assert game.players[0].walls_remaining == 10
+    assert game.players[1].walls_remaining == 10
     assert game.players[0].id == 0
     assert game.players[1].id == 1

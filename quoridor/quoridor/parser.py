@@ -166,7 +166,7 @@ def parse_string_to_state(state_string: str) -> GameState:
                             id=player_id,
                             position=player_data.get("position", (0, 0)),
                             size=size,
-                            fences_remaining=player_data.get("walls", 0),
+                            walls_remaining=player_data.get("walls", 0),
                         )
                     )
                     player_data = {}  # Reset pour le prochain joueur
@@ -220,7 +220,7 @@ def _print_state(state: GameState):
     for player in state.players:
         print(f"Id : {player.id}")
         print(f"Position : {player.position}")
-        print(f"Walls remaining : {player.fences_remaining}")
+        print(f"Walls remaining : {player.walls_remaining}")
 
     # Board
     _print_graph(state.board)

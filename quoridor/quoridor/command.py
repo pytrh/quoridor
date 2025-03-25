@@ -57,10 +57,10 @@ class Command(ABC):
 
     def update_wall(self):
         """
-        Remove one fence to the fences counter of the current player
+        Remove one fence to the walls counter of the current player
         """
-        self.state.players[self.state.current_player.id].fences_remaining = (
-            self.state.players[self.state.current_player.id].fences_remaining - 1
+        self.state.players[self.state.current_player.id].walls_remaining = (
+            self.state.players[self.state.current_player.id].walls_remaining - 1
         )
 
 
@@ -101,7 +101,7 @@ class PlaceWallCommand(Command):
         """
 
         # Check that the current player still has wall remaining
-        if self.state.players[self.state.current_player.id].fences_remaining == 0:
+        if self.state.players[self.state.current_player.id].walls_remaining == 0:
             raise InvalidMoveError
 
         # Check that the wall is placed within the board
@@ -117,7 +117,7 @@ class PlaceWallCommand(Command):
 
         if (
             direction == Direction.H
-            and self.state.players[self.state.current_player.id].fences_remaining > 0
+            and self.state.players[self.state.current_player.id].walls_remaining > 0
         ):  # Horizontal wall
             if temp_board.edge_exists((x, y), (x + 1, y)) and temp_board.edge_exists(
                 (x, y + 1), (x + 1, y + 1)
@@ -129,7 +129,7 @@ class PlaceWallCommand(Command):
 
         elif (
             direction == Direction.V
-            and self.state.players[self.state.current_player.id].fences_remaining > 0
+            and self.state.players[self.state.current_player.id].walls_remaining > 0
         ):  # Vertical wall
             if temp_board.edge_exists((x, y), (x, y + 1)) and temp_board.edge_exists(
                 (x + 1, y), (x + 1, y + 1)
@@ -162,7 +162,7 @@ class PlaceWallCommand(Command):
     def undo(self) -> None:
         """Remove the wall that was placed."""
         self.state.board.remove_wall(self.position, self.orientation)
-        self.player.fences_remaining += 1
+        self.player.walls_remaining += 1
         self.switch_player()
 
     def redo(self) -> None:
