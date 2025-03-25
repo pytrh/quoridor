@@ -189,13 +189,13 @@ class CLIEngine:
                 print(interstice, end="")
             print("")
 
-    def print_remaining_fences(self):
+    def print_remaining_walls(self):
         """
-        Print the remaining fences for each player.
+        Print the remaining walls for each player.
         """
         print(
-            "Remaining fences: "
-            + str(self.state.players[self.state.current_player.id].fences_remaining)
+            "Remaining walls: "
+            + str(self.state.players[self.state.current_player.id].walls_remaining)
         )
 
     def get_input_from_human_player(self) -> str:
@@ -259,7 +259,7 @@ class CLIEngine:
         self.render_board()
         while True:
             try:
-                self.print_remaining_fences()
+                self.print_remaining_walls()
                 command = self.get_command_from_human_player()
 
                 # Execute the command directly
