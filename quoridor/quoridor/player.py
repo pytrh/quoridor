@@ -1,16 +1,11 @@
 class Player:
     """
+    IMPORTANT: Blitz time is interpreted as the traditional sense ie total time for the game.
+    Different from E Fleury's requirements. Will justify in the report.
     Player class to represent a player in the game.
     """
-
-    def __init__(
-        self,
-        id: int,
-        position: tuple[int, int],
-        size: int,
-        walls_remaining: int = 10,
-        time_remaining: int = None,
-    ) -> None:
+    def __init__(self, id: int, position: tuple[int, int], size: int, walls_remaining: int = 10,
+                  time_remaining_blitz: int = None) -> None:
         """
         Initialize a new player.
 
@@ -20,37 +15,26 @@ class Player:
         :type position: tuple[int, int]
         :param walls: The number of walls the player has, default is 10.
         :type walls: int
-        :param time_remaining: The time remaining in seconds for the player in blitz mode, default is None.
-        :type time_remaining: int
+        :param time_remaining_blitz: The time remaining in seconds for the player in blitz mode, default is None.
+        :type time_remaining_blitz: int
         """
         self.id = id
         self.position = position
         self.walls_remaining = walls_remaining
-        self.time_remaining = time_remaining
-        self.winning_positions = self.winning_positions(size)
+        self.time_remaining_blitz = time_remaining_blitz
+        self.start_position = position
 
-    def winning_positions(self, size: int) -> list[(int, int)]:
-        """
-        Create a list of winning position for the player using the size of the board
-        :param size: size of the board
-        :type size: int
-        :return: list of winning position
-        :rtype: list(int, int)]
-        """
-        winning_position = []
-        posX_win = 0
-        posY_win = 0
-        if self.id == 0:
-            posY_win = size - 1
-        if self.id in (0, 1):
-            for i in range(size):
-                winning_position.append((i, posY_win))
-            return winning_position
+        if self.start_position[1] == 0:
+            self.goal_line = [(i, size - 1) for i in range(size)]
+        elif self.start_position[1] == size - 1:
+            self.goal_line = [(i, 0) for i in range(size)]
+        elif self.start_position[0] == 0:
+            self.goal_line = [(size - 1, i) for i in range(size)]
+        elif self.start_position[0] == size - 1:
+            self.goal_line = [(0, i) for i in range(size)]
 
-        if self.id == 2:
-            posX_win = size - 1
-        if self.id in (2, 3):
-            for i in range(size):
-                winning_position.append((posX_win, i))
-            return winning_position
-        return winning_position
+    def is_winning(self) -> bool:
+        """
+        Check if the player has won the game.
+        """
+        return self.position in self.goal_line
