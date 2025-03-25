@@ -31,32 +31,34 @@ class GameState:
         board: Graph = None,
         blitz: bool = False,
         num_walls: int = DEFAULT_NUM_WALLS,
-        history: List['Command'] = None,
+        history: List["Command"] = None,
     ):
         """
-        Initialize a new game state.
-        :param size: The size of the board, default is 9.
-        :type size: int
-        :param current_player_id: The current player, default is 0.
-        :type current_player_id: int
-        :param players: The list of players, default is [Player(0, (0, 0), 0, 0), Player(1, (0, 0), 0, 0)].
-        :type players: list[Player]
-        :param board: The board, default is a new Graph().
-        :type board: Graph
-        :param blitz_mode: Whether the game is in blitz mode, default is False.
-        :type blitz_mode: bool
-        :param num_walls: The number of walls, default is 10.
-        :type num_walls: int
-        :param history: The history of moves, default is an empty list.
-       :type history: list[Command]
+         Initialize a new game state.
+         :param size: The size of the board, default is 9.
+         :type size: int
+         :param current_player_id: The current player, default is 0.
+         :type current_player_id: int
+         :param players: The list of players, default is [Player(0, (0, 0), 0, 0), Player(1, (0, 0), 0, 0)].
+         :type players: list[Player]
+         :param board: The board, default is a new Graph().
+         :type board: Graph
+         :param blitz_mode: Whether the game is in blitz mode, default is False.
+         :type blitz_mode: bool
+         :param num_walls: The number of walls, default is 10.
+         :type num_walls: int
+         :param history: The history of moves, default is an empty list.
+        :type history: list[Command]
         """
         self.board = board if board is not None else self.create_board(size)
         self.size = size
         self.num_players = num_players
+        self.initial_num_walls = num_walls
+
         if players is None:
             middle_board = size // 2
             # print(middle_board)
-            
+
             self.players = [
                 Player(0, (middle_board, 0), size, num_walls),
                 Player(1, (middle_board, size - 1), size, num_walls),
@@ -64,10 +66,16 @@ class GameState:
             if self.num_players > 2:
                 self.players.append(Player(2, (0, middle_board), size, num_walls))
             if self.num_players > 3:
-                self.players.append(Player(3, (size - 1, middle_board), size, num_walls))
+                self.players.append(
+                    Player(3, (size - 1, middle_board), size, num_walls)
+                )
         else:
             self.players = players
-        self.current_player = self.players[0] if current_player_id is None else self.players[current_player_id]
+        self.current_player = (
+            self.players[0]
+            if current_player_id is None
+            else self.players[current_player_id]
+        )
         self.blitz = blitz
         self.history = [] if history is None else history
         self.redo_stack = []
@@ -121,16 +129,23 @@ class GameState:
         :return: Is the game finished?
         :rtype: bool
         """
-        if self.current_player == 0:
-            if self.players[self.current_player].position[1] == self.size - 1:
+        if self.current_player.id == 0:
+            if self.players[self.current_player.id].position[1] == self.size - 1:
                 return True
-        elif self.current_player == 1:
-            if self.players[self.current_player].position[1] == 0:
+        elif self.current_player.id == 1:
+            if self.players[self.current_player.id].position[1] == 0:
                 return True
-        elif self.current_player == 2:
-            if self.players[self.current_player].position[0] == self.size - 1:
+        elif self.current_player.id == 2:
+            if self.players[self.current_player.id].position[0] == self.size - 1:
                 return True
-        elif self.current_player == 3:
-            if self.players[self.current_player].position[0] == 0:
+        elif self.current_player.id == 3:
+            if self.players[self.current_player.id].position[0] == 0:
                 return True
         return False
+
+    def switch_player(self):
+        """
+        Change the current player to the next one
+        If current player is the last one, the next one will the first
+        """
+        self.current_player.id = (self.current_player.id + 1) % self.num_players

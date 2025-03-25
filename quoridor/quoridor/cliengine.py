@@ -6,12 +6,24 @@ import copy
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
 from quoridor.command import (
-    Command, PlaceWallCommand, MovePawnCommand, UndoCommand, 
-    RedoCommand, RestartCommand, QuitCommand, AbandonCommand
+    Command,
+    PlaceWallCommand,
+    MovePawnCommand,
+    UndoCommand,
+    RedoCommand,
+    RestartCommand,
+    QuitCommand,
+    AbandonCommand,
 )
-from quoridor.exceptions import InvalidMoveError, InvalidCommandError, PathNotFoundError, GameOver
+from quoridor.exceptions import (
+    InvalidMoveError,
+    InvalidCommandError,
+    PathNotFoundError,
+    GameOver,
+)
 
-class CLIEngine():
+
+class CLIEngine:
     """
     Handles the CLI interface and launches the quoridor game.
     """
@@ -29,8 +41,40 @@ class CLIEngine():
         self.initial_state = copy.deepcopy(gamestate)
 
         # Create rows and columns based on the board size (from 3 to 15)
-        self.rows = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'][:self.size]
-        self.columns = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'][:self.size]
+        self.rows = [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+        ][: self.size]
+        self.columns = [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+        ][: self.size]
 
     def execute_command(self, command: Command) -> bool:
         """
@@ -40,6 +84,10 @@ class CLIEngine():
         if result:
             self.state.history.append(command)
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
+            if self.state.game_over():
+                self.render_game_over()
+            else:
+                self.state.switch_player()
         return result
 
     def translate_move(self, case: str) -> tuple[int, int]:
@@ -110,9 +158,7 @@ class CLIEngine():
         small_space = " "  # Must be of the size of big_space -1
         "  +" + "---+" * self.state.size
 
-        print(
-            "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
-        )
+        print("    " + horizontal_space.join(str(i + 1) for i in range(self.size)))
         print(big_space + interstice + (horizontal_wall + interstice) * self.size)
         for row in range(self.size):
             print(f"{self.rows[row]}" + small_space + vertical_wall, end="")
@@ -147,7 +193,10 @@ class CLIEngine():
         """
         Print the remaining fences for each player.
         """
-        print("Remaining fences: " + str(self.state.players[self.state.current_player.id].fences_remaining))
+        print(
+            "Remaining fences: "
+            + str(self.state.players[self.state.current_player.id].fences_remaining)
+        )
 
     def get_input_from_human_player(self) -> str:
         """
@@ -160,12 +209,17 @@ class CLIEngine():
         Check if the input is a well-formed pawn move.
         """
         return len(input) == 2 and input[0] in self.rows and input[1] in self.columns
-    
+
     def well_formed_wall_placement(self, input: str) -> bool:
         """
         Check if the input is a well-formed wall placement.
         """
-        return len(input) == 3 and input[0] in self.rows and input[1] in self.columns and input[2] in ["v", "h"]
+        return (
+            len(input) == 3
+            and input[0] in self.rows
+            and input[1] in self.columns
+            and input[2] in ["v", "h"]
+        )
 
     def render_game_over(self):
         """
@@ -191,7 +245,7 @@ class CLIEngine():
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)
             a, b = self.state.players[self.state.current_player.id].position
-            return MovePawnCommand(self.state, (a,b), (x,y))
+            return MovePawnCommand(self.state, (a, b), (x, y))
         elif self.well_formed_wall_placement(input):
             x, y, direction = self.translate_wall(input)
             return PlaceWallCommand(self.state, (x, y), direction)
@@ -207,16 +261,16 @@ class CLIEngine():
             try:
                 self.print_remaining_fences()
                 command = self.get_command_from_human_player()
-                
+
                 # Execute the command directly
                 self.execute_command(command)
-                
+
                 self.render_board()
                 if self.state.game_over():
                     raise GameOver
                     # self.render_game_over()
                     # exit()
-                    
+
             except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
                 print(f"Invalid move: {str(e)}")
             except GameOver:

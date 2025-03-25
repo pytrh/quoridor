@@ -13,18 +13,19 @@ from quoridor.exceptions import InvalidMoveError, PathNotFoundError, GameOver
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
 
+
 class Command(ABC):
     """Abstract base class for all commands in the game."""
-    
-    def __init__(self, state: 'GameState'):
+
+    def __init__(self, state: "GameState"):
         """Initialize the command with the game state."""
         self.state = state
-    
+
     @abstractmethod
     def execute(self) -> bool:
         """Execute the command."""
         pass
-    
+
     def undo(self) -> None:
         """
         Undo the command execution.
@@ -32,7 +33,7 @@ class Command(ABC):
         Override this method for commands that support undo.
         """
         raise NotImplementedError("This command cannot be undone")
-    
+
     def redo(self) -> None:
         """
         Redo the command execution.
@@ -40,7 +41,7 @@ class Command(ABC):
         Override this method for commands that support redo.
         """
         raise NotImplementedError("This command cannot be redone")
-    
+
     @abstractmethod
     def __str__(self) -> str:
         """Return a string representation of the command."""
@@ -52,9 +53,7 @@ class Command(ABC):
         Change the current player to the next one
         If current player is the last one, the next one will the first
         """
-        self.state.current_player.id = (
-            self.state.current_player.id + 1
-        ) % self.state.num_players
+        self.state.switch_player()
 
     def update_wall(self):
         """
@@ -67,21 +66,19 @@ class Command(ABC):
 
 class PlaceWallCommand(Command):
     """Command to place a wall on the board."""
-    
-    def __init__(self, state: 'GameState', position: Tuple[int, int], orientation: Direction):
+
+    def __init__(
+        self, state: "GameState", position: Tuple[int, int], orientation: Direction
+    ):
         super().__init__(state)
         self.position = position
         self.orientation = orientation
         self.player = self.state.players[self.state.current_player.id]
-    
+
     def execute(self) -> bool:
         """Execute the command to place a wall."""
         try:
-            self.place_wall(
-                self.position[0],
-                self.position[1],
-                self.orientation
-            )
+            self.place_wall(self.position[0], self.position[1], self.orientation)
             self.switch_player()
             return True
         except (InvalidMoveError, PathNotFoundError) as e:
@@ -161,39 +158,44 @@ class PlaceWallCommand(Command):
         # If the temporary board is valid, update the original
         self.state.board = temp_board
         self.update_wall()
-    
+
     def undo(self) -> None:
         """Remove the wall that was placed."""
         self.state.board.remove_wall(self.position, self.orientation)
         self.player.fences_remaining += 1
         self.switch_player()
-    
+
     def redo(self) -> None:
         """Re-place the wall that was removed."""
         self.execute()
-    
+
     def __str__(self) -> str:
         return f"Place {self.orientation.name} wall at {self.position}"
 
 
 class MovePawnCommand(Command):
     """Command to move a player's pawn on the board."""
-    
-    def __init__(self, state: 'GameState', from_position: Tuple[int, int], to_position: Tuple[int, int]):
+
+    def __init__(
+        self,
+        state: "GameState",
+        from_position: Tuple[int, int],
+        to_position: Tuple[int, int],
+    ):
         super().__init__(state)
         self.player = self.state.players[self.state.current_player.id]
         self.from_position = from_position
         self.to_position = to_position
-    
+
     def execute(self) -> bool:
         """Move the current player's pawn in the specified direction."""
         try:
             self.make_move(self.from_position, self.to_position)
-            self.switch_player()
+            # self.switch_player()
             return True
         except InvalidMoveError as e:
             raise e
-    
+
     def temp_board(self) -> Graph:
         """
         Create a new graph that add and remove edges based on the position
@@ -255,23 +257,23 @@ class MovePawnCommand(Command):
         """Move the pawn back to its previous position."""
         self.player.position = self.from_position
         self.switch_player()
-    
+
     def redo(self) -> None:
         """Move the pawn to its new position again."""
         self.execute()
-    
+
     def __str__(self) -> str:
         return f"Move pawn from {self.from_position} to {self.to_position}"
 
 
 class UndoCommand(Command):
     """Command to undo the last game action."""
-    
-    def __init__(self, state: 'GameState', history: List[Command]=None):
+
+    def __init__(self, state: "GameState", history: List[Command] = None):
         super().__init__(state)
         # Allow an external history to be passed, but default to using state's history
         self.history = history if history is not None else state.history
-    
+
     def execute(self) -> bool:
         """Undo the last command in the command history."""
         if self.history:
@@ -280,19 +282,19 @@ class UndoCommand(Command):
             self.state.redo_stack.append(last_command)
             return True
         return False
-    
+
     def __str__(self) -> str:
         return "Undo last move"
 
 
 class RedoCommand(Command):
     """Command to redo a previously undone action."""
-    
-    def __init__(self, state: 'GameState', redo_stack: List[Command]=None):
+
+    def __init__(self, state: "GameState", redo_stack: List[Command] = None):
         super().__init__(state)
         # Allow an external redo_stack to be passed, but default to using state's redo_stack
         self.redo_stack = redo_stack if redo_stack is not None else state.redo_stack
-    
+
     def execute(self) -> bool:
         """Redo the last undone command."""
         if self.redo_stack:
@@ -302,56 +304,58 @@ class RedoCommand(Command):
                 self.state.history.append(command)
             return result
         return False
-    
+
     def __str__(self) -> str:
         return "Redo previously undone move"
 
 
 class RestartCommand(Command):
     """Command to restart the game."""
-    
-    def __init__(self, state: 'GameState', initial_state: 'GameState'):
+
+    def __init__(self, state: "GameState", initial_state: "GameState"):
         super().__init__(state)
         self.initial_state = deepcopy(initial_state)
-    
+
     def execute(self) -> bool:
         """Restart the game to its initial state."""
         self.state = deepcopy(self.initial_state)
         return True
-    
+
     def __str__(self) -> str:
         return "Restart game"
 
 
 class AbandonCommand(Command):
     """Command to abandon the current game."""
-    
-    def __init__(self, state: 'GameState'):
+
+    def __init__(self, state: "GameState"):
         super().__init__(state)
-    
+
     def execute(self) -> bool:
         """Abandon the current game, declaring the opponent as winner if only one player is left"""
         if len(self.state.players) == 1:
-            self.state.winner = self.state.players[1 if self.state.current_player.id == 0 else 0]
+            self.state.winner = self.state.players[
+                1 if self.state.current_player.id == 0 else 0
+            ]
             raise GameOver
         else:
             """Simply remove the current player from the game"""
             self.state.players.pop(self.state.current_player.id)
         return True
-    
+
     def __str__(self) -> str:
         return f"Abandon game (Player {self.state.current_player.id} surrenders)"
 
 
 class QuitCommand(Command):
     """Command to quit the application."""
-    
-    def __init__(self, state: 'GameState'):
+
+    def __init__(self, state: "GameState"):
         super().__init__(state)
-    
+
     def execute(self) -> bool:
         """Quit the application."""
         exit(0)
-    
+
     def __str__(self) -> str:
         return "Quit application"

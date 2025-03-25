@@ -1,12 +1,22 @@
+import copy
 import logging
 import gi
 
+from quoridor.command import (
+    Command,
+    PlaceWallCommand,
+    MovePawnCommand,
+    UndoCommand,
+    RedoCommand,
+    RestartCommand,
+    QuitCommand,
+    AbandonCommand,
+)
 from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError
-
 from quoridor.gamestate import GameState
 
-from quoridor.gamemode import GameMode
+from quoridor.config import MIN_GRID_SIZE, MAX_GRID_SIZE, DEFAULT_NUM_WALLS
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, GObject
@@ -17,11 +27,13 @@ class MainWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
         self.set_default_size(600, 400)
 
-        self.manager = None
+        self.state = None
+        self.initial_state = None
         self._number_of_players = None
         self._board_size = None
         self._num_walls = None
-        self._game_mode = None
+        self._blitz_mode = None
+
         self._blitz_limit_time = None
         self._blitz_time = None
         self._ai_mode = None
@@ -293,7 +305,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.create_option_label(box, "Board length :")
         self.board_slider = Gtk.Scale()
         self.board_slider.set_digits(0)
-        self.board_slider.set_range(3, 15)  # TODO magic number
+        self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
         self.board_slider.set_increments(2, 2)
         self.board_slider.set_draw_value(True)
         self.board_slider.set_value(9)
@@ -311,9 +323,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.create_option_label(box, "Number of walls per player :")
         self.wall_slider = Gtk.Scale()
         self.wall_slider.set_digits(0)
-        self.wall_slider.set_range(0, 50)  # TODO magic number
+        self.wall_slider.set_range(0, MAX_GRID_SIZE * 2)  # TODO magic number
         self.wall_slider.set_draw_value(True)
-        self.wall_slider.set_value(10)
+        self.wall_slider.set_value(DEFAULT_NUM_WALLS)  # TODO magic number
         self.wall_slider.connect("value-changed", self.slider_changed_wall)
         box.append(self.wall_slider)
 
@@ -330,12 +342,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.btn_normal.set_active(True)  # Normal mode by default
         self.btn_blitz.set_group(self.btn_normal)
 
-        self.btn_normal.connect(
-            "toggled", self.on_game_mode_button_toggled, GameMode.NORMAL
-        )
-        self.btn_blitz.connect(
-            "toggled", self.on_game_mode_button_toggled, GameMode.BLITZ
-        )
+        self.btn_normal.connect("toggled", self.on_game_mode_button_toggled, "Normal")
+        self.btn_blitz.connect("toggled", self.on_game_mode_button_toggled, "Blitz")
 
         hbox.append(self.btn_normal)
         hbox.append(self.btn_blitz)
@@ -396,23 +404,23 @@ class MainWindow(Gtk.ApplicationWindow):
         self.stack.set_visible_child_name("about")
 
     def on_back_home(self, button):
-        if self.manager is not None:
-            for row in range(self.manager.get_board_size()):
-                for col in range(self.manager.get_board_size()):
+        if self.state is not None:
+            for row in range(self.state.size):
+                for col in range(self.state.size):
                     if (row, col) in self.cells:
                         self.game_grid.remove(self.cells[(row, col)])
         self.cells = {}
-        self.manager = None
+        self.state = None
         self.stack.set_visible_child_name("home")
         logging.debug("Button was clicked")
 
     def on_restart_clicked(self, button):
-        for row in range(self.manager.get_board_size()):
-            for col in range(self.manager.get_board_size()):
+        for row in range(self.state.size):
+            for col in range(self.state.size):
                 if (row, col) in self.cells:
                     self.game_grid.remove(self.cells[(row, col)])
         self.cells = {}
-        self.manager = None
+        self.state = None
 
         self.on_start_game_clicked("clicked")
 
@@ -424,10 +432,13 @@ class MainWindow(Gtk.ApplicationWindow):
             self._number_of_players = int(players)
             logging.debug(f"Number of players selected: {self._number_of_players}")
 
-    def on_game_mode_button_toggled(self, button, mode: GameMode):
+    def on_game_mode_button_toggled(self, button, mode):
         if button.get_active():
-            self._game_mode = mode
-            logging.debug(f"Playing in {self._game_mode.display_name} Mode")
+            if mode == "Blitz":
+                self._blitz_mode = True
+            else:
+                self._blitz_mode = False
+            logging.debug(f"Playing in {mode} Mode")
 
     def on_ai_switch_switched(self, switch, state):
         logging.debug(f"The switch has been switched {'on' if state else 'off'}")
@@ -445,29 +456,26 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
-        self.create_game_manager(
+        self.initialize_state(
             num_players=self._number_of_players,
             size=self._board_size,
             num_walls=self._num_walls,
-            blitz_mode=self._game_mode,
-            blitz_limit_time=self._blitz_limit_time,
-            blitz_time=self._blitz_time,
-            ai_mode=self._ai_mode,
+            blitz=self._blitz_mode,
         )
         self.create_board()
         self.render_board()
 
-    def create_game_manager(self, **kwargs):
+    def initialize_state(self, **kwargs):
         filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        state = GameState(**filtered_kwargs)
-        self.manager = GameManager(state)
+        self.state = GameState(**filtered_kwargs)
+        self.initial_state = copy.deepcopy(self.state)
 
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
         self.cells = {}
 
-        for row in range(self.manager.get_board_size()):
-            for col in range(self.manager.get_board_size()):
+        for row in range(self.state.size):
+            for col in range(self.state.size):
                 cell = Gtk.Button(label="")
                 cell.set_size_request(40, 40)
                 self.game_grid.attach(cell, col, row, 1, 1)
@@ -480,7 +488,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
                 self.cells[(row, col)] = cell
 
-        for i in range(self.manager.get_num_players()):
+        for i in range(self.state.num_players):
             player = "winning_pos_player_blue"
             if i == 1:
                 player = "winning_pos_player_red"
@@ -488,39 +496,33 @@ class MainWindow(Gtk.ApplicationWindow):
                 player = "winning_pos_player_green"
             elif i == 3:
                 player = "winning_pos_player_yellow"
-            for j in range(self.manager.get_board_size()):
-                win = self.manager.get_state()._players[i].winning_position[j]
+            for j in range(self.state.size):
+                win = self.state.players[i].winning_position[j]
                 cell = self.cells[(win[0], win[1])]
                 cell.get_style_context().add_class(player)
 
                 if player == "winning_pos_player_green" and j == 0:
                     cell.get_style_context().add_class("corner-bl")
-                if (
-                    player == "winning_pos_player_green"
-                    and j == self.manager.get_board_size() - 1
-                ):
+                if player == "winning_pos_player_green" and j == self.state.size - 1:
                     cell.get_style_context().add_class("corner-br")
 
                 if player == "winning_pos_player_yellow" and j == 0:
                     cell.get_style_context().add_class("corner-tl")
-                if (
-                    player == "winning_pos_player_yellow"
-                    and j == self.manager.get_board_size() - 1
-                ):
+                if player == "winning_pos_player_yellow" and j == self.state.size - 1:
                     cell.get_style_context().add_class("corner-tr")
 
         # adding pawns
-        self.blue_pos = self.manager.get_position_players(0)
-        self.red_pos = self.manager.get_position_players(1)
+        self.blue_pos = self.state.players[0].position
+        self.red_pos = self.state.players[1].position
 
         self.create_draggable_pawn(self.blue_pos, "🔵")
         self.create_draggable_pawn(self.red_pos, "🔴")
         if self._number_of_players is not None:
             if self._number_of_players > 2:
-                self.green_pos = self.manager.get_position_players(2)
+                self.green_pos = self.state.players[2].position
                 self.create_draggable_pawn(self.green_pos, "🟢")
             if self._number_of_players > 3:
-                self.yellow_pos = self.manager.get_position_players(3)
+                self.yellow_pos = self.state.players[3].position
                 self.create_draggable_pawn(self.yellow_pos, "🟡")
 
         # adding walls
@@ -603,18 +605,19 @@ class MainWindow(Gtk.ApplicationWindow):
 
         last_row, last_col = last_pos
         try:
-            self.manager.make_move((last_row, last_col), (row, col))
-            if self.manager.get_state().game_over():
+            move_pawn = MovePawnCommand(self.state, (last_row, last_col), (row, col))
+            self.execute_command(move_pawn)
+            if self.state.game_over():
                 logging.info("-------- GameOver --------")
                 self.game_is_over()
             else:
-                self.manager.switch_player()
+                self.state.switch_player()
             self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
     def game_is_over(self):
-        id_player = self.manager.get_state()._current_player
+        id_player = self.state.current_player.id
         emoji = "🔵"
         if id_player == 1:
             emoji = "🔴"
@@ -632,22 +635,19 @@ class MainWindow(Gtk.ApplicationWindow):
         logging.debug(f"Placing a wall {wall_type} in ({row}, {col})")
 
         try:
-            self.manager.place_wall(row, col, wall_type)
-            if self.manager.get_state().game_over():
-                logging.info("-------- GameOver --------")
-            else:
-                self.manager.switch_player()
+            self.execute_command(PlaceWallCommand(self.state, (row, col), wall_type))
+            self.state.switch_player()
             self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
     def render_board(self):
-        for row in range(self.manager.get_board_size()):
-            for col in range(self.manager.get_board_size()):
+        for row in range(self.state.size):
+            for col in range(self.state.size):
                 button = self.cells[(row, col)]
                 button.set_label("")
 
-        for i in range(self.manager.get_num_players()):
+        for i in range(self.state.num_players):
             emoji = "🔵"
             if i == 1:
                 emoji = "🔴"
@@ -656,20 +656,21 @@ class MainWindow(Gtk.ApplicationWindow):
             elif i == 3:
                 emoji = "🟡"
 
-            position_player = self.manager.get_position_players(i)
+            position_player = self.state.players[i].position
             self.cells[(position_player[0], position_player[1])].set_label(emoji)
             self.create_draggable_pawn((position_player[0], position_player[1]), emoji)
 
-        for row in range(self.manager.get_board_size() - 1):
-            for col in range(self.manager.get_board_size() - 1):
-                if self.manager.get_state().wall_exist(row, col, Direction.H):
+        for row in range(self.state.size - 1):
+            for col in range(self.state.size - 1):
+                if self.state.wall_exist(row, col, Direction.H):
                     self.cells[(row, col)].get_style_context().add_class("wall-h")
                     self.cells[(row, col + 1)].get_style_context().add_class("wall-h")
-                elif self.manager.get_state().wall_exist(row, col, Direction.V):
+                elif self.state.wall_exist(row, col, Direction.V):
                     self.cells[(row, col)].get_style_context().add_class("wall-v")
                     self.cells[(row + 1, col)].get_style_context().add_class("wall-v")
 
-        id_player = self.manager.get_state()._current_player
+        id_player = self.state.current_player.id
+        logging.debug(f"id : {id_player}")
         emoji = "🔵"
         if id_player == 1:
             emoji = "🔴"
@@ -682,14 +683,13 @@ class MainWindow(Gtk.ApplicationWindow):
         return
 
     def set_parameters(self, state: GameState):
-        info = state.get_info_parameters()
-        self._number_of_players = info.get("num_players")
-        self._board_size = info.get("size")
-        self._num_walls = info.get("num_walls")
-        self._game_mode = info.get("game_mode")
-        self._blitz_limit_time = info.get("blitz_limit_time")
-        self._blitz_time = info.get("blitz_time")
-        self._ai_mode = info.get("ai_mode")
+        self._number_of_players = state.num_players
+        self._board_size = state.size
+        self._num_walls = state.initial_num_walls
+        self._blitz_mode = state.blitz
+        self._blitz_limit_time = None
+        self._blitz_time = None
+        self._ai_mode = None
 
         if self._number_of_players == 2:
             self.btn_nb_players_2.set_active(True)
@@ -708,16 +708,26 @@ class MainWindow(Gtk.ApplicationWindow):
         self.btn_blitz.set_active(False)
         self.switch_ai.set_active(False)
 
+    def execute_command(self, command: Command) -> bool:
+        """
+        Execute a command and add it to the command history.
+        """
+        result = command.execute()
+        if result:
+            self.state.history.append(command)
+            self.state.redo_stack.clear()  # Clear redo stack when new command is executed
+        return result
+
 
 class MyApplication(Gtk.Application):
-    def __init__(self, manager: GameManager, **kwargs):
+    def __init__(self, state: GameState, **kwargs):
         super().__init__(**kwargs)
-        self.connect("activate", self.on_activate)
+        self.connect("activates", self.on_activate)
 
         from pathlib import Path
 
         current_dir = Path(__file__).resolve().parent
-        path_to_style_css = current_dir / "../src/gui/style.css"
+        path_to_style_css = current_dir / "../quoridor/style.css"
 
         css_provider = Gtk.CssProvider()
         css_provider.load_from_path(path_to_style_css.as_posix())
@@ -727,20 +737,20 @@ class MyApplication(Gtk.Application):
             css_provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
-        self.manager = manager
+        self.state = state
 
     def on_activate(self, app):
         self.window = MainWindow(application=app, title="Quoridor.py")
         self.window.present()
-        if self.manager is not None:
-            self.window.set_parameters(self.manager.get_state())
+        if self.state is not None:
+            self.window.set_parameters(self.state)
             self.window.on_new_game_clicked(None)
 
 
-class GUIEngine(Engine):
-    def __init__(self, manager: GameManager):
+class GUIEngine:
+    def __init__(self, state: GameState):
         self.app = MyApplication(
-            manager=manager,
+            state=state,
             application_id="quoridor.py",
             flags=Gio.ApplicationFlags.FLAGS_NONE,
         )

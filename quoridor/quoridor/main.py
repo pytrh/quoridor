@@ -8,8 +8,9 @@ import importlib.metadata
 import logging
 import sys
 
-from quoridor.gamestate import GameState
 from quoridor.cliengine import CLIEngine
+from quoridor.gamestate import GameState
+from quoridor.guiengine import GUIEngine
 from quoridor.config import (
     MIN_GRID_SIZE,
     MAX_GRID_SIZE,
@@ -21,6 +22,7 @@ from quoridor.config import (
     DEFAULT_BLITZ_TIME,
     DEFAULT_NUM_WALLS,
 )
+
 
 def setup_logging(verbose, debug):
     """
@@ -67,6 +69,12 @@ def main():
         action="store_true",
     )
     parser.add_argument(
+        "-g",
+        "--gui",
+        help="Enable gui (Graphic User Interface)",
+        action="store_true",
+    )
+    parser.add_argument(
         "-s",
         "--size",
         help="Set the grid size (SIZE × SIZE). Default: 9. "
@@ -101,7 +109,6 @@ def main():
         logging.debug("File found in arguments")
         # game = GameState.load_game_from_file(args.file)
 
-
     size = DEFAULT_SIZE
     num_players = DEFAULT_NUM_PLAYERS
     blitz_time = DEFAULT_BLITZ_TIME
@@ -131,13 +138,13 @@ def main():
         if num_players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
 
-    initial_state = GameState(
-        size=size,
-        num_players=num_players,
-        num_walls=num_walls
-    )
-    cli_engine = CLIEngine(initial_state)
-    cli_engine.start_game()
+    initial_state = GameState(size=size, num_players=num_players, num_walls=num_walls)
+    if args.gui:
+        engine = GUIEngine(initial_state)
+        engine.run()
+    else:
+        cli_engine = CLIEngine(initial_state)
+        cli_engine.start_game()
     sys.exit(0)
 
 
