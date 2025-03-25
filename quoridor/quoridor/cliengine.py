@@ -146,7 +146,7 @@ class CLIEngine:
             return False
         return True
 
-    def get_board_to_string(self):
+    def get_string_from_board(self) -> str:
         """
         Return the board in string format
         """
@@ -193,7 +193,7 @@ class CLIEngine:
         """
         Print the board on the terminal
         """
-        print(self.get_board_to_string())
+        print(self.get_string_from_board())
 
     def print_remaining_walls(self):
         """

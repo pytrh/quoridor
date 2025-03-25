@@ -107,7 +107,7 @@ def _test_parse_string_to_graph():
     cli.execute_command(place1)
     cli.execute_command(place2)
     cli.execute_command(place3)
-    string_board = cli.get_board_to_string()
+    string_board = cli.get_string_from_board()
     print(string_board)
 
     print("")
@@ -169,7 +169,7 @@ def parse_string_to_state(state_string: str) -> GameState:
                             walls_remaining=player_data.get("walls", 0),
                         )
                     )
-                    player_data = {}  # Reset pour le prochain joueur
+                    player_data = {}
                 elif key == "player_position":
                     player_data["position"] = tuple(map(int, value.split(",")))
                 elif key == "player_walls":
