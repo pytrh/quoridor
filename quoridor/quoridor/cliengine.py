@@ -146,9 +146,9 @@ class CLIEngine:
             return False
         return True
 
-    def render_board(self):
+    def get_board_to_string(self):
         """
-        Print the board on the terminal
+        Return the board in string format
         """
         horizontal_wall = "---"
         vertical_wall = "|"
@@ -158,10 +158,11 @@ class CLIEngine:
         small_space = " "  # Must be of the size of big_space -1
         "  +" + "---+" * self.state.size
 
-        print("    " + horizontal_space.join(str(i + 1) for i in range(self.size)))
-        print(big_space + interstice + (horizontal_wall + interstice) * self.size)
+        result = "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
+        result += "\n"
+        result += big_space + interstice + (horizontal_wall + interstice) * self.size
         for row in range(self.size):
-            print(f"{self.rows[row]}" + small_space + vertical_wall, end="")
+            result += f"\n{self.rows[row]}" + small_space + vertical_wall
             for columns in range(self.size):
                 case = "   "
                 for player in range(self.state.num_players):
@@ -174,20 +175,25 @@ class CLIEngine:
                 if columns == self.size - 1 or not self.state.board.edge_exists(
                     (row, columns), (row, columns + 1)
                 ):
-                    print(case + vertical_wall, end="")
+                    result += case + vertical_wall
                 else:
-                    print(case + " ", end="")
-            print("")
-            print(big_space + interstice, end="")
+                    result += case + " "
+            result += "\n" + big_space + interstice
             for columns in range(self.size):
                 if row == self.size - 1 or not self.state.board.edge_exists(
                     (row, columns), (row + 1, columns)
                 ):
-                    print(horizontal_wall, end="")
+                    result += horizontal_wall
                 else:
-                    print(horizontal_space, end="")
-                print(interstice, end="")
-            print("")
+                    result += horizontal_space
+                result += interstice
+        return result
+
+    def render_board(self):
+        """
+        Print the board on the terminal
+        """
+        print(self.get_board_to_string())
 
     def print_remaining_fences(self):
         """
