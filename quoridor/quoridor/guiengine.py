@@ -4,8 +4,6 @@ import gi
 from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError
 
-from quoridor.engine import Engine
-from quoridor.gamemanager import GameManager
 from quoridor.gamestate import GameState
 
 from quoridor.gamemode import GameMode
