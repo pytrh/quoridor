@@ -497,7 +497,7 @@ class MainWindow(Gtk.ApplicationWindow):
             elif i == 3:
                 player = "winning_pos_player_yellow"
             for j in range(self.state.size):
-                win = self.state.players[i].winning_position[j]
+                win = self.state.players[i].goal_line[j]
                 cell = self.cells[(win[0], win[1])]
                 cell.get_style_context().add_class(player)
 
