@@ -610,8 +610,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def handle_timer_end_for_player(self, id: int):
         "handle 3 players"
-        if self.state.num_players >= 3:
-            self.state.remove_player(id)
+        if self.state.num_players >= 3:  # TODO voir combien de joueur il reste
+            self.state.abandon_game(id)
             self.state.players[self.state.current_player.id].timer.start_turn(True)
             self.state.players[self.state.current_player.id].timer.display_lock.set()
         else:

@@ -194,7 +194,7 @@ class GameState:
         )
         return cloned_state
 
-    def remove_player(self, player_id: int):
+    def abandon_game(self, player_id: int):
         # TODO remove player_id in players  and  change num_players
 
         # TODO or you can modify switch player to jump a specify player_id
