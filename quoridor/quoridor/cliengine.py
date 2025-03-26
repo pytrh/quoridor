@@ -41,7 +41,7 @@ class CLIEngine:
         self.size = gamestate.size
         # cant copy threads 
         # self.initial_state = copy.deepcopy(gamestate)
-        self.initial_state = self.copy_state()
+        self.initial_state = gamestate.copy_state()
 
         # Create rows and columns based on the board size (from 3 to 15)
         self.rows = [
@@ -79,22 +79,6 @@ class CLIEngine:
             "15",
         ][: self.size]
     
-    def copy_state(self):
-        cloned_state = GameState(
-            size=self.state.size,
-            current_player_id=self.state.current_player.id,
-            players=self.state.players,
-            num_players=self.state.num_players,
-            board=self.state.board,
-            num_walls=self.state.initial_num_walls,
-            history=self.state.history,
-            blitz_mode=self.state.blitz_mode,
-            blitz_time=self.state.blitz_time,
-            ai_mode=self.state.ai_mode,
-        )
-        return cloned_state
-
-
     def execute_command(self, command: Command) -> bool:
         """
         Execute a command and add it to the command history.

@@ -166,3 +166,21 @@ class GameState:
         If current player is the last one, the next one will the first
         """
         self.current_player.id = (self.current_player.id + 1) % self.num_players
+
+    def copy_state(self):
+        """
+        copy game state
+        """
+        cloned_state = GameState(
+            size=self.size,
+            current_player_id=self.current_player.id,
+            players=self.players,
+            num_players=self.num_players,
+            board=self.board,
+            num_walls=self.initial_num_walls,
+            history=self.history,
+            blitz_mode=self.blitz_mode,
+            blitz_time=self.blitz_time,
+            ai_mode=self.ai_mode,
+        )
+        return cloned_state
