@@ -5,6 +5,7 @@ Run the quoridor game in the terminal.
 import copy
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
+from quoridor.gamemode import GameMode
 from quoridor.command import (
     Command,
     PlaceWallCommand,
@@ -281,16 +282,18 @@ class CLIEngine:
         """
         end timer
         """
-        self.state.players[self.state.current_player.id].time_remaining_blitz.end_turn()
-        self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.clear()
+        if self.state.blitz_mode in (GameMode.BLITZ, GameMode.BLITZ_LONG):
+            self.state.players[self.state.current_player.id].time_remaining_blitz.end_turn()
+            self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.clear()
 
     def start_blitz_turn(self, blitz_mode_active: bool):
         """
         get and start timer
         """
-        self.state.players[self.state.current_player.id].time_remaining_blitz.start_turn(self.state.current_player.id, 
-                                                                                         blitz_mode_active)
-        self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.set()
+        if self.state.blitz_mode in (GameMode.BLITZ, GameMode.BLITZ_LONG):
+            self.state.players[self.state.current_player.id].time_remaining_blitz.start_turn(self.state.current_player.id, 
+                                                                                            blitz_mode_active)
+            self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.set()
 
 
     def start_game(self):
@@ -303,17 +306,15 @@ class CLIEngine:
             try:
                 self.print_remaining_walls()
 
-                if self.state.blitz_mode:
-                    self.start_blitz_turn(blitz_mode_active)
-                    blitz_mode_active = False
-                    print("")
+                self.start_blitz_turn(blitz_mode_active)
+                blitz_mode_active = False
+                print("")
 
                 command = self.get_command_from_human_player()
                 # Execute the command directly
                 self.execute_command(command)
                 
-                if self.state.blitz_mode:
-                    self.end_blitz_turn()
+                self.end_blitz_turn()
 
                 blitz_mode_active = True
                 self.render_board()
@@ -323,10 +324,9 @@ class CLIEngine:
                     # exit()
 
             except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
-                if self.state.blitz_mode:
-                    self.end_blitz_turn()
-
+                self.end_blitz_turn()
                 print(f"Invalid move: {str(e)}")
+                
             except GameOver:
                 self.render_game_over()
                 exit()
