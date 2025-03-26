@@ -142,11 +142,11 @@ class PlaceWallCommand(Command):
         # Check if all the players can still win
         for i in range(0, self.state.num_players):
             path = False
-            for j in range(0, len(self.state.players[i].winning_position)):
+            for j in range(0, len(self.state.players[i].goal_line)):
                 try:
                     temp_board.a_star(
                         self.state.players[i].position,
-                        self.state.players[i].winning_position[j],
+                        self.state.players[i].goal_line[j],
                     )
                     path = True
                     break
