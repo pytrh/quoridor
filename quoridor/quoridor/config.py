@@ -1,5 +1,6 @@
 """
-Constants for the Quoridor game.
+Centralized configuration module for the Quoridor game.
+IE: Board size, number of players, number of walls, etc.
 """
 
 # Board size limits
