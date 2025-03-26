@@ -311,10 +311,10 @@ class CLIEngine:
                 print("")
 
                 command = self.get_command_from_human_player()
+
+                self.end_blitz_turn()
                 # Execute the command directly
                 self.execute_command(command)
-                
-                self.end_blitz_turn()
 
                 blitz_mode_active = True
                 self.render_board()
