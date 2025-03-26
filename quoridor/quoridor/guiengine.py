@@ -14,17 +14,18 @@ from quoridor.command import (
 )
 from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError
+from quoridor.gamemode import GameMode
 from quoridor.gamestate import GameState
+from quoridor.guiobserver import GuiObserver
 
 from quoridor.config import MIN_GRID_SIZE, MAX_GRID_SIZE, DEFAULT_NUM_WALLS
 
-from quoridor.gamemode import GameMode
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, GObject
 
 
-class MainWindow(Gtk.ApplicationWindow):
+class MainWindow(Gtk.ApplicationWindow, GuiObserver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_default_size(600, 400)

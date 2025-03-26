@@ -4,8 +4,7 @@ import time
 import os
 
 from quoridor.gamemode import GameMode
-
-# from quoridor.guiengine import GUIEngine
+from quoridor.guiobserver import GuiObserver
 
 
 class Timer:
@@ -73,7 +72,7 @@ class Timer:
         """
         return self.current_time
 
-    def set_gui_observer(self, gui: any):
+    def set_gui_observer(self, gui: GuiObserver):
         self.gui = gui
 
     def _timeout_watchdog(self):
@@ -104,4 +103,3 @@ class Timer:
                     os._exit(0)  # TODO remove force exit
 
             time.sleep(0.5)
-        print("over")
