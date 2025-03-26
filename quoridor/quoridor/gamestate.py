@@ -7,9 +7,9 @@ from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.direction import Direction
 from quoridor.config import (
-    DEFAULT_SIZE,
-    DEFAULT_NUM_PLAYERS,
-    DEFAULT_NUM_WALLS,
+    GRID_SIZE,
+    NUM_PLAYERS,
+    NUM_WALLS,
 )
 
 if TYPE_CHECKING:
@@ -24,13 +24,13 @@ class GameState:
 
     def __init__(
         self,
-        size: int = DEFAULT_SIZE,
+        size: int = GRID_SIZE,
         current_player_id: int = 0,
         players: list[Player] = None,
-        num_players: int = DEFAULT_NUM_PLAYERS,
+        num_players: int = NUM_PLAYERS,
         board: Graph = None,
         blitz: bool = False,
-        num_walls: int = DEFAULT_NUM_WALLS,
+        num_walls: int = NUM_WALLS,
         history: List["Command"] = None,
     ):
         """

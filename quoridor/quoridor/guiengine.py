@@ -16,7 +16,7 @@ from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError
 from quoridor.gamestate import GameState
 
-from quoridor.config import MIN_GRID_SIZE, MAX_GRID_SIZE, DEFAULT_NUM_WALLS
+from quoridor.config import MIN_GRID_SIZE, MAX_GRID_SIZE
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, GObject
