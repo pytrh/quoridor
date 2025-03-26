@@ -8,6 +8,7 @@ Classes:
     EdgeNotFoundError: Raised when trying to access an edge that is not in the graph.
     PathNotFoundError: Raised when there is no path between two nodes.
     InvalidMoveError: Raised when an invalid move is attempted in the game.
+    GameOver: Raised when the game is over.
 """
 
 class NodeNotFoundError(Exception):
@@ -28,4 +29,8 @@ class InvalidMoveError(Exception):
 
 class InvalidCommandError(Exception):
     """Exception raised when an invalid command is attempted in the game."""
+    pass
+
+class GameOver(Exception):
+    """Exception raised when the game is over."""
     pass

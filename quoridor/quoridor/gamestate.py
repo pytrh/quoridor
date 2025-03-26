@@ -2,9 +2,18 @@
 GameState module.
 """
 
+from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.direction import Direction
+from quoridor.config import (
+    DEFAULT_SIZE,
+    DEFAULT_NUM_PLAYERS,
+    DEFAULT_NUM_WALLS,
+)
+
+if TYPE_CHECKING:
+    from quoridor.command import Command
 
 
 class GameState:
@@ -15,43 +24,62 @@ class GameState:
 
     def __init__(
         self,
-        size: int = 9,
-        num_players: int = 2,
-        blitz_mode: bool = False,
-        num_walls: int = 10,
-        history: list[list[str]] = [[]],
+        size: int = DEFAULT_SIZE,
+        current_player_id: int = 0,
+        players: list[Player] = None,
+        num_players: int = DEFAULT_NUM_PLAYERS,
+        board: Graph = None,
+        blitz: bool = False,
+        num_walls: int = DEFAULT_NUM_WALLS,
+        history: List["Command"] = None,
     ):
         """
-        Initialize a new game state.
-        :param size: The size of the board, default is 9.
-        :type size: int
-        :param num_players: The number of players, default is 2.
-        :type num_players: int
-        :param blitz_mode: Whether the game is in blitz mode, default is False.
-        :type blitz_mode: bool
-        :param history: The history of moves, default is an empty list.
-        :type history: list[list[str]]
+         Initialize a new game state.
+         :param size: The size of the board, default is 9.
+         :type size: int
+         :param current_player_id: The current player, default is 0.
+         :type current_player_id: int
+         :param players: The list of players, default is [Player(0, (0, 0), 0, 0), Player(1, (0, 0), 0, 0)].
+         :type players: list[Player]
+         :param board: The board, default is a new Graph().
+         :type board: Graph
+         :param blitz_mode: Whether the game is in blitz mode, default is False.
+         :type blitz_mode: bool
+         :param num_walls: The number of walls, default is 10.
+         :type num_walls: int
+         :param history: The history of moves, default is an empty list.
+        :type history: list[Command]
         """
-        self.board = self.create_board(size)
+        self.board = board if board is not None else self.create_board(size)
         self.size = size
-        self.current_player = 0
         self.num_players = num_players
+        self.initial_num_walls = num_walls
 
-        # Players placement
-        middle_board = size // 2
-        print(middle_board)
-        players = [
-            Player(0, (middle_board, 0), size, num_walls),
-            Player(1, (middle_board, size - 1), size, num_walls),
-        ]
-        if num_players > 2:
-            players.append(Player(2, (0, middle_board), size, num_walls))
-        if num_players > 3:
-            players.append(Player(3, (size - 1, middle_board), size, num_walls))
-        self.players = players
-        self.blitz_mode = blitz_mode
-        self.history = history
-        self.move_count = 0
+        if players is None:
+            middle_board = size // 2
+            # print(middle_board)
+
+            self.players = [
+                Player(0, (middle_board, 0), size, num_walls),
+                Player(1, (middle_board, size - 1), size, num_walls),
+            ]
+            if self.num_players > 2:
+                self.players.append(Player(2, (0, middle_board), size, num_walls))
+            if self.num_players > 3:
+                self.players.append(
+                    Player(3, (size - 1, middle_board), size, num_walls)
+                )
+        else:
+            self.players = players
+        self.current_player = (
+            self.players[0]
+            if current_player_id is None
+            else self.players[current_player_id]
+        )
+        self.blitz = blitz
+        self.history = [] if history is None else history
+        self.redo_stack = []
+        # self.move_count = 0
 
     def create_board(self, size: int = 9) -> Graph:
         """
@@ -101,17 +129,23 @@ class GameState:
         :return: Is the game finished?
         :rtype: bool
         """
-        match self.current_player:
-            case 0:
-                if self.players[self.current_player].position[1] == self.size - 1:
-                    return True
-            case 1:
-                if self.players[self.current_player].position[1] == 0:
-                    return True
-            case 2:
-                if self.players[self.current_player].position[0] == self.size - 1:
-                    return True
-            case 3:
-                if self.players[self.current_player].position[0] == 0:
-                    return True
+        if self.current_player.id == 0:
+            if self.players[self.current_player.id].position[1] == self.size - 1:
+                return True
+        elif self.current_player.id == 1:
+            if self.players[self.current_player.id].position[1] == 0:
+                return True
+        elif self.current_player.id == 2:
+            if self.players[self.current_player.id].position[0] == self.size - 1:
+                return True
+        elif self.current_player.id == 3:
+            if self.players[self.current_player.id].position[0] == 0:
+                return True
         return False
+
+    def switch_player(self):
+        """
+        Change the current player to the next one
+        If current player is the last one, the next one will the first
+        """
+        self.current_player.id = (self.current_player.id + 1) % self.num_players

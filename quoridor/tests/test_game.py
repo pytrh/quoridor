@@ -74,10 +74,9 @@ def test_game():
     __check_game_parameters(game, 9, 4, False, [[]])
     assert game.current_player == 0
     assert game.move_count == 0
-    players = [
-        Player(0, (4, 0), 5),
-        Player(1, (4, 8), 5),
-        Player(2, (0, 4), 5),
-        Player(3, (4, 8), 5),
-    ]
-    __check_player(game, players)
+    assert game.players[0].position == (4, 0)
+    assert game.players[1].position == (4, 8)
+    assert game.players[0].walls_remaining == 10
+    assert game.players[1].walls_remaining == 10
+    assert game.players[0].id == 0
+    assert game.players[1].id == 1

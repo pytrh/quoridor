@@ -1,0 +1,61 @@
+.title {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+* {
+    font-family: 'Noto Color Emoji', sans-serif;
+}
+
+/* winning cell */
+button.winning_pos_player_red {
+    background: rgb(255, 111, 111);
+    color: white;
+}
+
+button.winning_pos_player_blue {
+    background: rgb(160, 196, 255);
+    color: white;
+}
+
+button.winning_pos_player_green {
+    background: rgb(167, 243, 208);
+    color: white;
+}
+
+button.winning_pos_player_yellow {
+    background: rgb(255, 237, 153);
+    color: white;
+}
+
+/* winning corner */
+button.corner-tl {
+    background: linear-gradient(to top right, rgb(255, 111, 111), rgb(255, 237, 153));
+    color: white;
+}
+
+button.corner-tr {
+    background: linear-gradient(to bottom right, rgb(255, 237, 153), rgb(160, 196, 255));
+    color: white;
+}
+
+button.corner-bl {
+    background: linear-gradient(to bottom right, rgb(255, 111, 111), rgb(167, 243, 208));
+    color: white;
+}
+
+button.corner-br {
+    background: linear-gradient(to top right, rgb(167, 243, 208), rgb(160, 196, 255));
+    color: white;
+}
+
+/* walls */
+button.wall-v {
+    border-right: 5px solid black;
+    color: white;
+}
+
+button.wall-h {
+    border-bottom: 5px solid black;
+    color: white;
+}

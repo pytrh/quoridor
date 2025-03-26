@@ -1,17 +1,31 @@
 """
-CLI Game Engine.
+Run the quoridor game in the terminal.
 """
 
-from quoridor.gameengine import GameEngine
+import copy
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, InvalidCommandError
-from quoridor.command import Command, CommandType
+from quoridor.command import (
+    Command,
+    PlaceWallCommand,
+    MovePawnCommand,
+    UndoCommand,
+    RedoCommand,
+    RestartCommand,
+    QuitCommand,
+    AbandonCommand,
+)
+from quoridor.exceptions import (
+    InvalidMoveError,
+    InvalidCommandError,
+    PathNotFoundError,
+    GameOver,
+)
 
 
-class CLIEngine(GameEngine):
+class CLIEngine:
     """
-    CLIEngine handles the CLI interface of the quoridor game.
+    Handles the CLI interface and launches the quoridor game.
     """
 
     def __init__(self, gamestate: GameState):
@@ -24,10 +38,57 @@ class CLIEngine(GameEngine):
         """
         self.state = gamestate
         self.size = gamestate.size
+        self.initial_state = copy.deepcopy(gamestate)
 
         # Create rows and columns based on the board size (from 3 to 15)
-        self.rows = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'][:self.size]
-        self.columns = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'][:self.size]
+        self.rows = [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+        ][: self.size]
+        self.columns = [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+        ][: self.size]
+
+    def execute_command(self, command: Command) -> bool:
+        """
+        Execute a command and add it to the command history.
+        """
+        result = command.execute()
+        if result:
+            self.state.history.append(command)
+            self.state.redo_stack.clear()  # Clear redo stack when new command is executed
+            if self.state.game_over():
+                self.render_game_over()
+            else:
+                self.state.switch_player()
+        return result
 
     def translate_move(self, case: str) -> tuple[int, int]:
         """
@@ -85,9 +146,9 @@ class CLIEngine(GameEngine):
             return False
         return True
 
-    def render_board(self):
+    def get_string_from_board(self) -> str:
         """
-        Print the board on the terminal
+        Return the board in string format
         """
         horizontal_wall = "---"
         vertical_wall = "|"
@@ -97,12 +158,11 @@ class CLIEngine(GameEngine):
         small_space = " "  # Must be of the size of big_space -1
         "  +" + "---+" * self.state.size
 
-        print(
-            "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
-        )
-        print(big_space + interstice + (horizontal_wall + interstice) * self.size)
+        result = "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
+        result += "\n"
+        result += big_space + interstice + (horizontal_wall + interstice) * self.size
         for row in range(self.size):
-            print(f"{self.rows[row]}" + small_space + vertical_wall, end="")
+            result += f"\n{self.rows[row]}" + small_space + vertical_wall
             for columns in range(self.size):
                 case = "   "
                 for player in range(self.state.num_players):
@@ -110,48 +170,68 @@ class CLIEngine(GameEngine):
                         self.state.players[player].position[0] == row
                         and self.state.players[player].position[1] == columns
                     ):
-                        case = " " + str(self.state.players[player].id + 1) + " "
+                        # case = " " + str(self.state.players[player].id + 1) + " "
+                        case = " " + str(player + 1) + " "
                 if columns == self.size - 1 or not self.state.board.edge_exists(
                     (row, columns), (row, columns + 1)
                 ):
-                    print(case + vertical_wall, end="")
+                    result += case + vertical_wall
                 else:
-                    print(case + " ", end="")
-            print("")
-            print(big_space + interstice, end="")
+                    result += case + " "
+            result += "\n" + big_space + interstice
             for columns in range(self.size):
                 if row == self.size - 1 or not self.state.board.edge_exists(
                     (row, columns), (row + 1, columns)
                 ):
-                    print(horizontal_wall, end="")
+                    result += horizontal_wall
                 else:
-                    print(horizontal_space, end="")
-                print(interstice, end="")
-            print("")
+                    result += horizontal_space
+                result += interstice
+        return result
 
-    def print_remaining_fences(self):
+    def render_board(self):
         """
-        Print the remaining fences for each player.
+        Print the board on the terminal
         """
-        print("Remaining fences: " + str(self.state.players[self.state.current_player].fences_remaining))
+        print(self.get_string_from_board())
+
+    def print_remaining_walls(self):
+        """
+        Print the remaining walls for each player.
+        """
+        print(
+            "Remaining walls: "
+            + str(self.state.players[self.state.current_player.id].walls_remaining)
+        )
 
     def get_input_from_human_player(self) -> str:
         """
         Get an input from the human player.
         """
-        return input("Player " + str(self.state.current_player + 1) + " will play?")
+        return input("Player " + str(self.state.current_player.id + 1) + " will play?")
 
     def well_formed_pawn_move(self, input: str) -> bool:
         """
         Check if the input is a well-formed pawn move.
         """
         return len(input) == 2 and input[0] in self.rows and input[1] in self.columns
-    
+
     def well_formed_wall_placement(self, input: str) -> bool:
         """
         Check if the input is a well-formed wall placement.
         """
-        return len(input) == 3 and input[0] in self.rows and input[1] in self.columns and input[2] in ["v", "h"]
+        return (
+            len(input) == 3
+            and input[0] in self.rows
+            and input[1] in self.columns
+            and input[2] in ["v", "h"]
+        )
+
+    def render_game_over(self):
+        """
+        Render the game over screen.
+        """
+        print(f"Player {self.state.current_player.id + 1} has won the game!")
 
     def get_command_from_human_player(self) -> Command:
         """
@@ -159,22 +239,46 @@ class CLIEngine(GameEngine):
         """
         input = self.get_input_from_human_player()
         if input == "undo":
-            return Command.create_simple_command(CommandType.UNDO)
+            return UndoCommand(self.state, self.state.history)
         elif input == "redo":
-            return Command.create_simple_command(CommandType.REDO)
+            return RedoCommand(self.state, self.state.redo_stack)
         elif input == "quit":
-            return Command.create_simple_command(CommandType.QUIT)
+            return QuitCommand(self.state)
         elif input == "restart":
-            return Command.create_simple_command(CommandType.RESTART)
+            return RestartCommand(self.state, self.initial_state)
+        elif input == "abandon":
+            return AbandonCommand(self.state)
         elif self.well_formed_pawn_move(input):
-            return Command.create_move_command(self.translate_move(input))
+            x, y = self.translate_move(input)
+            a, b = self.state.players[self.state.current_player.id].position
+            return MovePawnCommand(self.state, (a, b), (x, y))
         elif self.well_formed_wall_placement(input):
-            return Command.create_wall_command(self.translate_wall(input))
+            x, y, direction = self.translate_wall(input)
+            return PlaceWallCommand(self.state, (x, y), direction)
         else:
-            raise InvalidCommandError
+            raise InvalidCommandError("Invalid command format")
 
-    def render_game_over(self):
+    def start_game(self):
         """
-        Render the game over screen.
+        Start the game loop.
         """
-        print(f"Player {self.state.current_player + 1} has won the game!")
+        self.render_board()
+        while True:
+            try:
+                self.print_remaining_walls()
+                command = self.get_command_from_human_player()
+
+                # Execute the command directly
+                self.execute_command(command)
+
+                self.render_board()
+                if self.state.game_over():
+                    raise GameOver
+                    # self.render_game_over()
+                    # exit()
+
+            except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
+                print(f"Invalid move: {str(e)}")
+            except GameOver:
+                self.render_game_over()
+                exit()
