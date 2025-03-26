@@ -23,7 +23,7 @@ from quoridor.config import (
     DEFAULT_BLITZ_TIME,
     DEFAULT_NUM_WALLS,
     DEFAULT_GAME_MODE,
-    DEFAULT_AI_COLOR
+    DEFAULT_AI_COLOR,
 )
 
 
@@ -99,10 +99,10 @@ def main():
         type=int,
     )
     parser.add_argument(
-    "-b",
-    "--blitz",
-    help="Enable blitz (timer mode)",
-    action="store_true",
+        "-b",
+        "--blitz",
+        help="Enable blitz (timer mode)",
+        action="store_true",
     )
     parser.add_argument(
         "-t",
@@ -118,7 +118,7 @@ def main():
         help="Enable AI mode for COLOR (1, 2, 3, 4 or A for all). Default is 2. Can be used multiple times.",
         nargs="?",
         const=True,
-        action="append"
+        action="append",
     )
 
     args = parser.parse_args()
@@ -143,7 +143,6 @@ def main():
     current_ai_color = DEFAULT_AI_COLOR
     ai_colors = set()
 
-
     if args.walls:
         num_walls = args.walls
 
@@ -167,13 +166,13 @@ def main():
             sys.exit(1)
         if num_players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
-    
+
     if args.ai:
         for ai in args.ai:
             if ai is True:
                 ai_colors.add(current_ai_color)
                 current_ai_color += 1
-            elif ai == 'A':
+            elif ai == "A":
                 ai_colors = {1, 2, 3, 4}
                 break
             else:
@@ -182,21 +181,19 @@ def main():
                     logging.error("COLOR must be between 1 and 4 or 'A'")
                     sys.exit(1)
                 if color != 1 and color not in ai_colors:
-                    current_ai_color +=1
+                    current_ai_color += 1
                 ai_colors.add(color)
         ai_mode = GameMode.AI
 
-
     if args.blitz:
-            blitz_mode = GameMode.BLITZ
+        blitz_mode = GameMode.TIMER_INCR
 
     if args.time:
-        if blitz_mode != GameMode.BLITZ:
+        if blitz_mode != GameMode.TIMER_INCR:
             logging.warning("blitz mode is not activated. You cannot set a time.")
         else:
             blitz_time = args.time
-            blitz_mode = GameMode.BLITZ_LONG
-
+            blitz_mode = GameMode.BLITZ
 
     if (args.players is not None) and (args.ai is not None):
         logging.warning("Warning: -p option ignored due to presence of -a options")
@@ -204,14 +201,15 @@ def main():
     elif args.ai is not None:
         num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
 
-    initial_state = GameState(size=size,
-                              num_players=num_players,
-                              num_walls=num_walls,
-                              blitz_mode=blitz_mode,
-                              blitz_time=blitz_time * 60,
-                              ai_mode=ai_mode,
-                              ai_colors=ai_colors,
-                              )
+    initial_state = GameState(
+        size=size,
+        num_players=num_players,
+        num_walls=num_walls,
+        blitz_mode=blitz_mode,
+        blitz_time=blitz_time * 60,
+        ai_mode=ai_mode,
+        ai_colors=ai_colors,
+    )
     if args.gui:
         engine = GUIEngine(initial_state)
         engine.run()

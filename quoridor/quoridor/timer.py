@@ -4,6 +4,7 @@ import os
 
 from quoridor.gamemode import GameMode
 
+
 class Timer:
     def __init__(self, blitz_time: int, blitz_mode: GameMode):
         """
@@ -31,15 +32,14 @@ class Timer:
             blitz_mode_active (bool): Whether the blitz timer should reset at each turn.
         """
         self.current_player = current_player
-        if self.game_mode == GameMode.BLITZ and blitz_mode_active:
+        if self.game_mode == GameMode.TIMER_INCR and blitz_mode_active:
             self.current_time = self.initial_time
         self.turn_start_time = time.time()
 
-        if self.game_mode in (GameMode.BLITZ, GameMode.BLITZ_LONG):
+        if self.game_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
             self._stop_event.clear()
             self._watchdog_thread = threading.Thread(
-                target=self._timeout_watchdog,
-                args=(self.current_player,)
+                target=self._timeout_watchdog, args=(self.current_player,)
             )
             self._watchdog_thread.start()
 
@@ -47,7 +47,10 @@ class Timer:
         """
         End the current turn, update the remaining time, and stop the watchdog thread.
         """
-        if self.game_mode in (GameMode.BLITZ_LONG, GameMode.BLITZ) and self.turn_start_time is not None:
+        if (
+            self.game_mode in (GameMode.BLITZ, GameMode.TIMER_INCR)
+            and self.turn_start_time is not None
+        ):
             turn_end_time = time.time() - self.turn_start_time
             self.current_time -= int(turn_end_time)
             self.turn_start_time = None
@@ -79,7 +82,7 @@ class Timer:
             remaining = max(0, self.current_time - elapsed)
 
             if not self.display_lock.is_set():
-                print(f"\r[⏳ Remaining: {remaining}s] ", end='', flush=True)
+                print(f"\r[⏳ Remaining: {remaining}s] ", end="", flush=True)
 
             if remaining <= 0:
                 print(f"\n⏰ Time out! Player {current_player} has won the game!")

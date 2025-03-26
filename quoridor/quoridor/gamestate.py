@@ -13,7 +13,7 @@ from quoridor.config import (
     DEFAULT_NUM_WALLS,
     DEFAULT_GAME_MODE,
     DEFAULT_BLITZ_TIME,
-    GameMode
+    GameMode,
 )
 
 if TYPE_CHECKING:
@@ -90,13 +90,13 @@ class GameState:
         self.ai_mode = ai_mode
         # self.move_count = 0
 
-        if blitz_mode == GameMode.BLITZ or blitz_mode == GameMode.BLITZ_LONG:
+        if blitz_mode == GameMode.TIMER_INCR or blitz_mode == GameMode.BLITZ:
             for i in range(num_players):
-                self.players[i].time_remaining_blitz = Timer(blitz_time//num_players, blitz_mode)
-        
+                self.players[i].time_remaining_blitz = Timer(blitz_time, blitz_mode)
+
         if ai_mode == GameMode.AI:
             for i in ai_colors:
-                self.players[i-1].ai_mode = True
+                self.players[i - 1].ai_mode = True
 
     def create_board(self, size: int = 9) -> Graph:
         """

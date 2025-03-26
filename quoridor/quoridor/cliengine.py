@@ -39,7 +39,7 @@ class CLIEngine:
         """
         self.state = gamestate
         self.size = gamestate.size
-        # cant copy threads 
+        # cant copy threads
         # self.initial_state = copy.deepcopy(gamestate)
         self.initial_state = gamestate.copy_state()
 
@@ -78,7 +78,7 @@ class CLIEngine:
             "14",
             "15",
         ][: self.size]
-    
+
     def execute_command(self, command: Command) -> bool:
         """
         Execute a command and add it to the command history.
@@ -261,24 +261,31 @@ class CLIEngine:
         else:
             raise InvalidCommandError("Invalid command format")
 
-
     def end_blitz_turn(self):
         """
         end timer
         """
-        if self.state.blitz_mode in (GameMode.BLITZ, GameMode.BLITZ_LONG):
-            self.state.players[self.state.current_player.id].time_remaining_blitz.end_turn()
-            self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.clear()
+        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+            self.state.players[
+                self.state.current_player.id
+            ].time_remaining_blitz.end_turn()
+            self.state.players[
+                self.state.current_player.id
+            ].time_remaining_blitz.display_lock.clear()
 
     def start_blitz_turn(self, blitz_mode_active: bool):
         """
         get and start timer
         """
-        if self.state.blitz_mode in (GameMode.BLITZ, GameMode.BLITZ_LONG):
-            self.state.players[self.state.current_player.id].time_remaining_blitz.start_turn(self.state.current_player.id, 
-                                                                                            blitz_mode_active)
-            self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.set()
-
+        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+            self.state.players[
+                self.state.current_player.id
+            ].time_remaining_blitz.start_turn(
+                self.state.current_player.id, blitz_mode_active
+            )
+            self.state.players[
+                self.state.current_player.id
+            ].time_remaining_blitz.display_lock.set()
 
     def start_game(self):
         """
@@ -310,7 +317,7 @@ class CLIEngine:
             except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
                 self.end_blitz_turn()
                 print(f"Invalid move: {str(e)}")
-                
+
             except GameOver:
                 self.render_game_over()
                 exit()
