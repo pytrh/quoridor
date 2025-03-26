@@ -1,0 +1,88 @@
+import threading
+import time
+import os
+
+from quoridor.gamemode import GameMode
+
+class Timer:
+    def __init__(self, blitz_time: int, blitz_mode: GameMode):
+        """
+        Initialize a Timer object to manage countdown timing in blitz game modes.
+
+        Args:
+            blitz_time (int): The amount of time (in seconds) assigned to a player per turn.
+            blitz_mode (GameMode): The current game mode (e.g., BLITZ, BLITZ_LONG).
+        """
+        self.game_mode = blitz_mode
+        self.initial_time = blitz_time
+        self.current_time = blitz_time
+        self.turn_start_time = None
+        self._stop_event = threading.Event()
+        self.display_lock = threading.Event()
+        self._watchdog_thread = None
+        self.current_player = None
+
+    def start_turn(self, current_player: int, blitz_mode_active: bool):
+        """
+        Start a player's turn and launch the countdown watchdog.
+
+        Args:
+            current_player (int): The ID of the player whose turn it is.
+            blitz_mode_active (bool): Whether the blitz timer should reset at each turn.
+        """
+        self.current_player = current_player
+        if self.game_mode == GameMode.BLITZ and blitz_mode_active:
+            self.current_time = self.initial_time
+        self.turn_start_time = time.time()
+
+        if self.game_mode in (GameMode.BLITZ, GameMode.BLITZ_LONG):
+            self._stop_event.clear()
+            self._watchdog_thread = threading.Thread(
+                target=self._timeout_watchdog,
+                args=(self.current_player,)
+            )
+            self._watchdog_thread.start()
+
+    def end_turn(self):
+        """
+        End the current turn, update the remaining time, and stop the watchdog thread.
+        """
+        if self.game_mode in (GameMode.BLITZ_LONG, GameMode.BLITZ) and self.turn_start_time is not None:
+            turn_end_time = time.time() - self.turn_start_time
+            self.current_time -= int(turn_end_time)
+            self.turn_start_time = None
+            self._stop_event.set()
+            if self._watchdog_thread.is_alive:
+                self._watchdog_thread.join()
+                self._watchdog_thread = None
+
+    def get_time_remaining(self) -> int:
+        """
+        Return the current remaining time for the player.
+
+        Returns:
+            int: Time left in seconds.
+        """
+        return self.current_time
+
+    def _timeout_watchdog(self, current_player: int):
+        """
+        Internal method run in a separate thread that monitors the countdown.
+        If time runs out, it terminates the game.
+
+        Args:
+            current_player (int): The player being monitored for timeout.
+        """
+        while not self._stop_event.is_set():
+            now = time.time()
+            elapsed = int(now - self.turn_start_time)
+            remaining = max(0, self.current_time - elapsed)
+
+            if not self.display_lock.is_set():
+                print(f"\r[⏳ Remaining: {remaining}s] ", end='', flush=True)
+
+            if remaining <= 0:
+                print(f"\n⏰ Time out! Player {current_player} has won the game!")
+                os._exit(0)
+
+            time.sleep(0.5)

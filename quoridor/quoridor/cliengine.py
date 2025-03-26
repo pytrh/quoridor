@@ -38,7 +38,9 @@ class CLIEngine:
         """
         self.state = gamestate
         self.size = gamestate.size
-        self.initial_state = copy.deepcopy(gamestate)
+        # cant copy threads 
+        # self.initial_state = copy.deepcopy(gamestate)
+        self.initial_state = self.copy_state()
 
         # Create rows and columns based on the board size (from 3 to 15)
         self.rows = [
@@ -75,6 +77,22 @@ class CLIEngine:
             "14",
             "15",
         ][: self.size]
+    
+    def copy_state(self):
+        cloned_state = GameState(
+            size=self.state.size,
+            current_player_id=self.state.current_player.id,
+            players=self.state.players,
+            num_players=self.state.num_players,
+            board=self.state.board,
+            num_walls=self.state.initial_num_walls,
+            history=self.state.history,
+            blitz_mode=self.state.blitz_mode,
+            blitz_time=self.state.blitz_time,
+            ai_mode=self.state.ai_mode,
+        )
+        return cloned_state
+
 
     def execute_command(self, command: Command) -> bool:
         """
@@ -258,19 +276,46 @@ class CLIEngine:
         else:
             raise InvalidCommandError("Invalid command format")
 
+
+    def end_blitz_turn(self):
+        """
+        end timer
+        """
+        self.state.players[self.state.current_player.id].time_remaining_blitz.end_turn()
+        self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.clear()
+
+    def start_blitz_turn(self, blitz_mode_active: bool):
+        """
+        get and start timer
+        """
+        self.state.players[self.state.current_player.id].time_remaining_blitz.start_turn(self.state.current_player.id, 
+                                                                                         blitz_mode_active)
+        self.state.players[self.state.current_player.id].time_remaining_blitz.display_lock.set()
+
+
     def start_game(self):
         """
         Start the game loop.
         """
         self.render_board()
+        blitz_mode_active = True
         while True:
             try:
                 self.print_remaining_walls()
-                command = self.get_command_from_human_player()
 
+                if self.state.blitz_mode:
+                    self.start_blitz_turn(blitz_mode_active)
+                    blitz_mode_active = False
+                    print("")
+
+                command = self.get_command_from_human_player()
                 # Execute the command directly
                 self.execute_command(command)
+                
+                if self.state.blitz_mode:
+                    self.end_blitz_turn()
 
+                blitz_mode_active = True
                 self.render_board()
                 if self.state.game_over():
                     raise GameOver
@@ -278,6 +323,9 @@ class CLIEngine:
                     # exit()
 
             except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
+                if self.state.blitz_mode:
+                    self.end_blitz_turn()
+
                 print(f"Invalid move: {str(e)}")
             except GameOver:
                 self.render_game_over()

@@ -10,6 +10,7 @@ import sys
 
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
+from quoridor.gamemode import GameMode
 from quoridor.guiengine import GUIEngine
 from quoridor.config import (
     MIN_GRID_SIZE,
@@ -21,6 +22,8 @@ from quoridor.config import (
     DEFAULT_NUM_PLAYERS,
     DEFAULT_BLITZ_TIME,
     DEFAULT_NUM_WALLS,
+    DEFAULT_GAME_MODE,
+    DEFAULT_AI_COLOR
 )
 
 
@@ -95,6 +98,28 @@ def main():
         "Default: 2. Note: 3-player mode is not recommended.",
         type=int,
     )
+    parser.add_argument(
+    "-b",
+    "--blitz",
+    help="Enable blitz (timer mode)",
+    action="store_true",
+    )
+    parser.add_argument(
+        "-t",
+        "--time",
+        help="Set the blitz time for the game in minutes (only used in blitz mode). Example: -t 3",
+        type=int,
+        nargs="?",
+        const=15,
+    )
+    parser.add_argument(
+        "-a",
+        "--ai",
+        help="Enable AI mode for COLOR (1, 2, 3, 4 or A for all). Default is 2. Can be used multiple times.",
+        nargs="?",
+        const=True,
+        action="append"
+    )
 
     args = parser.parse_args()
 
@@ -111,8 +136,13 @@ def main():
 
     size = DEFAULT_SIZE
     num_players = DEFAULT_NUM_PLAYERS
-    blitz_time = DEFAULT_BLITZ_TIME
     num_walls = DEFAULT_NUM_WALLS
+    blitz_time = DEFAULT_BLITZ_TIME
+    blitz_mode = DEFAULT_GAME_MODE
+    ai_mode = DEFAULT_GAME_MODE
+    current_ai_color = DEFAULT_AI_COLOR
+    ai_colors = set()
+
 
     if args.walls:
         num_walls = args.walls
@@ -137,8 +167,51 @@ def main():
             sys.exit(1)
         if num_players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
+    
+    if args.ai:
+        for ai in args.ai:
+            if ai is True:
+                ai_colors.add(current_ai_color)
+                current_ai_color += 1
+            elif ai == 'A':
+                ai_colors = {1, 2, 3, 4}
+                break
+            else:
+                color = int(ai)
+                if color < 1 or color > 4:
+                    logging.error("COLOR must be between 1 and 4 or 'A'")
+                    sys.exit(1)
+                if color != 1 and color not in ai_colors:
+                    current_ai_color +=1
+                ai_colors.add(color)
+        ai_mode = GameMode.AI
 
-    initial_state = GameState(size=size, num_players=num_players, num_walls=num_walls)
+
+    if args.blitz:
+            blitz_mode = GameMode.BLITZ
+
+    if args.time:
+        if blitz_mode != GameMode.BLITZ:
+            logging.warning("blitz mode is not activated. You cannot set a time.")
+        else:
+            blitz_time = args.time
+            blitz_mode = GameMode.BLITZ_LONG
+
+
+    if (args.players is not None) and (args.ai is not None):
+        logging.warning("Warning: -p option ignored due to presence of -a options")
+        num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
+    elif args.ai is not None:
+        num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
+
+    initial_state = GameState(size=size,
+                              num_players=num_players,
+                              num_walls=num_walls,
+                              blitz_mode=blitz_mode,
+                              blitz_time=blitz_time * 60,
+                              ai_mode=ai_mode,
+                              ai_colors=ai_colors,
+                              )
     if args.gui:
         engine = GUIEngine(initial_state)
         engine.run()

@@ -5,11 +5,15 @@ GameState module.
 from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
+from quoridor.timer import Timer
 from quoridor.direction import Direction
 from quoridor.config import (
     DEFAULT_SIZE,
     DEFAULT_NUM_PLAYERS,
     DEFAULT_NUM_WALLS,
+    DEFAULT_GAME_MODE,
+    DEFAULT_BLITZ_TIME,
+    GameMode
 )
 
 if TYPE_CHECKING:
@@ -29,9 +33,12 @@ class GameState:
         players: list[Player] = None,
         num_players: int = DEFAULT_NUM_PLAYERS,
         board: Graph = None,
-        blitz: bool = False,
         num_walls: int = DEFAULT_NUM_WALLS,
         history: List["Command"] = None,
+        blitz_mode: GameMode = DEFAULT_GAME_MODE,
+        blitz_time: int = DEFAULT_BLITZ_TIME,
+        ai_mode: GameMode = DEFAULT_GAME_MODE,
+        ai_colors: list = [],
     ):
         """
          Initialize a new game state.
@@ -76,10 +83,20 @@ class GameState:
             if current_player_id is None
             else self.players[current_player_id]
         )
-        self.blitz = blitz
+        self.blitz_mode = blitz_mode
         self.history = [] if history is None else history
         self.redo_stack = []
+        self.blitz_time = blitz_time
+        self.ai_mode = ai_mode
         # self.move_count = 0
+
+        if blitz_mode == GameMode.BLITZ or blitz_mode == GameMode.BLITZ_LONG:
+            for i in range(num_players):
+                self.players[i].time_remaining_blitz = Timer(blitz_time//num_players, blitz_mode)
+        
+        if ai_mode == GameMode.AI:
+            for i in ai_colors:
+                self.players[i-1].ai_mode = True
 
     def create_board(self, size: int = 9) -> Graph:
         """

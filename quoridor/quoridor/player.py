@@ -1,3 +1,8 @@
+"""
+Player module
+"""
+from quoridor.timer import Timer
+
 class Player:
     """
     TODO: Find a less ugly way to access size of the board. Maybe import from config.py something
@@ -6,7 +11,7 @@ class Player:
     Player class to represent a player in the game.
     """
     def __init__(self, id: int, position: tuple[int, int], size: int, walls_remaining: int = 10,
-                  time_remaining_blitz: int = None) -> None:
+                  time_remaining_blitz: Timer = None, ai_mode: bool = False,) -> None:
         """
         Initialize a new player.
 
@@ -26,6 +31,7 @@ class Player:
         self.walls_remaining = walls_remaining
         self.time_remaining_blitz = time_remaining_blitz
         self.start_position = position
+        self.AI_mode = ai_mode
 
         if self.start_position[1] == 0:
             self.goal_line = [(i, size - 1) for i in range(size)]

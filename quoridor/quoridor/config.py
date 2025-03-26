@@ -1,3 +1,5 @@
+from quoridor.gamemode import GameMode
+
 """
 Constants for the Quoridor game.
 """
@@ -13,7 +15,13 @@ NOT_RECOMMENDED_NUM_PLAYERS = 3
 
 DEFAULT_SIZE = 9
 DEFAULT_NUM_PLAYERS = 2
-DEFAULT_BLITZ_TIME = 0
+DEFAULT_BLITZ_TIME = 1
 DEFAULT_NUM_WALLS = 20
+
+# Game Mode
+DEFAULT_GAME_MODE = GameMode.NORMAL
+
+# AI color 
+DEFAULT_AI_COLOR = 2
 
 # TODO: Parse the defaults from .quoridorrc
