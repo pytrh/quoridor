@@ -1,7 +1,8 @@
 """
 Command module handling both game operations and undo/redo/restart/quit etc.
 """
-
+# TODO: command.py is getting bloated with game logic and utility code,
+#       separate them into another module called gamelogic for example(funny old name ha!)
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple, List, TYPE_CHECKING
 from copy import deepcopy
