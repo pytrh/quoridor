@@ -266,26 +266,18 @@ class CLIEngine:
         end timer
         """
         if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
-            self.state.players[
-                self.state.current_player.id
-            ].time_remaining_blitz.end_turn()
-            self.state.players[
-                self.state.current_player.id
-            ].time_remaining_blitz.display_lock.clear()
+            self.state.players[self.state.current_player.id].timer.end_turn()
+            self.state.players[self.state.current_player.id].timer.display_lock.clear()
 
     def start_blitz_turn(self, blitz_mode_active: bool):
         """
         get and start timer
         """
         if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
-            self.state.players[
-                self.state.current_player.id
-            ].time_remaining_blitz.start_turn(
-                self.state.current_player.id, blitz_mode_active
+            self.state.players[self.state.current_player.id].timer.start_turn(
+                blitz_mode_active
             )
-            self.state.players[
-                self.state.current_player.id
-            ].time_remaining_blitz.display_lock.set()
+            self.state.players[self.state.current_player.id].timer.display_lock.set()
 
     def start_game(self):
         """

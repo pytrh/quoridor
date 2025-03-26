@@ -1,7 +1,9 @@
 """
 Player module
 """
+
 from quoridor.timer import Timer
+
 
 class Player:
     """
@@ -10,8 +12,16 @@ class Player:
     Different from E Fleury's requirements. Will justify in the report.
     Player class to represent a player in the game.
     """
-    def __init__(self, id: int, position: tuple[int, int], size: int, walls_remaining: int = 10,
-                  time_remaining_blitz: Timer = None, ai_mode: bool = False,) -> None:
+
+    def __init__(
+        self,
+        id: int,
+        position: tuple[int, int],
+        size: int,
+        walls_remaining: int = 10,
+        time_remaining_blitz: Timer = None,
+        ai_mode: bool = False,
+    ) -> None:
         """
         Initialize a new player.
 
@@ -29,7 +39,7 @@ class Player:
         self.id = id
         self.position = position
         self.walls_remaining = walls_remaining
-        self.time_remaining_blitz = time_remaining_blitz
+        self.timer = time_remaining_blitz
         self.start_position = position
         self.AI_mode = ai_mode
 

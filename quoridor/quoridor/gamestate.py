@@ -2,6 +2,7 @@
 GameState module.
 """
 
+import logging
 from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
@@ -57,6 +58,14 @@ class GameState:
          :param history: The history of moves, default is an empty list.
         :type history: list[Command]
         """
+        logging.debug("Creating GameState :")
+        logging.debug(f"number of players : {num_players}")
+        logging.debug(f"board size : {size}")
+        logging.debug(f"number of walls : {num_walls}")
+        logging.debug(f"blitz mode activated : {blitz_mode}")
+        logging.debug(f"blitz timer : {blitz_time}")
+        logging.debug(f"ai mode : {ai_mode}")
+
         self.board = board if board is not None else self.create_board(size)
         self.size = size
         self.num_players = num_players
@@ -92,7 +101,7 @@ class GameState:
 
         if blitz_mode == GameMode.TIMER_INCR or blitz_mode == GameMode.BLITZ:
             for i in range(num_players):
-                self.players[i].time_remaining_blitz = Timer(blitz_time, blitz_mode)
+                self.players[i].timer = Timer(3, blitz_mode, i)
 
         if ai_mode == GameMode.AI:
             for i in ai_colors:
@@ -184,3 +193,10 @@ class GameState:
             ai_mode=self.ai_mode,
         )
         return cloned_state
+
+    def remove_player(self, player_id: int):
+        # TODO remove player_id in players  and  change num_players
+
+        # TODO or you can modify switch player to jump a specify player_id
+        # maybe with a list of banned players [1, 3]
+        pass

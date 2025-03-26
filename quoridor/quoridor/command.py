@@ -79,7 +79,6 @@ class PlaceWallCommand(Command):
         """Execute the command to place a wall."""
         try:
             self.place_wall(self.position[0], self.position[1], self.orientation)
-            self.switch_player()
             return True
         except (InvalidMoveError, PathNotFoundError) as e:
             raise e
@@ -142,11 +141,11 @@ class PlaceWallCommand(Command):
         # Check if all the players can still win
         for i in range(0, self.state.num_players):
             path = False
-            for j in range(0, len(self.state.players[i].winning_position)):
+            for j in range(0, len(self.state.players[i].goal_line)):
                 try:
                     temp_board.a_star(
                         self.state.players[i].position,
-                        self.state.players[i].winning_position[j],
+                        self.state.players[i].goal_line[j],
                     )
                     path = True
                     break
@@ -191,7 +190,6 @@ class MovePawnCommand(Command):
         """Move the current player's pawn in the specified direction."""
         try:
             self.make_move(self.from_position, self.to_position)
-            # self.switch_player()
             return True
         except InvalidMoveError as e:
             raise e

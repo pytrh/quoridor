@@ -18,6 +18,8 @@ from quoridor.gamestate import GameState
 
 from quoridor.config import MIN_GRID_SIZE, MAX_GRID_SIZE, DEFAULT_NUM_WALLS
 
+from quoridor.gamemode import GameMode
+
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, GObject
 
@@ -32,11 +34,11 @@ class MainWindow(Gtk.ApplicationWindow):
         self._number_of_players = None
         self._board_size = None
         self._num_walls = None
-        self._blitz_mode = None
 
-        self._blitz_limit_time = None
+        self._blitz_mode = None
         self._blitz_time = None
         self._ai_mode = None
+        self._ai_colors = None
 
         GLib.set_application_name("quoridor")
 
@@ -337,15 +339,25 @@ class MainWindow(Gtk.ApplicationWindow):
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
         self.btn_normal = Gtk.CheckButton(label="Normal")
+        self.btn_timer = Gtk.CheckButton(label="Timer")
         self.btn_blitz = Gtk.CheckButton(label="Blitz")
 
         self.btn_normal.set_active(True)  # Normal mode by default
+        self.btn_timer.set_group(self.btn_normal)
         self.btn_blitz.set_group(self.btn_normal)
 
-        self.btn_normal.connect("toggled", self.on_game_mode_button_toggled, "Normal")
-        self.btn_blitz.connect("toggled", self.on_game_mode_button_toggled, "Blitz")
+        self.btn_normal.connect(
+            "toggled", self.on_game_mode_button_toggled, GameMode.NORMAL
+        )
+        self.btn_timer.connect(
+            "toggled", self.on_game_mode_button_toggled, GameMode.TIMER_INCR
+        )
+        self.btn_blitz.connect(
+            "toggled", self.on_game_mode_button_toggled, GameMode.BLITZ
+        )
 
         hbox.append(self.btn_normal)
+        hbox.append(self.btn_timer)
         hbox.append(self.btn_blitz)
 
         box.append(hbox)
@@ -410,16 +422,18 @@ class MainWindow(Gtk.ApplicationWindow):
                     if (row, col) in self.cells:
                         self.game_grid.remove(self.cells[(row, col)])
         self.cells = {}
+        self.clear_all_timer()
         self.state = None
         self.stack.set_visible_child_name("home")
         logging.debug("Button was clicked")
 
-    def on_restart_clicked(self, button):
+    def on_restart_clicked(self, button):  # TODO dupplicate code
         for row in range(self.state.size):
             for col in range(self.state.size):
                 if (row, col) in self.cells:
                     self.game_grid.remove(self.cells[(row, col)])
         self.cells = {}
+        self.clear_all_timer()
         self.state = None
 
         self.on_start_game_clicked("clicked")
@@ -432,13 +446,10 @@ class MainWindow(Gtk.ApplicationWindow):
             self._number_of_players = int(players)
             logging.debug(f"Number of players selected: {self._number_of_players}")
 
-    def on_game_mode_button_toggled(self, button, mode):
+    def on_game_mode_button_toggled(self, button, mode: GameMode):
         if button.get_active():
-            if mode == "Blitz":
-                self._blitz_mode = True
-            else:
-                self._blitz_mode = False
-            logging.debug(f"Playing in {mode} Mode")
+            self._blitz_mode = mode
+            logging.debug(f"Playing in {mode.display_name} Mode")
 
     def on_ai_switch_switched(self, switch, state):
         logging.debug(f"The switch has been switched {'on' if state else 'off'}")
@@ -460,15 +471,22 @@ class MainWindow(Gtk.ApplicationWindow):
             num_players=self._number_of_players,
             size=self._board_size,
             num_walls=self._num_walls,
-            blitz=self._blitz_mode,
+            blitz_mode=self._blitz_mode,
+            blitz_time=self._blitz_time,
+            # self._ai_mode
+            # self._ai_colors
         )
+        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+            self.initialise_timer()
+            self.state.players[self.state.current_player.id].timer.start_turn(True)
+            self.state.players[self.state.current_player.id].timer.display_lock.set()
         self.create_board()
         self.render_board()
 
     def initialize_state(self, **kwargs):
         filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
         self.state = GameState(**filtered_kwargs)
-        self.initial_state = copy.deepcopy(self.state)
+        self.initial_state = self.state.copy_state()
 
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
@@ -497,7 +515,7 @@ class MainWindow(Gtk.ApplicationWindow):
             elif i == 3:
                 player = "winning_pos_player_yellow"
             for j in range(self.state.size):
-                win = self.state.players[i].winning_position[j]
+                win = self.state.players[i].goal_line[j]
                 cell = self.cells[(win[0], win[1])]
                 cell.get_style_context().add_class(player)
 
@@ -582,6 +600,41 @@ class MainWindow(Gtk.ApplicationWindow):
 
         return True
 
+    def initialise_timer(self):
+        for player in self.state.players:
+            player.timer.set_gui_observer(self)
+
+    def update_timer(self, time: int, player_id: int):
+        self.timer_label.set_text(f"Timer : {time}")
+        logging.debug(f"Timer : {time} {player_id}")
+
+    def handle_timer_end_for_player(self, id: int):
+        "handle 3 players"
+        if self.state.num_players >= 3:
+            self.state.remove_player(id)
+            self.state.players[self.state.current_player.id].timer.start_turn(True)
+            self.state.players[self.state.current_player.id].timer.display_lock.set()
+        else:
+            self.state.switch_player()
+            self.game_is_over()
+
+    def handle_switch_player(self):
+        logging.debug(f"Switching player : {self.state.current_player.id} ")
+        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+            logging.debug(f"End timer for player : {self.state.current_player.id} ")
+            logging.debug(f"with  : {self.state.current_player.timer.current_time} ")
+            self.state.players[self.state.current_player.id].timer.end_turn()
+            self.state.players[self.state.current_player.id].timer.display_lock.clear()
+
+        self.state.switch_player()
+
+        logging.debug(f"Switch player : {self.state.current_player.id} ")
+        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+            logging.debug(f"Begin timer for player : {self.state.current_player.id} ")
+            logging.debug(f"with  : {self.state.current_player.timer.current_time} ")
+            self.state.players[self.state.current_player.id].timer.start_turn(True)
+            self.state.players[self.state.current_player.id].timer.display_lock.set()
+
     def handle_pawn_move(self, row: int, col: int, player_id):
         """Manages pawn movement"""
         pawn_positions = {
@@ -611,12 +664,25 @@ class MainWindow(Gtk.ApplicationWindow):
                 logging.info("-------- GameOver --------")
                 self.game_is_over()
             else:
-                self.state.switch_player()
+                self.handle_switch_player()
+            self.render_board()
+        except InvalidMoveError as e:
+            logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
+
+    def handle_place_wall(self, row, col, wall_type: Direction):
+        """Manages wall placement"""
+        logging.debug(f"Placing a wall {wall_type} in ({row}, {col})")
+
+        try:
+            place_wall = PlaceWallCommand(self.state, (row, col), wall_type)
+            self.execute_command(place_wall)
+            self.handle_switch_player()
             self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
     def game_is_over(self):
+        self.clear_all_timer()
         id_player = self.state.current_player.id
         emoji = "🔵"
         if id_player == 1:
@@ -629,17 +695,6 @@ class MainWindow(Gtk.ApplicationWindow):
             f'<span size="14000" weight="bold">{emoji} won!</span>'
         )
         self.stack.set_visible_child_name("end")
-
-    def handle_place_wall(self, row, col, wall_type: Direction):
-        """Manages wall placement"""
-        logging.debug(f"Placing a wall {wall_type} in ({row}, {col})")
-
-        try:
-            self.execute_command(PlaceWallCommand(self.state, (row, col), wall_type))
-            self.state.switch_player()
-            self.render_board()
-        except InvalidMoveError as e:
-            logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
     def render_board(self):
         for row in range(self.state.size):
@@ -686,10 +741,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self._number_of_players = state.num_players
         self._board_size = state.size
         self._num_walls = state.initial_num_walls
-        self._blitz_mode = state.blitz
-        self._blitz_limit_time = None
-        self._blitz_time = None
-        self._ai_mode = None
+        self._blitz_mode = state.blitz_mode
+        self._blitz_time = state.blitz_time
+        self._ai_mode = state.ai_mode
+        # self._ai_colors
 
         if self._number_of_players == 2:
             self.btn_nb_players_2.set_active(True)
@@ -704,8 +759,19 @@ class MainWindow(Gtk.ApplicationWindow):
         if self._num_walls is not None:
             self.wall_slider.set_value(self._num_walls)
 
-        self.btn_normal.set_active(True)
+        self.btn_normal.set_active(False)
+        self.btn_timer.set_active(False)
         self.btn_blitz.set_active(False)
+        if self._blitz_mode is not None:
+            if self._blitz_mode == GameMode.TIMER_INCR:
+                self.btn_timer.set_active(True)
+            elif self._blitz_mode == GameMode.BLITZ:
+                self.btn_blitz.set_active(True)
+            else:
+                self.btn_normal.set_active(True)
+        else:
+            self.btn_normal.set_active(True)
+
         self.switch_ai.set_active(False)
 
     def execute_command(self, command: Command) -> bool:
@@ -717,6 +783,14 @@ class MainWindow(Gtk.ApplicationWindow):
             self.state.history.append(command)
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
         return result
+
+    def clear_all_timer(self):
+        if self.state is not None:
+            if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+                for player in self.state.players:
+                    if player.timer.turn_start_time is not None:
+                        player.timer.end_turn()
+                        player.timer.display_lock.clear()
 
 
 class MyApplication(Gtk.Application):
@@ -741,10 +815,16 @@ class MyApplication(Gtk.Application):
 
     def on_activate(self, app):
         self.window = MainWindow(application=app, title="Quoridor.py")
+        self.window.connect("close-request", self.on_close_request)
         self.window.present()
         if self.state is not None:
             self.window.set_parameters(self.state)
             self.window.on_new_game_clicked(None)
+
+    def on_close_request(self, window):
+        logging.debug("Window closing")
+        self.window.clear_all_timer()
+        return False
 
 
 class GUIEngine:
