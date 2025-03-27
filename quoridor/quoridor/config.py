@@ -2,6 +2,9 @@
 Centralized configuration module for the Quoridor game.
 IE: Board size, number of players, number of walls, etc.
 """
+DEFAULT_GRID_SIZE = 9
+DEFAULT_NUM_PLAYERS = 2
+DEFAULT_NUM_WALLS = 20
 
 # Board size limits
 MIN_GRID_SIZE = 3

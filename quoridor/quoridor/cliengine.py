@@ -271,7 +271,10 @@ class CLIEngine:
         while True:
             try:
                 self.print_remaining_walls()
-                command = self.get_command_from_human_player()
+                if self.state.current_player.id not in self.state.ai_controllers:
+                    command = self.get_command_from_human_player()
+                else:
+                    command = self.state.ai_controllers[self.state.current_player.id].suggest_move()
                 print(f"Command: {command}")
 
                 # Execute the command directly

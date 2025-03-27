@@ -49,7 +49,7 @@ class GreedyAI(AI):
         """
         current_pos = self.player.position
         best_path = None
-        for goal in self.player.winning_position:
+        for goal in self.player.goal_line:
             path = self.graph.a_star(current_pos, goal)
             if best_path is None or len(path) < len(best_path):
                 best_path = path

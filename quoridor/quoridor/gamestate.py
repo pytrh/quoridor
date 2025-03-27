@@ -6,6 +6,7 @@ from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.direction import Direction
+from quoridor.ai import AI
 from quoridor.config import (
     GRID_SIZE,
     NUM_PLAYERS,
@@ -32,6 +33,7 @@ class GameState:
         blitz: bool = False,
         num_walls: int = NUM_WALLS,
         history: List["Command"] = None,
+        ai_controllers: dict[int, AI] = None,
     ):
         """
          Initialize a new game state.
