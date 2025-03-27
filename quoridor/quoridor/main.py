@@ -10,6 +10,7 @@ import logging
 import sys
 import os
 
+from quoridor.ai import AI, GreedyAI
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.guiengine import GUIEngine
@@ -95,6 +96,9 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("file", default=None, nargs="?")
+    parser.add_argument('-a', '--ai', action='append', default=[],
+                       help='Add an AI player. Can specify color (1-4 or A for all). Default is 2.')
+
     parser.add_argument(
         "-V",
         "--version",
@@ -188,7 +192,27 @@ def main():
         update_config_file(size, num_players, num_walls)
         update_default_config(size, num_players, num_walls)
 
-    initial_state = GameState(size=size, num_players=num_players, num_walls=num_walls)
+    # Process AI arguments
+    ai_ids = []
+    if args.ai:
+        for ai_arg in args.ai:
+            if ai_arg is None:
+                ai_ids.append(2)
+            elif ai_arg == 'A':
+                ai_ids = [i for i in range(num_players)]
+            else:
+                try:
+                    color = int(ai_arg)
+                    if 1 <= color <= 4:
+                        ai_ids.append(color - 1)
+                    else:
+                        print(f"Invalid AI color: {color}. Must be between 1 and 4.", file=sys.stderr)
+                except ValueError:
+                    print(f"Invalid AI color: {ai_arg}", file=sys.stderr)
+
+    ai_controllers = {id: GreedyAI() for id in ai_ids}
+    initial_state = GameState(size=size, num_players=num_players, num_walls=num_walls, ai_controllers=ai_controllers)
+
     if args.gui:
         engine = GUIEngine(initial_state)
         engine.run()

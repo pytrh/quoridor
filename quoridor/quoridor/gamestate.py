@@ -33,7 +33,7 @@ class GameState:
         blitz: bool = False,
         num_walls: int = NUM_WALLS,
         history: List["Command"] = None,
-        ai_controllers: dict[int, AI] = None,
+        ai_controllers: dict[int, "AI"] = None,
     ):
         """
          Initialize a new game state.
@@ -81,6 +81,7 @@ class GameState:
         self.blitz = blitz
         self.history = [] if history is None else history
         self.redo_stack = []
+        self.ai_controllers = ai_controllers if ai_controllers is not None else {}
         # self.move_count = 0
 
     def create_board(self, size: int = 9) -> Graph:

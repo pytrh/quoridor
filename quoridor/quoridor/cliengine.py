@@ -274,11 +274,12 @@ class CLIEngine:
                 if self.state.current_player.id not in self.state.ai_controllers:
                     command = self.get_command_from_human_player()
                 else:
-                    command = self.state.ai_controllers[self.state.current_player.id].suggest_move()
+                    command = self.state.ai_controllers[self.state.current_player.id].suggest_move(self.state)
                 print(f"Command: {command}")
 
                 # Execute the command directly
                 self.execute_command(command)
+                # TODO: Move the switch_player thing here seems a better idea
 
                 self.render_board()
                 if self.state.game_over():
