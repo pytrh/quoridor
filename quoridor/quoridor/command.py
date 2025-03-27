@@ -23,7 +23,13 @@ import os
 
 from quoridor.graph import Graph
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, PathNotFoundError, GameOver, NoUndoableCommand, NoRedoableCommand
+from quoridor.exceptions import (
+    InvalidMoveError,
+    PathNotFoundError,
+    GameOver,
+    NoUndoableCommand,
+    NoRedoableCommand,
+)
 
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
@@ -238,21 +244,43 @@ class PlaceWallCommand(Command):
         """Remove the wall that was placed."""
         self.player.walls_remaining += 1
         if self.orientation == Direction.H:
-            self.state.board.add_edge(self.position, (self.position[0] + 1, self.position[1]))
-            self.state.board.add_edge((self.position[0], self.position[1] + 1), (self.position[0] + 1, self.position[1] + 1))
+            self.state.board.add_edge(
+                self.position, (self.position[0] + 1, self.position[1])
+            )
+            self.state.board.add_edge(
+                (self.position[0], self.position[1] + 1),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
         else:
-            self.state.board.add_edge(self.position, (self.position[0], self.position[1] + 1))
-            self.state.board.add_edge((self.position[0] + 1, self.position[1]), (self.position[0] + 1, self.position[1] + 1))
+            self.state.board.add_edge(
+                self.position, (self.position[0], self.position[1] + 1)
+            )
+            self.state.board.add_edge(
+                (self.position[0] + 1, self.position[1]),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
+        self.state.backward_player()
 
     def redo(self) -> None:
         """Re-place the wall that was removed."""
         self.player.walls_remaining -= 1
         if self.orientation == Direction.H:
-            self.state.board.remove_edge(self.position, (self.position[0] + 1, self.position[1]))
-            self.state.board.remove_edge((self.position[0], self.position[1] + 1), (self.position[0] + 1, self.position[1] + 1))
+            self.state.board.remove_edge(
+                self.position, (self.position[0] + 1, self.position[1])
+            )
+            self.state.board.remove_edge(
+                (self.position[0], self.position[1] + 1),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
         else:
-            self.state.board.remove_edge(self.position, (self.position[0], self.position[1] + 1))
-            self.state.board.remove_edge((self.position[0] + 1, self.position[1]), (self.position[0] + 1, self.position[1] + 1))
+            self.state.board.remove_edge(
+                self.position, (self.position[0], self.position[1] + 1)
+            )
+            self.state.board.remove_edge(
+                (self.position[0] + 1, self.position[1]),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
+        self.state.switch_player()
 
     def __str__(self) -> str:
         return f"{self.rows[self.position[0]]}{self.position[1] + 1}{self.orientation.name.lower()}"
@@ -340,10 +368,12 @@ class MovePawnCommand(Command):
     def undo(self) -> None:
         """Move the pawn back to its previous position."""
         self.player.position = self.from_position
+        self.state.backward_player()
 
     def redo(self) -> None:
         """Move the pawn to its new position again."""
         self.player.position = self.to_position
+        self.state.switch_player()
 
     def __str__(self) -> str:
         return f"{self.rows[self.from_position[0]]}{self.from_position[1] + 1}-{self.rows[self.to_position[0]]}{self.to_position[1] + 1}"
@@ -358,10 +388,10 @@ class UndoCommand(Command):
     def execute(self) -> bool:
         """Undo the last command in the command history."""
         # print(f"Len of history: {len(self.state.history)}")
-        last_command = self.state.history.pop()
-        if not last_command:
+        if not self.state.history:
             raise NoUndoableCommand
 
+        last_command = self.state.history.pop()
         self.state.redo_stack.append(last_command)
         print(f"Last command: {last_command}")
         print(f"Size of redo stack: {len(self.state.redo_stack)}")
@@ -444,6 +474,7 @@ class QuitCommand(Command):
 
     def __str__(self) -> str:
         return "Quit application"
+
 
 class SaveCommand(Command):
     """Command to save the current game to a file."""

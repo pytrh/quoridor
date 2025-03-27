@@ -8,6 +8,7 @@ import configparser
 import importlib.metadata
 import logging
 import sys
+import os
 
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
@@ -20,8 +21,10 @@ from quoridor.config import (
     NOT_RECOMMENDED_NUM_PLAYERS,
 )
 
-DEFAULT_CONFIG_FILE = "quoridor/quoridor/.quoridorrc"
-CONFIG_FILE = "quoridor/quoridor/config.py"
+dirname = os.path.dirname(__file__)
+DEFAULT_CONFIG_FILE = os.path.join(dirname, ".quoridorrc")
+CONFIG_FILE = os.path.join(dirname, "config.py")
+
 
 def setup_logging(verbose, debug):
     """
@@ -41,6 +44,7 @@ def setup_logging(verbose, debug):
             level=logging.WARNING, format=log_format, datefmt=date_format
         )
 
+
 def load_default_config():
     config = configparser.ConfigParser()
     config.read(DEFAULT_CONFIG_FILE)
@@ -51,7 +55,8 @@ def load_default_config():
 
     return size, players, walls
 
-def update_default_config(size : int, num_players : int, num_walls : int)->None:
+
+def update_default_config(size: int, num_players: int, num_walls: int) -> None:
     config = configparser.ConfigParser()
     config.read(DEFAULT_CONFIG_FILE)
 
@@ -68,7 +73,8 @@ def update_default_config(size : int, num_players : int, num_walls : int)->None:
     with open(DEFAULT_CONFIG_FILE, "w") as default_config:
         config.write(default_config)
 
-def update_config_file(size : int, num_players : int, num_walls : int)->None:
+
+def update_config_file(size: int, num_players: int, num_walls: int) -> None:
     with open(CONFIG_FILE, "r+") as config_file:
         lines = config_file.readlines()
         config_file.seek(0)
@@ -80,6 +86,7 @@ def update_config_file(size : int, num_players : int, num_walls : int)->None:
             elif line.strip().startswith("NUM_WALLS"):
                 line = f"NUM_WALLS = {num_walls}\n"
             config_file.write(line)
+
 
 def main():
     """
@@ -148,7 +155,7 @@ def main():
         # game = GameState.load_game_from_file(args.file)
 
     size, num_players, num_walls = load_default_config()
-    changed = False # Will be True if default_config needs to be updated
+    changed = False  # Will be True if default_config needs to be updated
 
     if args.size:
         error = False
