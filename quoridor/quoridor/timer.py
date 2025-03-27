@@ -4,7 +4,7 @@ import time
 import os
 
 from quoridor.gamemode import GameMode
-from quoridor.guiobserver import GuiObserver
+from quoridor.observer import Observer
 
 
 class Timer:
@@ -69,7 +69,7 @@ class Timer:
         """
         return self.current_time
 
-    def set_gui_observer(self, gui: GuiObserver):
+    def set_gui_observer(self, gui: Observer):
         self.gui = gui
 
     def _timeout_watchdog(self):
