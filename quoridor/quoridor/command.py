@@ -337,7 +337,6 @@ class AbandonCommand(Command):
             raise GameOver
         else:
             """Simply remove the current player from the game"""
-            self.switch_player()
             self.state.num_players_remaining -= 1
             self.player.is_dead = True
 

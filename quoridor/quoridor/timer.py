@@ -92,7 +92,7 @@ class Timer:
                 print(f"\r[⏳ Remaining: {remaining}s] ", end="", flush=True)
 
             if remaining <= 0:
-                print(f"\n⏰ Time out! Player {self.player_id} has lost the game!")
+                print(f"\n⏰ Time out! Player {self.player_id + 1} has lost the game!")
                 if self.gui is not None:
                     self.gui.handle_timer_end_for_player(self.player_id)
                     break

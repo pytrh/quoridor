@@ -106,7 +106,7 @@ class GameState:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(blitz_time, blitz_mode, i)
+                self.players[i].timer = Timer(3, blitz_mode, i)
 
         if ai_mode == GameMode.AI:
             for i in ai_colors:
@@ -172,6 +172,9 @@ class GameState:
         elif self.current_player.id == 3:
             if self.players[self.current_player.id].position[0] == 0:
                 return True
+
+        if self.num_players_remaining == 1:
+            return True
         return False
 
     def switch_player(self):

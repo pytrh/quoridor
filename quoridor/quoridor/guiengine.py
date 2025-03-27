@@ -687,11 +687,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             move_pawn = MovePawnCommand(self.state, (last_row, last_col), (row, col))
             self.execute_command(move_pawn)
-            if self.state.game_over():
-                logging.info("-------- GameOver --------")
-                self.display_game_over_window()
-            else:
-                self.handle_switch_player()
             self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
@@ -703,7 +698,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             place_wall = PlaceWallCommand(self.state, (row, col), wall_type)
             self.execute_command(place_wall)
-            self.handle_switch_player()
             self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
@@ -809,6 +803,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if result:
             self.state.history.append(command)
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
+
+            if self.state.game_over():
+                logging.info("-------- GameOver --------")
+                self.display_game_over_window()
+            else:
+                self.handle_switch_player()
         return result
 
     def clear_all_timer(self):
