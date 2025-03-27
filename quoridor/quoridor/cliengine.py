@@ -19,6 +19,8 @@ from quoridor.exceptions import (
     InvalidMoveError,
     InvalidCommandError,
     PathNotFoundError,
+    NoUndoableCommand,
+    NoRedoableCommand,
     GameOver,
 )
 
@@ -285,6 +287,10 @@ class CLIEngine:
                 print(f"Invalid move: {str(e)}")
             except PathNotFoundError:
                 print("Cannot place wall: it would block a player's path to goal")
+            except NoUndoableCommand:
+                print("No move to undo")
+            except NoRedoableCommand:
+                print("No command to redo")
             except InvalidCommandError as e:
                 print(f"Invalid command: {str(e)}")
             except GameOver:

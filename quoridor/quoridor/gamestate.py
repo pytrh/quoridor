@@ -149,3 +149,10 @@ class GameState:
         If current player is the last one, the next one will the first
         """
         self.current_player.id = (self.current_player.id + 1) % self.num_players
+
+    def backward_player(self):
+        """
+        Change the current player to the next one
+        If current player is the last one, the next one will the first
+        """
+        self.current_player.id = (self.current_player.id - 1) % self.num_players
