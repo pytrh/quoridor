@@ -100,6 +100,7 @@ class Timer:
                     self.gui.handle_timer_end_for_player(self.player_id)
                     break
                 else:
-                    os._exit(0)  # TODO remove force exit
+                    self.end_turn()
+                    break
 
             time.sleep(0.5)

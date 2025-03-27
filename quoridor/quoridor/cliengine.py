@@ -1,7 +1,8 @@
 """
 Run the quoridor game in the terminal.
 """
-
+import sys
+import select
 import copy
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
@@ -207,11 +208,28 @@ class CLIEngine:
             + str(self.state.players[self.state.current_player.id].walls_remaining)
         )
 
+
+
+    def wait_for_input_with_timeout(self):
+        print("Player " + str(self.state.current_player.id + 1) + " will play? ", end="", flush=True)
+        buffer = ""
+
+        while True:
+            if self.state.players[self.state.current_player.id].timer.current_time <= 0:
+                print("\n⛔ Timeout triggered. Ending turn.")
+                exit(0) # TODO  to remove player if num players >= 3
+            if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
+                buffer = sys.stdin.readline().strip()
+                print(buffer)
+                if buffer:
+                    return buffer
+
+
     def get_input_from_human_player(self) -> str:
         """
         Get an input from the human player.
         """
-        return input("Player " + str(self.state.current_player.id + 1) + " will play?")
+        return self.wait_for_input_with_timeout()
 
     def well_formed_pawn_move(self, input: str) -> bool:
         """
