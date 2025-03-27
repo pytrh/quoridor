@@ -283,32 +283,28 @@ class CLIEngine:
         """
         end timer
         """
-        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
-            self.state.players[self.state.current_player.id].timer.end_turn()
-            self.state.players[self.state.current_player.id].timer.display_lock.clear()
+        if self.state.blitz_mode == GameMode.BLITZ:
+            self.state.current_player.timer.end_turn()
+            self.state.current_player.timer.display_lock.clear()
 
-    def start_blitz_turn(self, blitz_mode_active: bool):
+    def start_blitz_turn(self):
         """
         get and start timer
         """
-        if self.state.blitz_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
-            self.state.players[self.state.current_player.id].timer.start_turn(
-                blitz_mode_active
-            )
-            self.state.players[self.state.current_player.id].timer.display_lock.set()
+        if self.state.blitz_mode == GameMode.BLITZ:
+            self.state.current_player.timer.start_turn()
+            self.state.current_player.timer.display_lock.set()
 
     def start_game(self):
         """
         Start the game loop.
         """
         self.render_board()
-        blitz_mode_active = True
         while True:
             try:
                 self.print_remaining_walls()
 
-                self.start_blitz_turn(blitz_mode_active)
-                blitz_mode_active = False
+                self.start_blitz_turn()
                 print("")
 
                 command = self.get_command_from_human_player()

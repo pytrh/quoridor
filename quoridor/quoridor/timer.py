@@ -4,7 +4,7 @@ import time
 import os
 
 from quoridor.gamemode import GameMode
-from quoridor.guiobserver import GuiObserver
+from quoridor.observer import Observer
 
 
 class Timer:
@@ -27,7 +27,7 @@ class Timer:
         self.player_id = player_id
         self.gui = None
 
-    def start_turn(self, blitz_mode_active: bool):
+    def start_turn(self, reset_timer: bool = False):
         """
         Start a player's turn and launch the countdown watchdog.
 
@@ -35,11 +35,11 @@ class Timer:
             current_player (int): The ID of the player whose turn it is.
             blitz_mode_active (bool): Whether the blitz timer should reset at each turn.
         """
-        if self.game_mode == GameMode.TIMER_INCR and blitz_mode_active:
+        if reset_timer:
             self.current_time = self.initial_time
         self.turn_start_time = time.time()
 
-        if self.game_mode in (GameMode.TIMER_INCR, GameMode.BLITZ):
+        if self.game_mode == GameMode.BLITZ:
             self._stop_event.clear()
             self._watchdog_thread = threading.Thread(target=self._timeout_watchdog)
             self._watchdog_thread.start()
@@ -48,10 +48,7 @@ class Timer:
         """
         End the current turn, update the remaining time, and stop the watchdog thread.
         """
-        if (
-            self.game_mode in (GameMode.BLITZ, GameMode.TIMER_INCR)
-            and self.turn_start_time is not None
-        ):
+        if self.game_mode == GameMode.BLITZ and self.turn_start_time is not None:
             turn_end_time = time.time() - self.turn_start_time
             self.current_time -= int(turn_end_time)
             self.turn_start_time = None
@@ -72,7 +69,7 @@ class Timer:
         """
         return self.current_time
 
-    def set_gui_observer(self, gui: GuiObserver):
+    def set_gui_observer(self, gui: Observer):
         self.gui = gui
 
     def _timeout_watchdog(self):
