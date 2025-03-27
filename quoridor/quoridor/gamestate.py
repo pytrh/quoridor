@@ -95,13 +95,17 @@ class GameState:
         self.blitz_mode = blitz_mode
         self.history = [] if history is None else history
         self.redo_stack = []
+
         self.blitz_time = blitz_time
+
         self.ai_mode = ai_mode
         # self.move_count = 0
 
-        if blitz_mode == GameMode.TIMER_INCR or blitz_mode == GameMode.BLITZ:
+        if blitz_mode == GameMode.BLITZ:
+            # conversion in seconds
+            blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(3, blitz_mode, i)
+                self.players[i].timer = Timer(blitz_time, blitz_mode, i)
 
         if ai_mode == GameMode.AI:
             for i in ai_colors:
@@ -174,7 +178,8 @@ class GameState:
         Change the current player to the next one
         If current player is the last one, the next one will the first
         """
-        self.current_player.id = (self.current_player.id + 1) % self.num_players
+        new_player_id = (self.current_player.id + 1) % self.num_players
+        self.current_player = self.players[new_player_id]
 
     def copy_state(self):
         """

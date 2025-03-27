@@ -186,14 +186,13 @@ def main():
         ai_mode = GameMode.AI
 
     if args.blitz:
-        blitz_mode = GameMode.TIMER_INCR
+        blitz_mode = GameMode.BLITZ
 
     if args.time:
-        if blitz_mode != GameMode.TIMER_INCR:
+        if blitz_mode != GameMode.BLITZ:
             logging.warning("blitz mode is not activated. You cannot set a time.")
         else:
             blitz_time = args.time
-            blitz_mode = GameMode.BLITZ
 
     if (args.players is not None) and (args.ai is not None):
         logging.warning("Warning: -p option ignored due to presence of -a options")
@@ -206,7 +205,7 @@ def main():
         num_players=num_players,
         num_walls=num_walls,
         blitz_mode=blitz_mode,
-        blitz_time=blitz_time * 60,
+        blitz_time=blitz_time,
         ai_mode=ai_mode,
         ai_colors=ai_colors,
     )
