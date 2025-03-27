@@ -106,7 +106,7 @@ class GameState:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(3, blitz_mode, i)
+                self.players[i].timer = Timer(blitz_time, blitz_mode, i)
 
         if ai_mode == GameMode.AI:
             for i in ai_colors:
