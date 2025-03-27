@@ -9,6 +9,7 @@ from copy import deepcopy
 from quoridor.graph import Graph
 from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError, PathNotFoundError, GameOver
+from quoridor.gamemode import GameMode
 
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
@@ -326,20 +327,31 @@ class RestartCommand(Command):
 class AbandonCommand(Command):
     """Command to abandon the current game."""
 
-    def __init__(self, state: "GameState"):
+    def __init__(self, state: "GameState", player_id: int):
         super().__init__(state)
+        self.player = self.state.players[player_id]
 
     def execute(self) -> bool:
         """Abandon the current game, declaring the opponent as winner if only one player is left"""
         if len(self.state.players) == 1:
-            self.state.winner = self.state.players[
-                1 if self.state.current_player.id == 0 else 0
-            ]
             raise GameOver
         else:
             """Simply remove the current player from the game"""
-            self.state.players.pop(self.state.current_player.id)
+            self.switch_player()
+            self.state.num_players_remaining -= 1
+            self.player.is_dead = True
+
+            if self.state.blitz_mode == GameMode.BLITZ:
+                if self.player.timer.turn_start_time is not None:
+                    self.player.timer.end_turn()
+                    self.player.timer.display_lock.clear()
         return True
+
+    def undo(self) -> None:
+        """Append the abandonned player into players list"""
+        self.state.num_players_remaining += 1
+        self.player.is_dead = False
+        self.current_player = self.player
 
     def __str__(self) -> str:
         return f"Abandon game (Player {self.state.current_player.id} surrenders)"

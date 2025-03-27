@@ -69,6 +69,7 @@ class GameState:
         self.board = board if board is not None else self.create_board(size)
         self.size = size
         self.num_players = num_players
+        self.num_players_remaining = num_players
         self.initial_num_walls = num_walls
 
         if players is None:
@@ -105,7 +106,7 @@ class GameState:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(blitz_time, blitz_mode, i)
+                self.players[i].timer = Timer(3, blitz_mode, i)
 
         if ai_mode == GameMode.AI:
             for i in ai_colors:
@@ -180,6 +181,12 @@ class GameState:
         """
         new_player_id = (self.current_player.id + 1) % self.num_players
         self.current_player = self.players[new_player_id]
+        max = 4
+
+        while self.current_player.is_dead or max <= 0:
+            new_player_id = (new_player_id + 1) % self.num_players
+            self.current_player = self.players[new_player_id]
+            max -= 1
 
     def copy_state(self):
         """

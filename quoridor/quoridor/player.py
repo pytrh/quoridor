@@ -42,6 +42,7 @@ class Player:
         self.timer = time_remaining_blitz
         self.start_position = position
         self.AI_mode = ai_mode
+        self.is_dead = False
 
         if self.start_position[1] == 0:
             self.goal_line = [(i, size - 1) for i in range(size)]

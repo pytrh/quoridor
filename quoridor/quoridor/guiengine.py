@@ -634,15 +634,16 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.timer_label.set_text(f"Timer : {time}")
         logging.debug(f"Timer : {time} {player_id}")
 
-    def handle_timer_end_for_player(self, id: int):
+    def handle_timer_end_for_player(self, player_id: int):
         "handle 3 players"
-        if self.state.num_players >= 3:  # TODO voir combien de joueur il reste
-            self.state.abandon_game(id)
+        if self.state.num_players_remaining >= 3:
+            self.execute_command(AbandonCommand(self.state, player_id))
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
+            self.update_current_player_label()
         else:
-            self.state.switch_player()
-            self.game_is_over()
+            self.execute_command(AbandonCommand(self.state, player_id))
+            self.display_game_over_window()
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
@@ -688,7 +689,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.execute_command(move_pawn)
             if self.state.game_over():
                 logging.info("-------- GameOver --------")
-                self.game_is_over()
+                self.display_game_over_window()
             else:
                 self.handle_switch_player()
             self.render_board()
@@ -707,7 +708,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
-    def game_is_over(self):
+    def display_game_over_window(self):
         self.clear_all_timer()
         id_player = self.state.current_player.id
         emoji = "🔵"
@@ -750,6 +751,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.cells[(row, col)].get_style_context().add_class("wall-v")
                     self.cells[(row + 1, col)].get_style_context().add_class("wall-v")
 
+        self.update_current_player_label()
+
+        return
+
+    def update_current_player_label(self):
         id_player = self.state.current_player.id
         logging.debug(f"id : {id_player}")
         emoji = "🔵"
@@ -760,8 +766,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.current_player_label.set_label(f"Current player : {emoji}")
-
-        return
 
     def set_parameters(self, state: GameState):
         self._number_of_players = state.num_players
