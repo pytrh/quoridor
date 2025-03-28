@@ -220,8 +220,9 @@ class CLIEngine:
         buffer = ""
 
         while True:
-            if self.state.players[self.state.current_player.id].timer.current_time <= 0:
-                return "abandon"
+            if self.state.blitz_mode == GameMode.BLITZ:
+                if self.state.players[self.state.current_player.id].timer.current_time <= 0:
+                    return "abandon"
             if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
                 buffer = sys.stdin.readline().strip()
                 print(buffer)
