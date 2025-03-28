@@ -195,8 +195,9 @@ def main():
             blitz_time = args.time
 
     if (args.players is not None) and (args.ai is not None):
-        logging.warning("Warning: -p option ignored due to presence of -a options")
-        num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
+        if num_players < max(ai_colors):
+            logging.warning("Warning: -p option ignored due to presence of -a options")
+            num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
     elif args.ai is not None:
         num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
 
