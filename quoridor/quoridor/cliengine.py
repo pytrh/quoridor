@@ -12,6 +12,7 @@ from quoridor.command import (
     Command,
     PlaceWallCommand,
     MovePawnCommand,
+    TimeCommand,
     UndoCommand,
     RedoCommand,
     RestartCommand,
@@ -90,7 +91,7 @@ class CLIEngine:
             self.state.history.append(command)
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():
-                if type(command) == AbandonCommand:  # test gameOver via Abandon
+                if type(command) == AbandonCommand:
                     self.state.switch_player()
                 self.render_game_over()
             else:
@@ -273,6 +274,8 @@ class CLIEngine:
             return RestartCommand(self.state, self.initial_state)
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
+        elif input == "time":
+            return TimeCommand(self.state)
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)
             a, b = self.state.players[self.state.current_player.id].position

@@ -83,15 +83,15 @@ class Timer:
         while not self._stop_event.is_set():
             now = time.time()
             elapsed = int(now - self.turn_start_time)
-            remaining = max(0, self.current_time - elapsed)
+            self.remaining = max(0, self.current_time - elapsed)
 
             if self.gui is not None:
-                self.gui.update_timer(remaining, self.player_id)
+                self.gui.update_timer(self.remaining, self.player_id)
 
             if not self.display_lock.is_set():
-                print(f"\r[⏳ Remaining: {remaining}s] ", end="", flush=True)
+                print(f"\r[⏳ Remaining: {self.remaining}s] ", end="", flush=True)
 
-            if remaining <= 0:
+            if self.remaining <= 0:
                 print(f"\n⏰ Time out! Player {self.player_id + 1} has lost the game!")
                 if self.gui is not None:
                     self.gui.handle_timer_end_for_player(self.player_id)

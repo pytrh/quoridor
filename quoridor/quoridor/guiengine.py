@@ -643,6 +643,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.update_current_player_label()
         else:
             self.execute_command(AbandonCommand(self.state, player_id))
+            self.state.switch_player()
             self.display_game_over_window()
 
     def handle_switch_player(self):
