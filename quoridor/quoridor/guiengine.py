@@ -789,6 +789,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if self._blitz_mode is not None:
             if self._blitz_mode == GameMode.BLITZ:
                 self.btn_blitz.set_active(True)
+                self.timer_text_box.set_value(self._blitz_time or DEFAULT_BLITZ_TIME)
             else:
                 self.btn_normal.set_active(True)
         else:
