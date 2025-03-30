@@ -122,6 +122,7 @@ def main():
     )
 
     args = parser.parse_args()
+    game_related_args = ["players", "blitz", "time", "size", "walls", "ai"]
 
     setup_logging(verbose=args.verbose, debug=args.debug)
 
@@ -210,7 +211,10 @@ def main():
         ai_mode=ai_mode,
         ai_colors=ai_colors,
     )
-    if args.gui:
+    if args.gui and not any(getattr(args, arg) for arg in game_related_args):
+        engine = GUIEngine(None)
+        engine.run()
+    elif args.gui:
         engine = GUIEngine(initial_state)
         engine.run()
     else:
