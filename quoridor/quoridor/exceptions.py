@@ -9,6 +9,7 @@ Classes:
     PathNotFoundError: Raised when there is no path between two nodes.
     InvalidMoveError: Raised when an invalid move is attempted in the game.
     GameOver: Raised when the game is over.
+    NoUndoableCommand: Raised when there is no command to undo.
 """
 
 class NodeNotFoundError(Exception):
@@ -33,4 +34,12 @@ class InvalidCommandError(Exception):
 
 class GameOver(Exception):
     """Exception raised when the game is over."""
+    pass
+
+class NoUndoableCommand(Exception):
+    """Exception raised when there is no command to undo."""
+    pass
+
+class NoRedoableCommand(Exception):
+    """Exception raised when there is no command to redo."""
     pass

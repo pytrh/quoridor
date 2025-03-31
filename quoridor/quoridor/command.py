@@ -1,15 +1,36 @@
+# TODO: Joe started savecommand, but didn't finish it. Anyone is welcome to finish it.
+# TODO: command.py is getting bloated with game logic and utility code,
+#       separate them into another module called gamelogic for example(funny old name ha!)
+#       Create another ABC only for PlaceWallCommand, MovePawnCommand to conform to LSP
 """
 Command module handling both game operations and undo/redo/restart/quit etc.
+List of commands:
+Commands of which execute() return True:
+- PlaceWallCommand fully implemented
+- MovePawnCommand fully implemented
+Commands of which execute() return False:
+- UndoCommand fully implemented
+- RedoCommand fully implemented
+- RestartCommand Never started
+- AbandonCommand Lucas is working on it
+- SaveCommand in progress
+- QuitCommand fully implemented
 """
-
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple, List, TYPE_CHECKING
 from copy import deepcopy
+import os
 
 from quoridor.graph import Graph
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, PathNotFoundError, GameOver
 from quoridor.gamemode import GameMode
+from quoridor.exceptions import (
+    InvalidMoveError,
+    PathNotFoundError,
+    GameOver,
+    NoUndoableCommand,
+    NoRedoableCommand,
+)
 
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
@@ -48,7 +69,7 @@ class Command(ABC):
         """Return a string representation of the command."""
         pass
 
-    # TODO: Very ugly code, fix these 2 functions below
+    # TODO: Very ugly code, these 2 functions below don't belong here
     def switch_player(self):
         """
         Change the current player to the next one
@@ -58,11 +79,73 @@ class Command(ABC):
 
     def update_wall(self):
         """
-        Remove one fence to the walls counter of the current player
+        Decrement the walls remaining of the current player
         """
         self.state.players[self.state.current_player.id].walls_remaining = (
             self.state.players[self.state.current_player.id].walls_remaining - 1
         )
+
+    def get_string_from_board(self) -> str:
+        """
+        Return the board in string format
+        """
+        horizontal_wall = "---"
+        vertical_wall = "|"
+        interstice = "+"
+        horizontal_space = "   "  # Must be of the same size than horizontal_wall
+        big_space = "  "
+        small_space = " "  # Must be of the size of big_space -1
+        "  +" + "---+" * self.state.size
+
+        result = "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
+        result += "\n"
+        result += big_space + interstice + (horizontal_wall + interstice) * self.size
+        for row in range(self.size):
+            result += f"\n{self.rows[row]}" + small_space + vertical_wall
+            for columns in range(self.size):
+                case = "   "
+                for player in range(self.state.num_players):
+                    if (
+                        self.state.players[player].position[0] == row
+                        and self.state.players[player].position[1] == columns
+                    ):
+                        # case = " " + str(self.state.players[player].id + 1) + " "
+                        case = " " + str(player + 1) + " "
+                if columns == self.size - 1 or not self.state.board.edge_exists(
+                    (row, columns), (row, columns + 1)
+                ):
+                    result += case + vertical_wall
+                else:
+                    result += case + " "
+            result += "\n" + big_space + interstice
+            for columns in range(self.size):
+                if row == self.size - 1 or not self.state.board.edge_exists(
+                    (row, columns), (row + 1, columns)
+                ):
+                    result += horizontal_wall
+                else:
+                    result += horizontal_space
+                result += interstice
+        return result
+
+    # TODO: Very ugly, fix please
+    rows = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+    ]
 
 
 class PlaceWallCommand(Command):
@@ -80,10 +163,9 @@ class PlaceWallCommand(Command):
         """Execute the command to place a wall."""
         try:
             self.place_wall(self.position[0], self.position[1], self.orientation)
-            return True
         except (InvalidMoveError, PathNotFoundError) as e:
             raise e
-        return False
+        return True
 
     # Directly from legacy gamestatemanager.py
     # TODO: Move to PlaceWallCommand.execute()?
@@ -161,16 +243,48 @@ class PlaceWallCommand(Command):
 
     def undo(self) -> None:
         """Remove the wall that was placed."""
-        self.state.board.remove_wall(self.position, self.orientation)
         self.player.walls_remaining += 1
-        self.switch_player()
+        if self.orientation == Direction.H:
+            self.state.board.add_edge(
+                self.position, (self.position[0] + 1, self.position[1])
+            )
+            self.state.board.add_edge(
+                (self.position[0], self.position[1] + 1),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
+        else:
+            self.state.board.add_edge(
+                self.position, (self.position[0], self.position[1] + 1)
+            )
+            self.state.board.add_edge(
+                (self.position[0] + 1, self.position[1]),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
+        self.state.backward_player()
 
     def redo(self) -> None:
         """Re-place the wall that was removed."""
-        self.execute()
+        self.player.walls_remaining -= 1
+        if self.orientation == Direction.H:
+            self.state.board.remove_edge(
+                self.position, (self.position[0] + 1, self.position[1])
+            )
+            self.state.board.remove_edge(
+                (self.position[0], self.position[1] + 1),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
+        else:
+            self.state.board.remove_edge(
+                self.position, (self.position[0], self.position[1] + 1)
+            )
+            self.state.board.remove_edge(
+                (self.position[0] + 1, self.position[1]),
+                (self.position[0] + 1, self.position[1] + 1),
+            )
+        self.state.switch_player()
 
     def __str__(self) -> str:
-        return f"Place {self.orientation.name} wall at {self.position}"
+        return f"{self.rows[self.position[0]]}{self.position[1] + 1}{self.orientation.name.lower()}"
 
 
 class MovePawnCommand(Command):
@@ -255,31 +369,34 @@ class MovePawnCommand(Command):
     def undo(self) -> None:
         """Move the pawn back to its previous position."""
         self.player.position = self.from_position
-        self.switch_player()
+        self.state.backward_player()
 
     def redo(self) -> None:
         """Move the pawn to its new position again."""
-        self.execute()
+        self.player.position = self.to_position
+        self.state.switch_player()
 
     def __str__(self) -> str:
-        return f"Move pawn from {self.from_position} to {self.to_position}"
+        return f"{self.rows[self.from_position[0]]}{self.from_position[1] + 1}-{self.rows[self.to_position[0]]}{self.to_position[1] + 1}"
 
 
 class UndoCommand(Command):
     """Command to undo the last game action."""
 
-    def __init__(self, state: "GameState", history: List[Command] = None):
+    def __init__(self, state: "GameState"):
         super().__init__(state)
-        # Allow an external history to be passed, but default to using state's history
-        self.history = history if history is not None else state.history
 
     def execute(self) -> bool:
         """Undo the last command in the command history."""
-        if self.history:
-            last_command = self.history.pop()
-            last_command.undo()
-            self.state.redo_stack.append(last_command)
-            return True
+        # print(f"Len of history: {len(self.state.history)}")
+        if not self.state.history:
+            raise NoUndoableCommand
+
+        last_command = self.state.history.pop()
+        self.state.redo_stack.append(last_command)
+        print(f"Last command: {last_command}")
+        print(f"Size of redo stack: {len(self.state.redo_stack)}")
+        last_command.undo()
         return False
 
     def __str__(self) -> str:
@@ -289,19 +406,19 @@ class UndoCommand(Command):
 class RedoCommand(Command):
     """Command to redo a previously undone action."""
 
-    def __init__(self, state: "GameState", redo_stack: List[Command] = None):
+    def __init__(self, state: "GameState"):
         super().__init__(state)
-        # Allow an external redo_stack to be passed, but default to using state's redo_stack
-        self.redo_stack = redo_stack if redo_stack is not None else state.redo_stack
 
     def execute(self) -> bool:
         """Redo the last undone command."""
-        if self.redo_stack:
-            command = self.redo_stack.pop()
-            result = command.execute()
-            if result:
-                self.state.history.append(command)
-            return result
+        print(f"Size of redo stack right before bug: {len(self.state.redo_stack)}")
+        if not self.state.redo_stack:
+            raise NoRedoableCommand
+
+        command = self.state.redo_stack.pop()
+        print(f"Command to redo: {command}")
+        command.redo()
+        self.state.history.append(command)
         return False
 
     def __str__(self) -> str:
@@ -318,7 +435,7 @@ class RestartCommand(Command):
     def execute(self) -> bool:
         """Restart the game to its initial state."""
         self.state = deepcopy(self.initial_state)
-        return True
+        return False
 
     def __str__(self) -> str:
         return "Restart game"
@@ -412,3 +529,30 @@ class HelpCommand(Command):
 
     def __str__(self) -> str:
         return "Help"
+
+class SaveCommand(Command):
+    """Command to save the current game to a file."""
+
+    def __init__(self, state: "GameState", filename: str):
+        super().__init__(state)
+        self.filename = filename
+
+    def execute(self) -> bool:
+        """Save the current game to a file."""
+        # Create a string representation of the current game state
+        # First line is the current player ID
+        state_string = f"{self.state.current_player.id}\n"
+
+        # Add the board representation
+        state_string += self.get_string_from_board()
+
+        # Get parent directory of the parent directory
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(self.filename)))
+        os.makedirs(parent_dir, exist_ok=True)
+        save_path = os.path.join(parent_dir, os.path.basename(self.filename))
+        with open(save_path, "w") as f:
+            f.write(state_string)
+        return False
+
+    def __str__(self) -> str:
+        return f"Save game to {self.filename}"

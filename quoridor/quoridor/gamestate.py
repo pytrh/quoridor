@@ -8,6 +8,7 @@ from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.timer import Timer
 from quoridor.direction import Direction
+from quoridor.ai import AI
 from quoridor.config import (
     DEFAULT_SIZE,
     DEFAULT_NUM_PLAYERS,
@@ -29,17 +30,17 @@ class GameState:
 
     def __init__(
         self,
-        size: int = DEFAULT_SIZE,
+        size: int = GRID_SIZE,
         current_player_id: int = 0,
         players: list[Player] = None,
-        num_players: int = DEFAULT_NUM_PLAYERS,
+        num_players: int = NUM_PLAYERS,
         board: Graph = None,
         num_walls: int = DEFAULT_NUM_WALLS,
         history: List["Command"] = None,
         blitz_mode: GameMode = DEFAULT_GAME_MODE,
         blitz_time: int = DEFAULT_BLITZ_TIME,
-        ai_mode: GameMode = DEFAULT_GAME_MODE,
-        ai_colors: list = [],
+
+        ai_controllers: dict[int, "AI"] = None,
     ):
         """
          Initialize a new game state.
@@ -99,8 +100,8 @@ class GameState:
 
         self.blitz_time = blitz_time
 
-        self.ai_mode = ai_mode
-        # self.move_count = 0
+        self.ai_controllers = ai_controllers if ai_controllers is not None else {}
+
 
         if blitz_mode == GameMode.BLITZ:
             # conversion in seconds
@@ -208,3 +209,10 @@ class GameState:
             ai_mode=self.ai_mode,
         )
         return cloned_state
+
+    def backward_player(self):
+        """
+        Change the current player to the previous one
+        If current player is the first one, the previous one will the last
+        """
+        self.current_player.id = (self.current_player.id - 1) % self.num_players

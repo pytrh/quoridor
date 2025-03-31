@@ -24,6 +24,8 @@ from quoridor.exceptions import (
     InvalidMoveError,
     InvalidCommandError,
     PathNotFoundError,
+    NoUndoableCommand,
+    NoRedoableCommand,
     GameOver,
 )
 
@@ -88,8 +90,11 @@ class CLIEngine:
         Execute a command and add it to the command history.
         """
         result = command.execute()
+        # print(f"Executed command: {command}")
+        # print(f"result: {result}")
         if result:
             self.state.history.append(command)
+            print(f"Executed command: {command}")
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():
                 if type(command) == AbandonCommand:
@@ -269,9 +274,9 @@ class CLIEngine:
         """
         input = self.get_input_from_human_player()
         if input == "undo":
-            return UndoCommand(self.state, self.state.history)
+            return UndoCommand(self.state)
         elif input == "redo":
-            return RedoCommand(self.state, self.state.redo_stack)
+            return RedoCommand(self.state)
         elif input == "quit":
             return QuitCommand(self.state)
         elif input == "restart":
@@ -319,15 +324,21 @@ class CLIEngine:
         while True:
             try:
                 self.print_remaining_walls()
-
+                
+                # start blitz
                 self.start_blitz_turn()
-                print("")
-
-                command = self.get_command_from_human_player()
+                
+                
+                if self.state.current_player.id not in self.state.ai_controllers:
+                    command = self.get_command_from_human_player()
+                else:
+                    command = self.state.ai_controllers[self.state.current_player.id].suggest_move(self.state)
+                print(f"Command: {command}")
 
                 self.end_blitz_turn()
                 # Execute the command directly
                 self.execute_command(command)
+                # TODO: Move the switch_player thing here seems a better idea
 
                 blitz_mode_active = True
                 self.render_board()
@@ -336,10 +347,19 @@ class CLIEngine:
                     # self.render_game_over()
                     # exit()
 
-            except (InvalidMoveError, PathNotFoundError, InvalidCommandError) as e:
+            except InvalidMoveError as e:
                 self.end_blitz_turn()
                 print(f"Invalid move: {str(e)}")
-
+            except PathNotFoundError:
+                self.end_blitz_turn()
+                print("Cannot place wall: it would block a player's path to goal")
+            except NoUndoableCommand:
+                print("No move to undo")
+            except NoRedoableCommand:
+                print("No command to redo")
+            except InvalidCommandError as e:
+                self.end_blitz_turn()
+                print(f"Invalid command: {str(e)}")
             except GameOver:
                 self.render_game_over()
                 exit()

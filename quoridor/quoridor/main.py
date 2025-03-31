@@ -4,10 +4,13 @@ Handles command line arguments
 """
 
 import argparse
+import configparser
 import importlib.metadata
 import logging
 import sys
+import os
 
+from quoridor.ai import AI, GreedyAI
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode
@@ -25,6 +28,10 @@ from quoridor.config import (
     DEFAULT_GAME_MODE,
     DEFAULT_AI_COLOR,
 )
+
+dirname = os.path.dirname(__file__)
+DEFAULT_CONFIG_FILE = os.path.join(dirname, ".quoridorrc")
+CONFIG_FILE = os.path.join(dirname, "config.py")
 
 
 def setup_logging(verbose, debug):
@@ -46,6 +53,49 @@ def setup_logging(verbose, debug):
         )
 
 
+def load_default_config():
+    config = configparser.ConfigParser()
+    config.read(DEFAULT_CONFIG_FILE)
+
+    size = config.getint("Default", "size", fallback=9)
+    players = config.getint("Default", "players", fallback=2)
+    walls = config.getint("Default", "walls", fallback=20)
+
+    return size, players, walls
+
+
+def update_default_config(size: int, num_players: int, num_walls: int) -> None:
+    config = configparser.ConfigParser()
+    config.read(DEFAULT_CONFIG_FILE)
+
+    config["Default"]["size"] = str(size)
+    config["Default"]["players"] = str(num_players)
+    config["Default"]["walls"] = str(num_walls)
+
+    print("Updated Config:")
+    for section in config.sections():
+        print(f"[{section}]")
+        for key, value in config.items(section):
+            print(f"{key} = {value}")
+
+    with open(DEFAULT_CONFIG_FILE, "w") as default_config:
+        config.write(default_config)
+
+
+def update_config_file(size: int, num_players: int, num_walls: int) -> None:
+    with open(CONFIG_FILE, "r+") as config_file:
+        lines = config_file.readlines()
+        config_file.seek(0)
+        for line in lines:
+            if line.strip().startswith("GRID_SIZE"):
+                line = f"GRID_SIZE = {size}\n"
+            elif line.strip().startswith("NUM_PLAYERS"):
+                line = f"NUM_PLAYERS = {num_players}\n"
+            elif line.strip().startswith("NUM_WALLS"):
+                line = f"NUM_WALLS = {num_walls}\n"
+            config_file.write(line)
+
+
 def main():
     """
     Main function
@@ -53,6 +103,9 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("file", default=None, nargs="?")
+    parser.add_argument('-a', '--ai', action='append', default=[],
+                       help='Add an AI player. Can specify color (1-4 or A for all). Default is 2.')
+
     parser.add_argument(
         "-V",
         "--version",
@@ -149,24 +202,55 @@ def main():
 
     if args.size:
         error = False
-        size = args.size
-        if size not in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
+        if args.size not in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
             logging.error("grid size must be between 3 and 15.")
             error = True
-        if size % 2 == 0:
+        if args.size % 2 == 0:
             logging.error("size must be an odd number.")
             error = True
         if error:
             sys.exit(1)
+        size = args.size
+        changed = True
 
     if args.players:
         error = False
-        num_players = args.players
-        if num_players not in range(MIN_NUM_PLAYERS, MAX_NUM_PLAYERS + 1):
+        if args.players not in range(MIN_NUM_PLAYERS, MAX_NUM_PLAYERS + 1):
             logging.error("can only have 2, 3 or 4 players.")
             sys.exit(1)
-        if num_players == NOT_RECOMMENDED_NUM_PLAYERS:
+        if args.players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
+        num_players = args.players
+        changed = True
+
+    if args.walls:
+        num_walls = args.walls
+        changed = True
+
+    if changed:
+        update_config_file(size, num_players, num_walls)
+        update_default_config(size, num_players, num_walls)
+
+    # Process AI arguments
+    ai_ids = []
+    if args.ai:
+        for ai_arg in args.ai:
+            if ai_arg is None:
+                ai_ids.append(2)
+            elif ai_arg == 'A':
+                ai_ids = [i for i in range(num_players)]
+            else:
+                try:
+                    color = int(ai_arg)
+                    if 1 <= color <= 4:
+                        ai_ids.append(color - 1)
+                    else:
+                        print(f"Invalid AI color: {color}. Must be between 1 and 4.", file=sys.stderr)
+                except ValueError:
+                    print(f"Invalid AI color: {ai_arg}", file=sys.stderr)
+
+    ai_controllers = {id: GreedyAI() for id in ai_ids}
+    initial_state = GameState(size=size, num_players=num_players, num_walls=num_walls, ai_controllers=ai_controllers)
 
     if args.ai:
         for ai in args.ai:
