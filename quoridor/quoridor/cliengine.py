@@ -20,6 +20,7 @@ from quoridor.command import (
     QuitCommand,
     AbandonCommand,
     HelpCommand,
+    SaveCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -281,6 +282,8 @@ class CLIEngine:
             return RestartCommand(self.state, self.initial_state)
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
+        elif input == "save":
+            return SaveCommand(self.state, "toto.txt")
         elif input == "time":
             if self.state.blitz_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)
