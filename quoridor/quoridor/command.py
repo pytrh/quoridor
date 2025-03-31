@@ -382,3 +382,31 @@ class TimeCommand(Command):
 
     def __str__(self) -> str:
         return "Time player"
+
+class HelpCommand(Command):
+    """Command to display the list of available commands."""
+
+    def __init__(self, state: "GameState"):
+        super().__init__(state)
+
+    def execute(self) -> bool:
+        """Display the help menu with all available commands"""
+        print("\n--- Available Commands ---")
+        print(" undo       : Undo the last move")
+        print(" redo       : Redo the last undone move")
+        print(" quit       : Quit the game")
+        print(" restart    : Restart the game from the beginning")
+        print(" abandon    : Abandon the game")
+        print(" time       : Show elapsed time")
+        print(" help or h  : Show this help menu")
+        print()
+        print("To move     : type a direction followed by a number (e.g. 'e4')")
+        print()
+        print("To place a wall:")
+        print("   - Horizontal wall → e.g. 'e4h'")
+        print("   - Vertical wall   → e.g. 'e4v'")
+        print("--------------------------\n")
+        return False
+
+    def __str__(self) -> str:
+        return "Help"

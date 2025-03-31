@@ -18,6 +18,7 @@ from quoridor.command import (
     RestartCommand,
     QuitCommand,
     AbandonCommand,
+    HelpCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -276,6 +277,8 @@ class CLIEngine:
             return AbandonCommand(self.state, self.state.current_player.id)
         elif input == "time":
             return TimeCommand(self.state)
+        elif input == 'h' or input == "help":
+            return HelpCommand(self.state)
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)
             a, b = self.state.players[self.state.current_player.id].position
