@@ -2,15 +2,20 @@
 GameState module.
 """
 
+import logging
 from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
+from quoridor.timer import Timer
 from quoridor.direction import Direction
 from quoridor.ai import AI
 from quoridor.config import (
-    GRID_SIZE,
-    NUM_PLAYERS,
-    NUM_WALLS,
+    DEFAULT_SIZE,
+    DEFAULT_NUM_PLAYERS,
+    DEFAULT_NUM_WALLS,
+    DEFAULT_GAME_MODE,
+    DEFAULT_BLITZ_TIME,
+    GameMode,
 )
 
 if TYPE_CHECKING:
@@ -30,9 +35,11 @@ class GameState:
         players: list[Player] = None,
         num_players: int = NUM_PLAYERS,
         board: Graph = None,
-        blitz: bool = False,
-        num_walls: int = NUM_WALLS,
+        num_walls: int = DEFAULT_NUM_WALLS,
         history: List["Command"] = None,
+        blitz_mode: GameMode = DEFAULT_GAME_MODE,
+        blitz_time: int = DEFAULT_BLITZ_TIME,
+
         ai_controllers: dict[int, "AI"] = None,
     ):
         """
@@ -52,9 +59,18 @@ class GameState:
          :param history: The history of moves, default is an empty list.
         :type history: list[Command]
         """
+        logging.debug("Creating GameState :")
+        logging.debug(f"number of players : {num_players}")
+        logging.debug(f"board size : {size}")
+        logging.debug(f"number of walls : {num_walls}")
+        logging.debug(f"blitz mode activated : {blitz_mode}")
+        logging.debug(f"blitz timer : {blitz_time}")
+        logging.debug(f"ai mode : {ai_mode}")
+
         self.board = board if board is not None else self.create_board(size)
         self.size = size
         self.num_players = num_players
+        self.num_players_remaining = num_players
         self.initial_num_walls = num_walls
 
         if players is None:
@@ -78,11 +94,24 @@ class GameState:
             if current_player_id is None
             else self.players[current_player_id]
         )
-        self.blitz = blitz
+        self.blitz_mode = blitz_mode
         self.history = [] if history is None else history
         self.redo_stack = []
+
+        self.blitz_time = blitz_time
+
         self.ai_controllers = ai_controllers if ai_controllers is not None else {}
-        # self.move_count = 0
+
+
+        if blitz_mode == GameMode.BLITZ:
+            # conversion in seconds
+            blitz_time = blitz_time * 60
+            for i in range(num_players):
+                self.players[i].timer = Timer(blitz_time, blitz_mode, i)
+
+        if ai_mode == GameMode.AI:
+            for i in ai_colors:
+                self.players[i - 1].ai_mode = True
 
     def create_board(self, size: int = 9) -> Graph:
         """
@@ -144,6 +173,9 @@ class GameState:
         elif self.current_player.id == 3:
             if self.players[self.current_player.id].position[0] == 0:
                 return True
+
+        if self.num_players_remaining == 1:
+            return True
         return False
 
     def switch_player(self):
@@ -151,7 +183,32 @@ class GameState:
         Change the current player to the next one
         If current player is the last one, the next one will the first
         """
-        self.current_player.id = (self.current_player.id + 1) % self.num_players
+        new_player_id = (self.current_player.id + 1) % self.num_players
+        self.current_player = self.players[new_player_id]
+        max = 4
+
+        while self.current_player.is_dead or max <= 0:
+            new_player_id = (new_player_id + 1) % self.num_players
+            self.current_player = self.players[new_player_id]
+            max -= 1
+
+    def copy_state(self):
+        """
+        copy game state
+        """
+        cloned_state = GameState(
+            size=self.size,
+            current_player_id=self.current_player.id,
+            players=self.players,
+            num_players=self.num_players,
+            board=self.board,
+            num_walls=self.initial_num_walls,
+            history=self.history,
+            blitz_mode=self.blitz_mode,
+            blitz_time=self.blitz_time,
+            ai_mode=self.ai_mode,
+        )
+        return cloned_state
 
     def backward_player(self):
         """

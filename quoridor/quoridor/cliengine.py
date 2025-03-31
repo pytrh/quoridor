@@ -2,18 +2,23 @@
 Run the quoridor game in the terminal.
 """
 
+import sys
+import select
 import copy
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
+from quoridor.gamemode import GameMode
 from quoridor.command import (
     Command,
     PlaceWallCommand,
     MovePawnCommand,
+    TimeCommand,
     UndoCommand,
     RedoCommand,
     RestartCommand,
     QuitCommand,
     AbandonCommand,
+    HelpCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -40,7 +45,9 @@ class CLIEngine:
         """
         self.state = gamestate
         self.size = gamestate.size
-        self.initial_state = copy.deepcopy(gamestate)
+        # cant copy threads
+        # self.initial_state = copy.deepcopy(gamestate)
+        self.initial_state = gamestate.copy_state()
 
         # Create rows and columns based on the board size (from 3 to 15)
         self.rows = [
@@ -90,6 +97,8 @@ class CLIEngine:
             print(f"Executed command: {command}")
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():
+                if type(command) == AbandonCommand:
+                    self.state.switch_player()
                 self.render_game_over()
             else:
                 self.state.switch_player()
@@ -209,11 +218,32 @@ class CLIEngine:
             + str(self.state.players[self.state.current_player.id].walls_remaining)
         )
 
+    def wait_for_input_with_timeout(self):
+        print(
+            "Player " + str(self.state.current_player.id + 1) + " will play? ",
+            end="",
+            flush=True,
+        )
+        buffer = ""
+
+        while True:
+            if self.state.blitz_mode == GameMode.BLITZ:
+                if (
+                    self.state.players[self.state.current_player.id].timer.current_time
+                    <= 0
+                ):
+                    return "abandon"
+            if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
+                buffer = sys.stdin.readline().strip()
+                print(buffer)
+                if buffer:
+                    return buffer
+
     def get_input_from_human_player(self) -> str:
         """
         Get an input from the human player.
         """
-        return input("Player " + str(self.state.current_player.id + 1) + " will play?")
+        return self.wait_for_input_with_timeout()
 
     def well_formed_pawn_move(self, input: str) -> bool:
         """
@@ -252,7 +282,14 @@ class CLIEngine:
         elif input == "restart":
             return RestartCommand(self.state, self.initial_state)
         elif input == "abandon":
-            return AbandonCommand(self.state)
+            return AbandonCommand(self.state, self.state.current_player.id)
+        elif input == "time":
+            if self.state.blitz_mode == GameMode.BLITZ:
+                return TimeCommand(self.state)
+            else:
+                raise InvalidCommandError("Mode blitz is disabled")
+        elif input == "h" or input == "help":
+            return HelpCommand(self.state)
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)
             a, b = self.state.players[self.state.current_player.id].position
@@ -263,6 +300,22 @@ class CLIEngine:
         else:
             raise InvalidCommandError("Invalid command format")
 
+    def end_blitz_turn(self):
+        """
+        end timer
+        """
+        if self.state.blitz_mode == GameMode.BLITZ:
+            self.state.current_player.timer.end_turn()
+            self.state.current_player.timer.display_lock.clear()
+
+    def start_blitz_turn(self):
+        """
+        get and start timer
+        """
+        if self.state.blitz_mode == GameMode.BLITZ:
+            self.state.current_player.timer.start_turn()
+            self.state.current_player.timer.display_lock.set()
+
     def start_game(self):
         """
         Start the game loop.
@@ -271,16 +324,23 @@ class CLIEngine:
         while True:
             try:
                 self.print_remaining_walls()
+                
+                # start blitz
+                self.start_blitz_turn()
+                
+                
                 if self.state.current_player.id not in self.state.ai_controllers:
                     command = self.get_command_from_human_player()
                 else:
                     command = self.state.ai_controllers[self.state.current_player.id].suggest_move(self.state)
                 print(f"Command: {command}")
 
+                self.end_blitz_turn()
                 # Execute the command directly
                 self.execute_command(command)
                 # TODO: Move the switch_player thing here seems a better idea
 
+                blitz_mode_active = True
                 self.render_board()
                 if self.state.game_over():
                     raise GameOver
@@ -288,14 +348,17 @@ class CLIEngine:
                     # exit()
 
             except InvalidMoveError as e:
+                self.end_blitz_turn()
                 print(f"Invalid move: {str(e)}")
             except PathNotFoundError:
+                self.end_blitz_turn()
                 print("Cannot place wall: it would block a player's path to goal")
             except NoUndoableCommand:
                 print("No move to undo")
             except NoRedoableCommand:
                 print("No command to redo")
             except InvalidCommandError as e:
+                self.end_blitz_turn()
                 print(f"Invalid command: {str(e)}")
             except GameOver:
                 self.render_game_over()
