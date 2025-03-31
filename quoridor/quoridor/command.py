@@ -494,3 +494,15 @@ class HelpCommand(Command):
         return "Help"
 
 
+class SaveCommand(Command):
+    """Command to display the time remaining on the player's timer."""
+
+    def __init__(self, state: "GameState"):
+        super().__init__(state)
+
+    def execute(self) -> bool:
+        """Display the time remaining on the player's timer"""
+        return False
+
+    def __str__(self) -> str:
+        return "Time player"
