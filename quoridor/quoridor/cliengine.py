@@ -92,7 +92,7 @@ class CLIEngine:
         """
         result = command.execute()
         if result:
-            self.state.history.append(command)
+            self.state.history.append((self.state.current_player.id,command))
             logging.debug(f"Executed command: {command}")
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():

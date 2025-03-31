@@ -37,7 +37,7 @@ class GameState:
         num_players: int = DEFAULT_NUM_PLAYERS,
         board: Graph = None,
         num_walls: int = DEFAULT_NUM_WALLS,
-        history: List["Command"] = None,
+        history: list[tuple[int, "Command"]] = None,
         blitz_mode: GameMode = DEFAULT_GAME_MODE,
         blitz_time: int = DEFAULT_BLITZ_TIME,
         ai_ids: set = [],

@@ -21,6 +21,7 @@ from copy import deepcopy
 from typing import Optional, Tuple, List, TYPE_CHECKING
 import os
 
+from quoridor.io import ReadWriteHistory
 from quoridor.graph import Graph
 from quoridor.direction import Direction
 from quoridor.gamemode import GameMode
@@ -34,7 +35,6 @@ from quoridor.exceptions import (
 
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
-
 
 class Command(ABC):
     """Abstract base class for all commands in the game."""
@@ -353,8 +353,8 @@ class UndoCommand(Command):
         if not self.state.history:
             raise NoUndoableCommand
 
-        last_command = self.state.history.pop()
-        self.state.redo_stack.append(last_command)
+        player_id,last_command = self.state.history.pop()
+        self.state.redo_stack.append((player_id, last_command))
         print(f"Last command: {last_command}")
         print(f"Size of redo stack: {len(self.state.redo_stack)}")
         last_command.undo()
@@ -376,10 +376,10 @@ class RedoCommand(Command):
         if not self.state.redo_stack:
             raise NoRedoableCommand
 
-        command = self.state.redo_stack.pop()
+        player_id, command = self.state.redo_stack.pop()
         print(f"Command to redo: {command}")
         command.redo()
-        self.state.history.append(command)
+        self.state.history.append((player_id, command))
         return False
 
     def __str__(self) -> str:
@@ -497,11 +497,12 @@ class HelpCommand(Command):
 class SaveCommand(Command):
     """Command to display the time remaining on the player's timer."""
 
-    def __init__(self, state: "GameState"):
+    def __init__(self, state: "GameState", filename: str):
         super().__init__(state)
 
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
+        print(ReadWriteHistory.parse_history_to_list_of_str(self.state.history, self.state))
         return False
 
     def __str__(self) -> str:
