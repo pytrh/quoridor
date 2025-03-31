@@ -20,7 +20,6 @@ class Player:
         size: int,
         walls_remaining: int = 10,
         time_remaining_blitz: Timer = None,
-        ai_mode: bool = False,
     ) -> None:
         """
         Initialize a new player.
@@ -41,7 +40,6 @@ class Player:
         self.walls_remaining = walls_remaining
         self.timer = time_remaining_blitz
         self.start_position = position
-        self.AI_mode = ai_mode
         self.is_dead = False
 
         if self.start_position[1] == 0:

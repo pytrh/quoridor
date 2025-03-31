@@ -45,8 +45,6 @@ class CLIEngine:
         """
         self.state = gamestate
         self.size = gamestate.size
-        # cant copy threads
-        # self.initial_state = copy.deepcopy(gamestate)
         self.initial_state = gamestate.copy_state()
 
         # Create rows and columns based on the board size (from 3 to 15)
@@ -324,15 +322,16 @@ class CLIEngine:
         while True:
             try:
                 self.print_remaining_walls()
-                
+
                 # start blitz
                 self.start_blitz_turn()
-                
-                
+
                 if self.state.current_player.id not in self.state.ai_controllers:
                     command = self.get_command_from_human_player()
                 else:
-                    command = self.state.ai_controllers[self.state.current_player.id].suggest_move(self.state)
+                    command = self.state.ai_controllers[
+                        self.state.current_player.id
+                    ].suggest_move(self.state)
                 print(f"Command: {command}")
 
                 self.end_blitz_turn()
@@ -340,7 +339,7 @@ class CLIEngine:
                 self.execute_command(command)
                 # TODO: Move the switch_player thing here seems a better idea
 
-                blitz_mode_active = True
+                print("render")
                 self.render_board()
                 if self.state.game_over():
                     raise GameOver

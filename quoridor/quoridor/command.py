@@ -17,8 +17,8 @@ Commands of which execute() return False:
 - QuitCommand fully implemented
 """
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple, List, TYPE_CHECKING
 from copy import deepcopy
+from typing import Optional, Tuple, List, TYPE_CHECKING
 import os
 
 from quoridor.graph import Graph
@@ -430,11 +430,11 @@ class RestartCommand(Command):
 
     def __init__(self, state: "GameState", initial_state: "GameState"):
         super().__init__(state)
-        self.initial_state = deepcopy(initial_state)
+        self.restart_state = initial_state
 
     def execute(self) -> bool:
         """Restart the game to its initial state."""
-        self.state = deepcopy(self.initial_state)
+        self.state.set_state(self.restart_state)
         return False
 
     def __str__(self) -> str:
@@ -529,6 +529,7 @@ class HelpCommand(Command):
 
     def __str__(self) -> str:
         return "Help"
+
 
 class SaveCommand(Command):
     """Command to save the current game to a file."""

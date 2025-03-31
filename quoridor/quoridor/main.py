@@ -10,7 +10,6 @@ import logging
 import sys
 import os
 
-from quoridor.ai import AI, GreedyAI
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode
@@ -103,8 +102,6 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("file", default=None, nargs="?")
-    parser.add_argument('-a', '--ai', action='append', default=[],
-                       help='Add an AI player. Can specify color (1-4 or A for all). Default is 2.')
 
     parser.add_argument(
         "-V",
@@ -193,9 +190,10 @@ def main():
     num_walls = DEFAULT_NUM_WALLS
     blitz_time = DEFAULT_BLITZ_TIME
     blitz_mode = DEFAULT_GAME_MODE
-    ai_mode = DEFAULT_GAME_MODE
     current_ai_color = DEFAULT_AI_COLOR
-    ai_colors = set()
+    ai_ids = set()
+
+    changed = False
 
     if args.walls:
         num_walls = args.walls
@@ -231,44 +229,23 @@ def main():
         update_config_file(size, num_players, num_walls)
         update_default_config(size, num_players, num_walls)
 
-    # Process AI arguments
-    ai_ids = []
-    if args.ai:
-        for ai_arg in args.ai:
-            if ai_arg is None:
-                ai_ids.append(2)
-            elif ai_arg == 'A':
-                ai_ids = [i for i in range(num_players)]
-            else:
-                try:
-                    color = int(ai_arg)
-                    if 1 <= color <= 4:
-                        ai_ids.append(color - 1)
-                    else:
-                        print(f"Invalid AI color: {color}. Must be between 1 and 4.", file=sys.stderr)
-                except ValueError:
-                    print(f"Invalid AI color: {ai_arg}", file=sys.stderr)
-
-    ai_controllers = {id: GreedyAI() for id in ai_ids}
-    initial_state = GameState(size=size, num_players=num_players, num_walls=num_walls, ai_controllers=ai_controllers)
-
+    # Gesstion des paramètres d'IA
     if args.ai:
         for ai in args.ai:
             if ai is True:
-                ai_colors.add(current_ai_color)
+                ai_ids.add(current_ai_color)
                 current_ai_color += 1
             elif ai == "A":
-                ai_colors = {1, 2, 3, 4}
+                ai_ids = {1, 2, 3, 4}
                 break
             else:
                 color = int(ai)
                 if color < 1 or color > 4:
                     logging.error("COLOR must be between 1 and 4 or 'A'")
                     sys.exit(1)
-                if color != 1 and color not in ai_colors:
+                if color != 1 and color not in ai_ids:
                     current_ai_color += 1
-                ai_colors.add(color)
-        ai_mode = GameMode.AI
+                ai_ids.add(color)
 
     if args.blitz:
         blitz_mode = GameMode.BLITZ
@@ -280,11 +257,11 @@ def main():
             blitz_time = args.time
 
     if (args.players is not None) and (args.ai is not None):
-        if num_players < max(ai_colors):
+        if num_players < max(ai_ids):
             logging.warning("Warning: -p option ignored due to presence of -a options")
-            num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
+            num_players = max(DEFAULT_AI_COLOR, max(ai_ids))
     elif args.ai is not None:
-        num_players = max(DEFAULT_AI_COLOR, max(ai_colors))
+        num_players = max(DEFAULT_AI_COLOR, max(ai_ids))
 
     initial_state = GameState(
         size=size,
@@ -292,8 +269,7 @@ def main():
         num_walls=num_walls,
         blitz_mode=blitz_mode,
         blitz_time=blitz_time,
-        ai_mode=ai_mode,
-        ai_colors=ai_colors,
+        ai_ids=ai_ids,
     )
     if args.gui and not any(getattr(args, arg) for arg in game_related_args):
         engine = GUIEngine(None)

@@ -2,13 +2,14 @@
 GameState module.
 """
 
+from copy import deepcopy
 import logging
 from typing import List, TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.timer import Timer
 from quoridor.direction import Direction
-from quoridor.ai import AI
+from quoridor.ai import AI, GreedyAI
 from quoridor.config import (
     DEFAULT_SIZE,
     DEFAULT_NUM_PLAYERS,
@@ -30,17 +31,16 @@ class GameState:
 
     def __init__(
         self,
-        size: int = GRID_SIZE,
+        size: int = DEFAULT_SIZE,
         current_player_id: int = 0,
         players: list[Player] = None,
-        num_players: int = NUM_PLAYERS,
+        num_players: int = DEFAULT_NUM_PLAYERS,
         board: Graph = None,
         num_walls: int = DEFAULT_NUM_WALLS,
         history: List["Command"] = None,
         blitz_mode: GameMode = DEFAULT_GAME_MODE,
         blitz_time: int = DEFAULT_BLITZ_TIME,
-
-        ai_controllers: dict[int, "AI"] = None,
+        ai_ids: set = [],
     ):
         """
          Initialize a new game state.
@@ -65,13 +65,14 @@ class GameState:
         logging.debug(f"number of walls : {num_walls}")
         logging.debug(f"blitz mode activated : {blitz_mode}")
         logging.debug(f"blitz timer : {blitz_time}")
-        logging.debug(f"ai mode : {ai_mode}")
+        logging.debug(f"ai ids : {ai_ids}")
 
         self.board = board if board is not None else self.create_board(size)
         self.size = size
         self.num_players = num_players
         self.num_players_remaining = num_players
         self.initial_num_walls = num_walls
+        self.ai_ids = ai_ids
 
         if players is None:
             middle_board = size // 2
@@ -100,18 +101,16 @@ class GameState:
 
         self.blitz_time = blitz_time
 
-        self.ai_controllers = ai_controllers if ai_controllers is not None else {}
-
-
         if blitz_mode == GameMode.BLITZ:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
                 self.players[i].timer = Timer(blitz_time, blitz_mode, i)
 
-        if ai_mode == GameMode.AI:
-            for i in ai_colors:
-                self.players[i - 1].ai_mode = True
+        if len(ai_ids) > 0:
+            self.ai_controllers = {id: GreedyAI() for id in ai_ids}
+        else:
+            self.ai_controllers = {}
 
     def create_board(self, size: int = 9) -> Graph:
         """
@@ -196,19 +195,42 @@ class GameState:
         """
         copy game state
         """
+        new_list_players = [
+            Player(player.id, player.position, self.size, player.walls_remaining, None)
+            for player in self.players
+        ]
+
         cloned_state = GameState(
             size=self.size,
             current_player_id=self.current_player.id,
-            players=self.players,
+            players=new_list_players,
             num_players=self.num_players,
-            board=self.board,
+            board=deepcopy(self.board),
             num_walls=self.initial_num_walls,
-            history=self.history,
+            history=deepcopy(self.history),
             blitz_mode=self.blitz_mode,
             blitz_time=self.blitz_time,
-            ai_mode=self.ai_mode,
+            ai_ids=deepcopy(self.ai_ids),
         )
         return cloned_state
+
+    def set_state(self, state: any):  # type: ignore
+        new_list_players = [
+            Player(player.id, player.position, state.size, player.walls_remaining, None)
+            for player in state.players
+        ]
+
+        self.size = state.size
+        self.current_player_id = state.current_player.id
+        self.current_player = state.players[self.current_player_id]
+        self.players = new_list_players
+        self.num_players = state.num_players
+        self.board = deepcopy(state.board)
+        self.num_walls = state.initial_num_walls
+        self.history = deepcopy(state.history)
+        self.blitz_mode = state.blitz_mode
+        self.blitz_time = state.blitz_time
+        self.ai_ids = deepcopy(state.ai_ids)
 
     def backward_player(self):
         """
