@@ -499,10 +499,11 @@ class SaveCommand(Command):
 
     def __init__(self, state: "GameState", filename: str):
         super().__init__(state)
+        self.filename = filename
 
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
-        print(ReadWriteHistory.parse_history_to_list_of_str(self.state.history, self.state))
+        ReadWriteHistory.write_history(self.filename, ReadWriteHistory.parse_history_to_list_of_str(self.state.history, self.state))
         return False
 
     def __str__(self) -> str:
