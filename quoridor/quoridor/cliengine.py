@@ -223,7 +223,10 @@ class CLIEngine:
 
         while True:
             if self.state.blitz_mode == GameMode.BLITZ:
-                if self.state.players[self.state.current_player.id].timer.current_time <= 0:
+                if (
+                    self.state.players[self.state.current_player.id].timer.current_time
+                    <= 0
+                ):
                     return "abandon"
             if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
                 buffer = sys.stdin.readline().strip()
@@ -276,8 +279,11 @@ class CLIEngine:
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
         elif input == "time":
-            return TimeCommand(self.state)
-        elif input == 'h' or input == "help":
+            if self.state.blitz_mode == GameMode.BLITZ:
+                return TimeCommand(self.state)
+            else:
+                raise InvalidCommandError("Mode blitz is disabled")
+        elif input == "h" or input == "help":
             return HelpCommand(self.state)
         elif self.well_formed_pawn_move(input):
             x, y = self.translate_move(input)

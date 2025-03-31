@@ -368,7 +368,8 @@ class QuitCommand(Command):
 
     def __str__(self) -> str:
         return "Quit application"
-    
+
+
 class TimeCommand(Command):
     """Command to display the time remaining on the player's timer."""
 
@@ -377,11 +378,12 @@ class TimeCommand(Command):
 
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
-        print(self.state.current_player.timer.remaining)
+        print(f"\r[⏳ Remaining: {self.state.current_player.timer.remaining}s] ")
         return False
 
     def __str__(self) -> str:
         return "Time player"
+
 
 class HelpCommand(Command):
     """Command to display the list of available commands."""
