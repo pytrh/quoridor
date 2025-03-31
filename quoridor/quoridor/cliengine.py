@@ -2,6 +2,7 @@
 Run the quoridor game in the terminal.
 """
 
+import logging
 import sys
 import select
 import copy
@@ -88,11 +89,9 @@ class CLIEngine:
         Execute a command and add it to the command history.
         """
         result = command.execute()
-        # print(f"Executed command: {command}")
-        # print(f"result: {result}")
         if result:
             self.state.history.append(command)
-            print(f"Executed command: {command}")
+            logging.debug(f"Executed command: {command}")
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():
                 if type(command) == AbandonCommand:
@@ -233,7 +232,7 @@ class CLIEngine:
                     return "abandon"
             if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
                 buffer = sys.stdin.readline().strip()
-                print(buffer)
+                logging.info(buffer)
                 if buffer:
                     return buffer
 
@@ -332,14 +331,13 @@ class CLIEngine:
                     command = self.state.ai_controllers[
                         self.state.current_player.id
                     ].suggest_move(self.state)
-                print(f"Command: {command}")
+                logging.debug(f"Command: {command}")
 
                 self.end_blitz_turn()
                 # Execute the command directly
                 self.execute_command(command)
                 # TODO: Move the switch_player thing here seems a better idea
 
-                print("render")
                 self.render_board()
                 if self.state.game_over():
                     raise GameOver

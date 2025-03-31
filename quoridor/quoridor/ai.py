@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
 
+
 class AI(ABC):
     """
     Abstract base class for AI classes.
@@ -25,21 +26,25 @@ class AI(ABC):
         """
         pass
 
+
 class GreedyAI(AI):
     """
     Returns a pawn move that has the shortest path to a winning position.
     """
+
     def suggest_move(self, state: "GameState") -> MovePawnCommand:
         """
         :param state: The current game state
         :return: A MovePawnCommand.
         """
         player = state.players[state.current_player.id]
+        graph = state.temp_board()
+
         current_pos = player.position
         best_path = None
         for goal in player.goal_line:
-            path = state.board.a_star(current_pos, goal)
+            path = graph.a_star(current_pos, goal)
             if best_path is None or len(path) < len(best_path):
                 best_path = path
-        
+
         return MovePawnCommand(state, current_pos, best_path[1])

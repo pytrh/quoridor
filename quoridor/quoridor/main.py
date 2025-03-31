@@ -71,11 +71,11 @@ def update_default_config(size: int, num_players: int, num_walls: int) -> None:
     config["Default"]["players"] = str(num_players)
     config["Default"]["walls"] = str(num_walls)
 
-    print("Updated Config:")
+    logging.debug("Updated Config:")
     for section in config.sections():
-        print(f"[{section}]")
+        logging.debug(f"[{section}]")
         for key, value in config.items(section):
-            print(f"{key} = {value}")
+            logging.debug(f"{key} = {value}")
 
     with open(DEFAULT_CONFIG_FILE, "w") as default_config:
         config.write(default_config)
@@ -233,10 +233,10 @@ def main():
     if args.ai:
         for ai in args.ai:
             if ai is True:
-                ai_ids.add(current_ai_color)
+                ai_ids.add(current_ai_color - 1)
                 current_ai_color += 1
             elif ai == "A":
-                ai_ids = {1, 2, 3, 4}
+                ai_ids = {0, 1, 2, 3}
                 break
             else:
                 color = int(ai)
@@ -245,7 +245,7 @@ def main():
                     sys.exit(1)
                 if color != 1 and color not in ai_ids:
                     current_ai_color += 1
-                ai_ids.add(color)
+                ai_ids.add(color - 1)
 
     if args.blitz:
         blitz_mode = GameMode.BLITZ
@@ -257,11 +257,11 @@ def main():
             blitz_time = args.time
 
     if (args.players is not None) and (args.ai is not None):
-        if num_players < max(ai_ids):
+        if num_players < max(len(ai_ids), max(ai_ids) + 1):
             logging.warning("Warning: -p option ignored due to presence of -a options")
-            num_players = max(DEFAULT_AI_COLOR, max(ai_ids))
+            num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
     elif args.ai is not None:
-        num_players = max(DEFAULT_AI_COLOR, max(ai_ids))
+        num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
 
     initial_state = GameState(
         size=size,

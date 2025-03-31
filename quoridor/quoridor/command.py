@@ -309,45 +309,6 @@ class MovePawnCommand(Command):
         except InvalidMoveError as e:
             raise e
 
-    def temp_board(self) -> Graph:
-        """
-        Create a new graph that add and remove edges based on the position
-        of players: Players next to each other can jump over the other.
-        If the jump lead to a wall, border, or another player, the straight
-        jump is replaced with two possible diagonal jump to the side of
-        the other player. If those two diagonal jump are impossible, it's
-        not possible to jump over the other player.
-        :return: The modified board as an undirected graph.
-        :rtype: Graph
-        """
-        board = deepcopy(self.state.board)
-        p = [(), (), (), ()]
-        for i in range(self.state.num_players):
-            p[i] = self.state.players[i].position
-        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-
-        x, y = p[self.state.current_player.id]
-        for dx, dy in directions:
-            adj = (x + dx, y + dy)
-            jump = (x + 2 * dx, y + 2 * dy)
-
-            if adj in p and board.edge_exists((x, y), adj):
-                board.remove_edge((x, y), adj)
-
-                if board.node_exists(jump) and board.edge_exists(adj, jump):
-                    # Straight jump
-                    board.add_edge((x, y), jump)
-                else:
-                    # Diagonal jump
-                    side_directions = [(dy, dx), (-dy, -dx)]
-
-                    for pdx, pdy in side_directions:
-                        side_jump = (x + dx + pdx, y + dy + pdy)
-                        if board.edge_exists(side_jump, adj):
-                            board.add_edge((x, y), side_jump)
-
-        return board
-
     def make_move(self, start: tuple[int, int], end: tuple[int, int]):
         """
         Try to make the current player do the movement between two position.
@@ -361,7 +322,7 @@ class MovePawnCommand(Command):
         if not (self.state.players[self.state.current_player.id].position == start):
             raise InvalidMoveError
         else:
-            board_temp = self.temp_board()
+            board_temp = self.state.temp_board()
             if not board_temp.edge_exists(start, end):
                 raise InvalidMoveError
             self.state.players[self.state.current_player.id].position = end
