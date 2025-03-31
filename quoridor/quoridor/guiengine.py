@@ -149,9 +149,15 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         power_button.set_halign(Gtk.Align.START)
         power_button.connect("clicked", self.on_back_home)
 
+        btn_abandon = Gtk.Button(label="Abandon")
+        btn_abandon.set_size_request(20, 10)
+        btn_abandon.set_halign(Gtk.Align.START)
+        btn_abandon.connect("clicked", self.on_abandon_game)
+
         left_box.append(restart_button)
         left_box.append(download_button)
         left_box.append(power_button)
+        left_box.append(btn_abandon)
 
         # Game box
         game_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -514,6 +520,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.state = GameState(**filtered_kwargs)
         self.initial_state = self.state.copy_state()
 
+    def on_abandon_game(self, button):
+        self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
+        self.update_current_player_label()
+
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
         self.cells = {}
@@ -808,6 +818,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
             if self.state.game_over():
                 logging.info("-------- GameOver --------")
+                if type(command) == AbandonCommand:
+                    self.state.switch_player()
                 self.display_game_over_window()
             else:
                 self.handle_switch_player()
