@@ -29,6 +29,7 @@ from quoridor.exceptions import (
     NoRedoableCommand,
     GameOver,
 )
+from quoridor.ai import heuristic
 
 
 class CLIEngine:
@@ -331,7 +332,7 @@ class CLIEngine:
                 else:
                     command = self.state.ai_controllers[
                         self.state.current_player.id
-                    ].suggest_move(self.state)
+                    ].suggest_move(self.state, heuristic)
                 logging.debug(f"Command: {command}")
 
                 self.end_blitz_turn()

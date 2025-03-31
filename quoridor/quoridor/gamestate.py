@@ -5,11 +5,7 @@ GameState module.
 from copy import deepcopy
 import logging
 from typing import List, TYPE_CHECKING
-from quoridor.graph import Graph
-from quoridor.player import Player
-from quoridor.timer import Timer
-from quoridor.direction import Direction
-from quoridor.ai import AI, GreedyAI
+from quoridor.ai import AI, GreedyAI, EasyAI
 from quoridor.config import (
     DEFAULT_SIZE,
     DEFAULT_NUM_PLAYERS,
@@ -18,6 +14,10 @@ from quoridor.config import (
     DEFAULT_BLITZ_TIME,
     GameMode,
 )
+from quoridor.direction import Direction
+from quoridor.graph import Graph
+from quoridor.player import Player
+from quoridor.timer import Timer
 
 if TYPE_CHECKING:
     from quoridor.command import Command
@@ -107,7 +107,7 @@ class GameState:
                 self.players[i].timer = Timer(blitz_time, blitz_mode, i)
 
         if len(ai_ids) > 0:
-            self.ai_controllers = {id: GreedyAI() for id in ai_ids}
+            self.ai_controllers = {id: EasyAI(0) for id in ai_ids}
         else:
             self.ai_controllers = {}
 
@@ -236,7 +236,14 @@ class GameState:
         copy game state
         """
         new_list_players = [
-            Player(player.id, player.position, self.size, player.walls_remaining, None)
+            Player(
+                player.id,
+                player.position,
+                self.size,
+                player.walls_remaining,
+                None,
+                player.goal_line,
+            )
             for player in self.players
         ]
 

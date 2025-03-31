@@ -20,6 +20,7 @@ class Player:
         size: int,
         walls_remaining: int = 10,
         time_remaining_blitz: Timer = None,
+        goal_line: list[tuple[int, int]] = None,
     ) -> None:
         """
         Initialize a new player.
@@ -42,14 +43,21 @@ class Player:
         self.start_position = position
         self.is_dead = False
 
-        if self.start_position[1] == 0:
-            self.goal_line = [(i, size - 1) for i in range(size)]
-        elif self.start_position[1] == size - 1:
-            self.goal_line = [(i, 0) for i in range(size)]
-        elif self.start_position[0] == 0:
-            self.goal_line = [(size - 1, i) for i in range(size)]
-        elif self.start_position[0] == size - 1:
-            self.goal_line = [(0, i) for i in range(size)]
+        if goal_line is not None:
+            self.goal_line = goal_line
+        else:
+            if self.start_position[1] == 0:
+                self.goal_line = [(i, size - 1) for i in range(size)]
+            elif self.start_position[1] == size - 1:
+                self.goal_line = [(i, 0) for i in range(size)]
+            elif self.start_position[0] == 0:
+                self.goal_line = [(size - 1, i) for i in range(size)]
+            elif self.start_position[0] == size - 1:
+                self.goal_line = [(0, i) for i in range(size)]
+            else:
+                raise ValueError(
+                    f"Invalid start position {self.start_position} for player {self.id}"
+                )
 
     def is_winning(self) -> bool:
         """
