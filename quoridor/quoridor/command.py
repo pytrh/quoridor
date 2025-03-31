@@ -442,6 +442,8 @@ class QuitCommand(Command):
 
     def execute(self) -> bool:
         """Quit the application."""
+        # demander à l'utilisateur s'il veut sauvegarder la partie ou non dans un fichier
+        # elif input == "save": # TODO save state F34 (bastien)
         exit(0)
 
     def __str__(self) -> str:
@@ -518,3 +520,18 @@ class SaveCommand(Command):
 
     def __str__(self) -> str:
         return f"Save game to {self.filename}"
+
+
+class TimeCommand(Command):
+    """Command to display the time remaining on the player's timer."""
+
+    def __init__(self, state: "GameState"):
+        super().__init__(state)
+
+    def execute(self) -> bool:
+        """Display the time remaining on the player's timer"""
+
+        return False
+
+    def __str__(self) -> str:
+        return "Time player"

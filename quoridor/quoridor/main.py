@@ -197,6 +197,9 @@ def main():
 
     if args.walls:
         num_walls = args.walls
+        if args.walls < 0:
+            num_walls = 999
+        changed = True
 
     if args.size:
         error = False
@@ -219,10 +222,6 @@ def main():
         if args.players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
         num_players = args.players
-        changed = True
-
-    if args.walls:
-        num_walls = args.walls
         changed = True
 
     if changed:

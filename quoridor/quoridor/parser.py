@@ -186,7 +186,7 @@ def parse_string_to_state(state_string: str) -> GameState:
                 logging.warning("Impossible to parse board before initializing size")
         elif line.startswith("history"):
             history_string = "".join(state_lines[i + 1 :])
-            # history = parse_string_to_history(history_string) # TODO
+            # history = parse_list_of_str_to_history(history_string) # TODO : mohamad
             break
         i += 1
 

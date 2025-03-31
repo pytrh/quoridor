@@ -285,6 +285,7 @@ class CLIEngine:
                 return TimeCommand(self.state)
             else:
                 raise InvalidCommandError("Mode blitz is disabled")
+        # elif input == "save": # TODO save history F35 (mohamad)
         elif input == "h" or input == "help":
             return HelpCommand(self.state)
         elif self.well_formed_pawn_move(input):
