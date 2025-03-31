@@ -1,6 +1,6 @@
 [Default]
 size = 9
-players = 2
+players = 3
 walls = 20
 blitz = false
 time = 30

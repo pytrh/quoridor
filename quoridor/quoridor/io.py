@@ -15,8 +15,12 @@ turns = [["e2", "e3"], ["d4", "d5"]]
 ReadWriteHistory.write_history("output_history.txt", turns)
 """
 
+from typing import TYPE_CHECKING
 from quoridor.graph import Graph
-from quoridor.command import Command
+if TYPE_CHECKING:
+    from quoridor.command import Command
+    from quoridor.gamestate import GameState
+
 
 
 def parse_graph(string: str) -> Graph:
@@ -154,8 +158,28 @@ class ReadWriteHistory:
         except IOError:
             print(f"Error: Could not write to file '{output_file_path}'.")
 
-    def parse_history_to_list_of_str(history: list[Command]) -> list[list[str]]:
-        pass
+    @staticmethod
+    def parse_history_to_list_of_str(history: list["Command"], state: "GameState") -> list[list[str]]:
+        from quoridor.command import AbandonCommand
+        game_info: list[list[str]] = []
 
-    def parse_list_of_str_to_history(str: list[list[str]]) -> list[Command]:
+        for i in range(0, len(history), len(state.players)):
+            turn = []
+            for player_index in range(len(state.players)):
+                if i + player_index >= len(history):
+                    break
+                player_id,cmd = history[i + player_index]
+                
+                if isinstance(cmd, AbandonCommand):
+                    turn.append(f"{str(player_id+1)} SURRENDER")
+                else:
+                    turn.append(f"{str(player_id+1)} {str(cmd)}")
+
+            game_info.append(turn)
+        return game_info
+
+
+        
+
+    def parse_list_of_str_to_history(str: list[list[str]]) -> list["Command"]:
         pass
