@@ -265,9 +265,9 @@ def main():
     elif args.ai is not None:
         num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
 
-    # if args.replay:
-        # retreive num player from file 
-        #num_players = 
+    if args.replay:
+        lines = ReadWriteHistory.read_history(args.replay)
+        num_players = ReadWriteHistory.num_players_from_file(lines)
 
     initial_state = GameState(
         size=size,
