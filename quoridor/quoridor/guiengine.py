@@ -37,10 +37,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.state = None
         self.initial_state = None
+
         self._number_of_players = None
         self._board_size = None
         self._num_walls = None
-
         self._blitz_mode = None
         self._blitz_time = None
         self._ai_ids = None
@@ -438,7 +438,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def on_about_clicked(self, button):
         self.stack.set_visible_child_name("about")
 
-    def on_back_home(self, button):
+    def clear_board_gui(self):
         if self.state is not None:
             for row in range(self.state.size):
                 for col in range(self.state.size):
@@ -446,20 +446,23 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                         self.game_grid.remove(self.cells[(row, col)])
         self.cells = {}
         self.clear_all_timer()
-        self.state = None
+
+    def on_back_home(self, button):
+        self.clear_board_gui()
         self.stack.set_visible_child_name("home")
         logging.debug("Button was clicked")
 
-    def on_restart_clicked(self, button):  # TODO dupplicate code
-        for row in range(self.state.size):
-            for col in range(self.state.size):
-                if (row, col) in self.cells:
-                    self.game_grid.remove(self.cells[(row, col)])
-        self.cells = {}
-        self.clear_all_timer()
-        self.state = None
-
-        self.on_start_game_clicked("clicked")
+    def on_restart_clicked(self, button):
+        self.clear_board_gui()
+        self.state = GameState()
+        self.execute_command(RestartCommand(self.state, self.initial_state))
+        if self.state.blitz_mode == GameMode.BLITZ:
+            self.initialise_timer()
+            self.state.current_player.timer.start_turn()
+            self.state.current_player.timer.display_lock.set()
+        self.create_board()
+        self.render_board()
+        self.stack.set_visible_child_name("running_game")
 
     def on_load_game_clicked(self, button):
         self.open_dialog.show()
@@ -504,8 +507,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             num_walls=self._num_walls,
             blitz_mode=self._blitz_mode,
             blitz_time=self._blitz_time,
-            # self._ai_ids
+            ai_ids=self._ai_ids,
         )
+
         if self.state.blitz_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
@@ -520,7 +524,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_abandon_game(self, button):
         self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
-        self.update_current_player_label()
+        if not self.state.game_over():
+            self.update_current_player_label()
 
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
@@ -614,7 +619,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_drop(self, drop_target, value, x, y):
         """Handles dropping the piece and updates the board."""
-        logging.debug(value)
         cell = drop_target.get_widget()
 
         row, col = None, None
@@ -760,7 +764,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def update_current_player_label(self):
         id_player = self.state.current_player.id
-        logging.debug(f"id : {id_player}")
         emoji = "🔵"
         if id_player == 1:
             emoji = "🔴"
@@ -769,6 +772,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.current_player_label.set_label(f"Current player : {emoji}")
+        logging.debug(f"Player {emoji} {id_player} must play")
 
     def set_parameters(self, state: GameState):
         self._number_of_players = state.num_players

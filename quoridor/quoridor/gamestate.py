@@ -261,7 +261,7 @@ class GameState:
         )
         return cloned_state
 
-    def set_state(self, state: any):  # type: ignore
+    def set_state(self, state: "GameState"):  # type: ignore
         new_list_players = [
             Player(player.id, player.position, state.size, player.walls_remaining, None)
             for player in state.players
@@ -272,6 +272,7 @@ class GameState:
         self.current_player = state.players[self.current_player_id]
         self.players = new_list_players
         self.num_players = state.num_players
+        self.num_players_remaining = state.num_players_remaining
         self.board = deepcopy(state.board)
         self.num_walls = state.initial_num_walls
         self.history = deepcopy(state.history)
