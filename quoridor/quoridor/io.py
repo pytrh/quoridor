@@ -220,7 +220,7 @@ class ReadWriteHistory:
 
                 except (InvalidMoveError, ValueError, IndexError) as e:
                     print(f"Commande ignorée pour le joueur {player_id} : '{cmd_str}' → {e}")
-
+        c = None
         return cmds
 
 
