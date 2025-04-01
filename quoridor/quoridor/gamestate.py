@@ -107,7 +107,7 @@ class GameState:
                 self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
-            self.ai_controllers = {id: EasyAI(0) for id in ai_ids}
+            self.ai_controllers = {id: GreedyAI(0) for id in ai_ids}
         else:
             self.ai_controllers = {}
 
@@ -261,7 +261,7 @@ class GameState:
         )
         return cloned_state
 
-    def set_state(self, state: any):  # type: ignore
+    def set_state(self, state: "GameState"):  # type: ignore
         new_list_players = [
             Player(player.id, player.position, state.size, player.walls_remaining, None)
             for player in state.players
@@ -272,12 +272,14 @@ class GameState:
         self.current_player = state.players[self.current_player_id]
         self.players = new_list_players
         self.num_players = state.num_players
+        self.num_players_remaining = state.num_players_remaining
         self.board = deepcopy(state.board)
         self.num_walls = state.initial_num_walls
         self.history = deepcopy(state.history)
         self.game_mode = state.game_mode
         self.blitz_time = state.blitz_time
         self.ai_ids = deepcopy(state.ai_ids)
+        self.ai_controllers = deepcopy(state.ai_controllers)
 
     def backward_player(self):
         """
