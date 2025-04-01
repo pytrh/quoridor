@@ -140,8 +140,17 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         # Left column (buttons)
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        left_box.set_margin_top(20)
+        left_box.set_margin_bottom(20)
+        left_box.set_margin_start(20)
+        left_box.set_margin_end(20)
+        left_box.set_halign(Gtk.Align.CENTER)
+        left_box.set_valign(Gtk.Align.CENTER)
         main_box.append(left_box)
 
+        game_button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        game_button_box.set_halign(Gtk.Align.CENTER)
+        game_button_box.set_valign(Gtk.Align.CENTER)
         restart_button = Gtk.Button(label="🔄 Restart")
         restart_button.connect("clicked", self.on_restart_clicked)
 
@@ -157,10 +166,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         btn_abandon.set_halign(Gtk.Align.START)
         btn_abandon.connect("clicked", self.on_abandon_game)
 
-        left_box.append(restart_button)
-        left_box.append(download_button)
-        left_box.append(power_button)
-        left_box.append(btn_abandon)
+        game_button_box.append(restart_button)
+        game_button_box.append(download_button)
+        game_button_box.append(power_button)
+        game_button_box.append(btn_abandon)
+        left_box.append(game_button_box)
+
+        self.game_players_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=10
+        )
+        self.game_players_box.set_halign(Gtk.Align.CENTER)
+        self.game_players_box.set_valign(Gtk.Align.CENTER)
+        left_box.append(self.game_players_box)
 
         # Game box
         game_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -563,6 +580,35 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._ai_ids = ai_ids
         logging.debug(f"setup ai : {self._ai_ids}")
 
+    def clear_box(self, box):
+        child = box.get_first_child()
+        while child:
+            next_child = child.get_next_sibling()
+            box.remove(child)
+            child = next_child
+
+    def create_box_players(self, box):
+        self.clear_box(box)
+        for player in self.state.players:
+            emoji = "🔵"
+            if player.id == 1:
+                emoji = "🔴"
+            elif player.id == 2:
+                emoji = "🟢"
+            elif player.id == 3:
+                emoji = "🟡"
+            is_ai = ""
+            if player.id in self.state.ai_controllers:
+                is_ai = "AI "
+            walls = ""
+            if not player.is_dead:
+                walls = f" : walls remaining = {player.walls_remaining}"
+            label = Gtk.Label(label=f"{is_ai}Player {player.id} {emoji} {walls}")
+            label.get_style_context().add_class("player")
+            if player.is_dead:
+                label.get_style_context().add_class("player-is-dead")
+            box.append(label)
+
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
         if self._blitz_mode == GameMode.BLITZ:
@@ -589,6 +635,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
+        self.create_box_players(self.game_players_box)
         self.create_board()
         self.render_board()
         self.handle_ai_player()
@@ -601,6 +648,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def on_abandon_game(self, button):
         self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
         if not self.state.game_over():
+            self.update_players_box()
             self.update_current_player_label()
 
     def create_board(self):
@@ -728,6 +776,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.execute_command(AbandonCommand(self.state, player_id))
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
+            self.update_players_box()
             self.update_current_player_label()
         else:
             self.execute_command(AbandonCommand(self.state, player_id))
@@ -847,6 +896,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.cells[(row, col)].get_style_context().add_class("wall-v")
                     self.cells[(row + 1, col)].get_style_context().add_class("wall-v")
 
+        self.update_players_box()
         self.update_current_player_label()
 
         return
@@ -862,6 +912,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             emoji = "🟡"
         self.current_player_label.set_label(f"Current player : {emoji}")
         logging.debug(f"Player {emoji} {id_player} must play")
+
+    def update_players_box(self):
+        self.create_box_players(self.game_players_box)
 
     def set_parameters(self, state: GameState):
         self._number_of_players = state.num_players
