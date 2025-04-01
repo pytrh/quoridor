@@ -107,7 +107,7 @@ class GameState:
                 self.players[i].timer = Timer(blitz_time, blitz_mode, i)
 
         if len(ai_ids) > 0:
-            self.ai_controllers = {id: EasyAI(0) for id in ai_ids}
+            self.ai_controllers = {id: GreedyAI(0) for id in ai_ids}
         else:
             self.ai_controllers = {}
 
@@ -279,6 +279,7 @@ class GameState:
         self.blitz_mode = state.blitz_mode
         self.blitz_time = state.blitz_time
         self.ai_ids = deepcopy(state.ai_ids)
+        self.ai_controllers = deepcopy(state.ai_controllers)
 
     def backward_player(self):
         """

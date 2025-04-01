@@ -1,5 +1,6 @@
 import copy
 import logging
+import time
 import gi
 
 from quoridor.command import (
@@ -21,10 +22,12 @@ from quoridor.observer import Observer
 from quoridor.config import (
     DEFAULT_AI_COLOR,
     DEFAULT_BLITZ_TIME,
+    DEFAULT_GRID_SIZE,
     MIN_GRID_SIZE,
     MAX_GRID_SIZE,
     DEFAULT_NUM_WALLS,
 )
+from quoridor.ai import heuristic
 
 
 gi.require_version("Gtk", "4.0")
@@ -322,7 +325,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
         self.board_slider.set_increments(2, 2)
         self.board_slider.set_draw_value(True)
-        self.board_slider.set_value(9)
+        self.board_slider.set_value(DEFAULT_GRID_SIZE)
         self.board_slider.connect("value-changed", self.slider_changed_board)
         box.append(self.board_slider)
 
@@ -524,9 +527,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def manage_ai_parameters(self):
         """manage AI parameters, override -p option in case of conflict with -a"""
-        if not self.switch_ai.get_active():
-            self._ai_ids = set()
-            return
         current_ai_color = DEFAULT_AI_COLOR
         ai_ids = set()
         if len(self._ai_ids) > 0:
@@ -569,7 +569,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self._blitz_time = self.timer_text_box.get_value_as_int()
             logging.debug("Temps sélectionné :", self._blitz_time)
 
-        self.manage_ai_parameters()
+        if not self.switch_ai.get_active():
+            self._ai_ids = set()
+        else:
+            if len(self._ai_ids) <= 0:
+                self._ai_ids.add(True)
+            self.manage_ai_parameters()
 
         self.initialize_state(
             num_players=self._number_of_players,
@@ -728,6 +733,15 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.state.switch_player()
             self.display_game_over_window()
 
+    def handle_ai_player(self):
+        if self.state.current_player.id in self.state.ai_controllers:
+            command = self.state.ai_controllers[
+                self.state.current_player.id
+            ].suggest_move(self.state, heuristic)
+            self.execute_command(command)
+            time.sleep(0.1)
+            self.render_board()
+
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
         if self.state.blitz_mode == GameMode.BLITZ:
@@ -744,6 +758,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             logging.debug(f"with  : {self.state.current_player.timer.current_time} ")
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
+
+        self.handle_ai_player()
 
     def handle_pawn_move(self, row: int, col: int, player_id):
         """Manages pawn movement"""
