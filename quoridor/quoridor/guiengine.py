@@ -591,6 +591,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.state.current_player.timer.display_lock.set()
         self.create_board()
         self.render_board()
+        self.handle_ai_player()
 
     def initialize_state(self, **kwargs):
         filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
@@ -738,9 +739,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             command = self.state.ai_controllers[
                 self.state.current_player.id
             ].suggest_move(self.state, heuristic)
-            self.execute_command(command)
-            time.sleep(0.1)
-            self.render_board()
+            # Exécute la commande après 1 seconde
+            GLib.timeout_add(100, lambda: self.execute_command(command) or False)
+
+            # Met à jour le plateau après 2 secondes
+            GLib.timeout_add(200, lambda: self.render_board() or False)
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
