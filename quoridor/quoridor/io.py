@@ -222,5 +222,16 @@ class ReadWriteHistory:
                     print(f"Commande ignorée pour le joueur {player_id} : '{cmd_str}' → {e}")
 
         return cmds
-        
+
+
+    @staticmethod
+    def num_players_from_file(turns: list[list[tuple[int,str]]]) -> int:
+        num_players = 0
+        for turn in turns:
+            for i in turn:
+                id,_ = i
+                num_players = max(id,num_players)
+        return num_players
+
+    
 
