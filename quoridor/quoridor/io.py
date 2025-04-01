@@ -148,7 +148,7 @@ class ReadWriteHistory:
                 )  # EOF should be positioned new line
                 for turn_nb, turn in enumerate(turns):
                     turn_str = " ".join(
-                        f"{player + 1} {move}" for player, move in enumerate(turn)
+                        f"{move}" for player, move in enumerate(turn)
                     )
                     history_file.write(f"\n{turn_nb + 1}. {turn_str} ")
 
