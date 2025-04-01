@@ -183,10 +183,6 @@ def main():
 
     setup_logging(verbose=args.verbose, debug=args.debug)
     
-    if args.replay:
-        lines = ReadWriteHistory.read_history(args.replay)
-        print(lines)
-    
     if args.version:
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
@@ -269,6 +265,10 @@ def main():
     elif args.ai is not None:
         num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
 
+    # if args.replay:
+        # retreive num player from file 
+        #num_players = 
+
     initial_state = GameState(
         size=size,
         num_players=num_players,
@@ -277,6 +277,10 @@ def main():
         blitz_time=blitz_time,
         ai_ids=ai_ids,
     )
+    if args.replay:
+        lines = ReadWriteHistory.read_history(args.replay)
+        ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)
+
     if args.gui and not any(getattr(args, arg) for arg in game_related_args):
         engine = GUIEngine(None)
         engine.run()
