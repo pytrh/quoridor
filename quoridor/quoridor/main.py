@@ -10,6 +10,7 @@ import logging
 import sys
 import os
 
+from quoridor.io import ReadWriteHistory
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode
@@ -170,20 +171,26 @@ def main():
         const=True,
         action="append",
     )
+    parser.add_argument(
+        "-r",
+        "--replay",
+        help="replay game from file saved during pending play",
+        required=False,
+    )
 
     args = parser.parse_args()
-    game_related_args = ["players", "blitz", "time", "size", "walls", "ai"]
+    game_related_args = ["players", "blitz", "time", "size", "walls", "ai","replay"]
 
     setup_logging(verbose=args.verbose, debug=args.debug)
-
+    
+    if args.replay:
+        lines = ReadWriteHistory.read_history(args.replay)
+        print(lines)
+    
     if args.version:
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
         sys.exit(0)
-
-    if args.file:
-        logging.debug("File found in arguments")
-        # game = GameState.load_game_from_file(args.file)
 
     size = DEFAULT_SIZE
     num_players = DEFAULT_NUM_PLAYERS
