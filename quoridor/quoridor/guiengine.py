@@ -19,6 +19,7 @@ from quoridor.gamestate import GameState
 from quoridor.observer import Observer
 
 from quoridor.config import (
+    DEFAULT_AI_COLOR,
     DEFAULT_BLITZ_TIME,
     MIN_GRID_SIZE,
     MAX_GRID_SIZE,
@@ -43,7 +44,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._num_walls = None
         self._blitz_mode = None
         self._blitz_time = None
-        self._ai_ids = None
+        self._ai_ids = set()
 
         GLib.set_application_name("quoridor")
 
@@ -112,8 +113,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.set_margin_bottom(20)
         box.set_margin_start(20)
         box.set_margin_end(20)
-        box.set_halign(Gtk.Align.START)
-        box.set_valign(Gtk.Align.START)
+        box.set_halign(Gtk.Align.CENTER)
+        box.set_valign(Gtk.Align.CENTER)
 
         self.create_return_button(box)
         self.create_nb_players(box)
@@ -387,7 +388,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def create_ai_switch(self, box):
         self.create_option_label(box, "AI Mode:")
-        switch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        switch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
         self.switch_ai = Gtk.Switch()
         self.switch_ai.set_active(False)
@@ -396,6 +397,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         switch_box.append(self.switch_ai)
         box.append(switch_box)
 
+        self.create_on_off_buttons(box)
         self.create_ai_hidden_radio_buttons(box)
 
     def create_start_button(self, box):
@@ -406,11 +408,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(btn_start)
 
     def create_option_label(self, box, text):
-        label = Gtk.Label()
-        # TODO: variable "dark red"
-        label.set_markup(
-            f'<span foreground="#8B0000" font_desc="14pt bold">{text}</span>'
-        )
+        label = Gtk.Label(label=text)
+        label.get_style_context().add_class("big-red")
         label.set_halign(Gtk.Align.START)
         box.append(label)
 
@@ -431,6 +430,32 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.radio_box.set_visible(False)  # Hide by default
         box.append(self.radio_box)
+
+    def create_on_off_buttons(self, box):
+        self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        label = Gtk.Label(label="AI player : ")
+        label.get_style_context().add_class("big-red")
+        self.player_box.append(label)
+
+        self.ai_player_buttons = []
+
+        for i in range(4):
+            button = Gtk.ToggleButton(label=f"AI {i+1}")
+            button.get_style_context().add_class("on-off-button")
+
+            def on_toggle(btn, i=i + 1):
+                btn.set_label(f"AI {i}" if btn.get_active() else f"AI {i}")
+                if btn.get_active():
+                    self._ai_ids.add(i - 1)
+                else:
+                    self._ai_ids.remove(i - 1)
+
+            button.connect("toggled", on_toggle)
+            self.ai_player_buttons.append(button)
+            self.player_box.append(button)
+
+        self.player_box.set_visible(False)  # Hide by default
+        box.append(self.player_box)
 
     def on_new_game_clicked(self, button):
         self.stack.set_visible_child_name("new_game")
@@ -485,9 +510,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         logging.debug(f"The switch has been switched {'on' if state else 'off'}")
         if state:
             self.radio_box.set_visible(True)
+            self.player_box.set_visible(True)
         else:
             self.btn_ai_easy.set_active(True)
             self.radio_box.set_visible(False)
+            self.player_box.set_visible(False)
 
     def open_response(self, dialog, response):
         if response == Gtk.ResponseType.ACCEPT:
@@ -495,11 +522,54 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             filename = file.get_path()
             logging.debug(filename)
 
+    def manage_ai_parameters(self):
+        """manage AI parameters, override -p option in case of conflict with -a"""
+        if not self.switch_ai.get_active():
+            self._ai_ids = set()
+            return
+        current_ai_color = DEFAULT_AI_COLOR
+        ai_ids = set()
+        if len(self._ai_ids) > 0:
+            for ai in self._ai_ids:
+                if ai is True:
+                    ai_ids.add(current_ai_color - 1)
+                    current_ai_color += 1
+                elif ai == "A":
+                    ai_ids = {0, 1, 2, 3}
+                    break
+                else:
+                    color = int(ai)
+                    if color != 1 and color not in ai_ids:
+                        current_ai_color += 1
+                    ai_ids.add(color)
+
+        if (
+            (self._number_of_players is not None)
+            and (len(self._ai_ids) > 0)
+            and len(ai_ids) > 0
+        ):
+            if self._number_of_players < max(len(ai_ids), max(ai_ids) + 1):
+                logging.warning(
+                    "Warning: -p option ignored due to presence of -a options"
+                )
+                self._number_of_players = max(
+                    DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1)
+                )
+        elif len(self._ai_ids) > 0 and len(ai_ids) > 0:
+            self._number_of_players = max(
+                DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1)
+            )
+
+        self._ai_ids = ai_ids
+        logging.debug(f"setup ai : {self._ai_ids}")
+
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
         if self._blitz_mode == GameMode.BLITZ:
             self._blitz_time = self.timer_text_box.get_value_as_int()
             logging.debug("Temps sélectionné :", self._blitz_time)
+
+        self.manage_ai_parameters()
 
         self.initialize_state(
             num_players=self._number_of_players,
@@ -806,7 +876,13 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         else:
             self.btn_normal.set_active(True)
 
-        self.switch_ai.set_active(False)
+        if len(self._ai_ids) > 0:
+            self.switch_ai.set_active(True)
+            self.manage_ai_parameters()
+            for i, button in enumerate(self.ai_player_buttons):
+                button.set_active(i in self._ai_ids)
+        else:
+            self.switch_ai.set_active(False)
 
     def execute_command(self, command: Command) -> bool:
         """

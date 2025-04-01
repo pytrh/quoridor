@@ -59,3 +59,23 @@ button.wall-h {
     border-bottom: 5px solid black;
     color: white;
 }
+
+.big-red {
+    color: #8B0000;
+    font-size: 14pt;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.on-off-button {
+    min-width: 40px;
+    min-height: 20px;
+    background: #ececec;
+    color: #8B0000;
+    border-radius: 5px;
+    font-family: sans-serif;
+}
+
+.on-off-button:checked {
+    background: #95df7c;
+}

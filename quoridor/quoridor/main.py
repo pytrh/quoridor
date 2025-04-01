@@ -228,7 +228,6 @@ def main():
         update_config_file(size, num_players, num_walls)
         update_default_config(size, num_players, num_walls)
 
-    # Gesstion des paramètres d'IA
     if args.ai:
         for ai in args.ai:
             if ai is True:
