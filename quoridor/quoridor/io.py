@@ -17,6 +17,7 @@ ReadWriteHistory.write_history("output_history.txt", turns)
 
 from typing import TYPE_CHECKING
 from quoridor.graph import Graph
+from quoridor.exceptions import InvalidMoveError
 if TYPE_CHECKING:
     from quoridor.command import Command
     from quoridor.gamestate import GameState
@@ -60,7 +61,7 @@ class ReadWriteHistory:
     """
 
     @staticmethod
-    def read_history(input_file_path: str) -> list[tuple[int,str]]:
+    def read_history(input_file_path: str) -> list[list[tuple[int,str]]]:
         """
         Reads the history from a text input file and returns an array containing
         the game information, a list of game moves per player per turn.
@@ -162,24 +163,64 @@ class ReadWriteHistory:
     def parse_history_to_list_of_str(history: list["Command"], state: "GameState") -> list[list[str]]:
         from quoridor.command import AbandonCommand
         game_info: list[list[str]] = []
+        current_turn: list[str] = []
 
-        for i in range(0, len(history), len(state.players)):
-            turn = []
-            for player_index in range(len(state.players)):
-                if i + player_index >= len(history):
-                    break
-                player_id,cmd = history[i + player_index]
-                
-                if isinstance(cmd, AbandonCommand):
-                    turn.append(f"{str(player_id+1)} SURRENDER")
-                else:
-                    turn.append(f"{str(player_id+1)} {str(cmd)}")
+        players_alive = {p.id for p in state.players if not p.is_dead}
+        players_this_turn = set()
 
-            game_info.append(turn)
+        for player_id, cmd in history:
+            if isinstance(cmd, AbandonCommand):
+                cmd_str = f"{player_id + 1} SURRENDER"
+                players_alive.discard(player_id)
+            else:
+                cmd_str = f"{player_id + 1} {str(cmd)}"
+            current_turn.append(cmd_str)
+            players_this_turn.add(player_id)
+
+            if players_alive.issubset(players_this_turn):
+                game_info.append(current_turn)
+                current_turn = []
+                players_this_turn = set()
+
+        if current_turn:
+            game_info.append(current_turn)
+
         return game_info
 
+        
+    @staticmethod
+    def parse_list_of_str_to_history(state: "GameState", turns: list[list[tuple[int,str]]]) -> list[tuple[int, "Command"]]:
+        from quoridor.cliengine import CLIEngine
+        from quoridor.command import (AbandonCommand,
+                                      MovePawnCommand,
+                                      PlaceWallCommand)
+        c = CLIEngine(state)
+        cmds: list[tuple[int, Command]] = []
+        for turn in turns:
+            for player_id, cmd_str in turn:
+                try:
+                    if(player_id >= 0):
+                        pid = player_id - 1
+                        if cmd_str == "SURRENDER":
+                            cmd = AbandonCommand(state, pid)
+                            c.execute_command(cmd)
+                        elif len(cmd_str) == 2 or (len(cmd_str) >= 3 and not cmd_str[-1] in "hv"):
+                            _, to_case = cmd_str.strip().lower().split('-')
+                            to_pos = c.translate_move(to_case)
+                            from_pos = state.players[pid].position
+                            cmd = MovePawnCommand(state, from_pos, to_pos)
+                            c.execute_command(cmd)
+                        elif len(cmd_str) >= 3 and cmd_str[-1] in "hv":
+                            x, y, direction = c.translate_wall(cmd_str)
+                            cmd = PlaceWallCommand(state, (x, y), direction)
+                            c.execute_command(cmd)
+                        else:
+                            raise InvalidMoveError(f"Command not found : {cmd_str}")
+                        cmds.append((pid, cmd))
 
+                except (InvalidMoveError, ValueError, IndexError) as e:
+                    print(f"Commande ignorée pour le joueur {player_id} : '{cmd_str}' → {e}")
+
+        return cmds
         
 
-    def parse_list_of_str_to_history(str: list[list[str]]) -> list["Command"]:
-        pass
