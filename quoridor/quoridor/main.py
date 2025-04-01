@@ -96,6 +96,8 @@ def update_config_file(size: int, num_players: int, num_walls: int, game_mode: G
     with open(CONFIG_FILE, "r+") as config_file:
         lines = config_file.readlines()
         config_file.seek(0)
+        config_file.truncate()
+
         for line in lines:
             if line.strip().startswith("GRID_SIZE"):
                 line = f"GRID_SIZE = {size}\n"
