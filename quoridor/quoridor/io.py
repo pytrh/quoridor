@@ -60,7 +60,7 @@ class ReadWriteHistory:
     """
 
     @staticmethod
-    def read_history(input_file_path: str) -> list[list[str]]:
+    def read_history(input_file_path: str) -> list[tuple[int,str]]:
         """
         Reads the history from a text input file and returns an array containing
         the game information, a list of game moves per player per turn.
@@ -95,7 +95,7 @@ class ReadWriteHistory:
         into an array.
         game_info = [nb_of_turns][nb_of_players].
         """
-        game_info: list[list[str]] = []
+        game_info: list[tuple[int,str]] = []
         max_players = 0
         try:
             for turn_nb, turn in enumerate(history_array):
@@ -104,12 +104,11 @@ class ReadWriteHistory:
                 if not line_sections or not line_sections[0].endswith("."):
                     print(f"Invalid line for turn: {turn_nb + 1}")
                     continue  # Skip invalid line
-
                 turn_nb = int(line_sections[0][:-1])
                 max_players = max(max_players, (len(line_sections) - 1) // 2)
                 while len(game_info) < turn_nb:
                     game_info.append(
-                        [""] * max_players
+                        [(-1,"")] * max_players
                     )  # Initialize turn with empty moves
 
                 ReadWriteHistory._process_moves(turn_nb, line_sections, game_info)
@@ -122,7 +121,7 @@ class ReadWriteHistory:
 
     @staticmethod
     def _process_moves(
-        turn_nb: int, line_sections: list[str], game_info: list[list[str]]
+        turn_nb: int, line_sections: list[str], game_info: list[tuple[int,str]]
     ) -> None:
         """Extract and process player moves for a given turn."""
         for i in range(1, len(line_sections), 2):
@@ -130,7 +129,8 @@ class ReadWriteHistory:
             try:
                 player_id = int(line_sections[i])
                 move = line_sections[i + 1]
-                game_info[turn_nb - 1][player_id - 1] = move
+                # print(player_id,move)
+                game_info[turn_nb - 1][player_id - 1] = (player_id, move)
 
             except (IndexError, ValueError) as error:
                 print(
@@ -142,7 +142,7 @@ class ReadWriteHistory:
     def write_history(output_file_path: str, turns: list[list[str]]):
         """Writes a history text file with the game information in the 'turns' parameter."""
         try:
-            with open(output_file_path, "a", encoding="utf-8") as history_file:
+            with open(output_file_path, "w", encoding="utf-8") as history_file:
                 history_file.write(
                     "# Quoridor Game History"
                 )  # EOF should be positioned new line
