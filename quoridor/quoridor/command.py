@@ -30,6 +30,7 @@ from quoridor.exceptions import (
     GameOver,
     NoUndoableCommand,
     NoRedoableCommand,
+    QuitApp,
 )
 
 if TYPE_CHECKING:
@@ -418,7 +419,7 @@ class AbandonCommand(Command):
             self.state.num_players_remaining -= 1
             self.player.is_dead = True
 
-            if self.state.blitz_mode == GameMode.BLITZ:
+            if self.state.game_mode == GameMode.BLITZ:
                 if self.player.timer.turn_start_time is not None:
                     self.player.timer.end_turn()
                     self.player.timer.display_lock.clear()
@@ -444,7 +445,7 @@ class QuitCommand(Command):
         """Quit the application."""
         # demander à l'utilisateur s'il veut sauvegarder la partie ou non dans un fichier
         # elif input == "save": # TODO save state F34 (bastien)
-        exit(0)
+        raise QuitApp
 
     def __str__(self) -> str:
         return "Quit application"

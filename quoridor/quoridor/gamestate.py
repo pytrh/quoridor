@@ -7,11 +7,11 @@ import logging
 from typing import List, TYPE_CHECKING
 from quoridor.ai import AI, GreedyAI, EasyAI
 from quoridor.config import (
-    DEFAULT_SIZE,
-    DEFAULT_NUM_PLAYERS,
-    DEFAULT_NUM_WALLS,
+    GRID_SIZE,
+    NUM_PLAYERS,
+    NUM_WALLS,
     DEFAULT_GAME_MODE,
-    DEFAULT_BLITZ_TIME,
+    BLITZ_TIME,
     GameMode,
 )
 from quoridor.direction import Direction
@@ -31,15 +31,15 @@ class GameState:
 
     def __init__(
         self,
-        size: int = DEFAULT_SIZE,
+        size: int = GRID_SIZE,
         current_player_id: int = 0,
         players: list[Player] = None,
-        num_players: int = DEFAULT_NUM_PLAYERS,
+        num_players: int = NUM_PLAYERS,
         board: Graph = None,
-        num_walls: int = DEFAULT_NUM_WALLS,
+        num_walls: int = NUM_WALLS,
         history: List["Command"] = None,
-        blitz_mode: GameMode = DEFAULT_GAME_MODE,
-        blitz_time: int = DEFAULT_BLITZ_TIME,
+        game_mode: GameMode = DEFAULT_GAME_MODE,
+        blitz_time: int = BLITZ_TIME,
         ai_ids: set = [],
     ):
         """
@@ -52,8 +52,8 @@ class GameState:
          :type players: list[Player]
          :param board: The board, default is a new Graph().
          :type board: Graph
-         :param blitz_mode: Whether the game is in blitz mode, default is False.
-         :type blitz_mode: bool
+         :param game_mode: Whether the game is in blitz mode, default is False.
+         :type game_mode: GameMode
          :param num_walls: The number of walls, default is 10.
          :type num_walls: int
          :param history: The history of moves, default is an empty list.
@@ -63,7 +63,7 @@ class GameState:
         logging.debug(f"number of players : {num_players}")
         logging.debug(f"board size : {size}")
         logging.debug(f"number of walls : {num_walls}")
-        logging.debug(f"blitz mode activated : {blitz_mode}")
+        logging.debug(f"blitz mode activated : {game_mode}")
         logging.debug(f"blitz timer : {blitz_time}")
         logging.debug(f"ai ids : {ai_ids}")
 
@@ -94,17 +94,17 @@ class GameState:
             if current_player_id is None
             else self.players[current_player_id]
         )
-        self.blitz_mode = blitz_mode
+        self.game_mode = game_mode
         self.history = [] if history is None else history
         self.redo_stack = []
 
         self.blitz_time = blitz_time
 
-        if blitz_mode == GameMode.BLITZ:
+        if game_mode == GameMode.BLITZ:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(blitz_time, blitz_mode, i)
+                self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
             self.ai_controllers = {id: EasyAI(0) for id in ai_ids}
@@ -255,7 +255,7 @@ class GameState:
             board=deepcopy(self.board),
             num_walls=self.initial_num_walls,
             history=deepcopy(self.history),
-            blitz_mode=self.blitz_mode,
+            game_mode=self.game_mode,
             blitz_time=self.blitz_time,
             ai_ids=deepcopy(self.ai_ids),
         )
@@ -275,7 +275,7 @@ class GameState:
         self.board = deepcopy(state.board)
         self.num_walls = state.initial_num_walls
         self.history = deepcopy(state.history)
-        self.blitz_mode = state.blitz_mode
+        self.game_mode = state.game_mode
         self.blitz_time = state.blitz_time
         self.ai_ids = deepcopy(state.ai_ids)
 

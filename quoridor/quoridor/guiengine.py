@@ -19,10 +19,10 @@ from quoridor.gamestate import GameState
 from quoridor.observer import Observer
 
 from quoridor.config import (
-    DEFAULT_BLITZ_TIME,
+    BLITZ_TIME,
     MIN_GRID_SIZE,
     MAX_GRID_SIZE,
-    DEFAULT_NUM_WALLS,
+    NUM_WALLS,
 )
 
 
@@ -41,7 +41,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._board_size = None
         self._num_walls = None
 
-        self._blitz_mode = None
+        self._game_mode = None
         self._blitz_time = None
         self._ai_ids = None
 
@@ -338,7 +338,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.wall_slider.set_digits(0)
         self.wall_slider.set_range(0, MAX_GRID_SIZE * 2)
         self.wall_slider.set_draw_value(True)
-        self.wall_slider.set_value(DEFAULT_NUM_WALLS)
+        self.wall_slider.set_value(NUM_WALLS)
         self.wall_slider.connect("value-changed", self.slider_changed_wall)
         box.append(self.wall_slider)
 
@@ -374,7 +374,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             page_increment=5,
         )
         self.timer_text_box.set_adjustment(adjustment)
-        self.timer_text_box.set_value(self._blitz_time or DEFAULT_BLITZ_TIME)
+        self.timer_text_box.set_value(self._blitz_time or BLITZ_TIME)
         self.timer_text_box.set_size_request(20, -1)
         self.timer_text_box.set_hexpand(True)
         self.timer_box.append(self.btn_blitz)
@@ -471,7 +471,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_game_mode_button_toggled(self, button, mode: GameMode):
         if button.get_active():
-            self._blitz_mode = mode
+            self._game_mode = mode
             logging.debug(f"Playing in {mode.display_name} Mode")
             if mode == GameMode.BLITZ:
                 self.timer_text_box.set_visible(True)
@@ -494,7 +494,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
-        if self._blitz_mode == GameMode.BLITZ:
+        if self._game_mode == GameMode.BLITZ:
             self._blitz_time = self.timer_text_box.get_value_as_int()
             logging.debug("Temps sélectionné :", self._blitz_time)
 
@@ -502,11 +502,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             num_players=self._number_of_players,
             size=self._board_size,
             num_walls=self._num_walls,
-            blitz_mode=self._blitz_mode,
+            game_mode=self._game_mode,
             blitz_time=self._blitz_time,
             # self._ai_ids
         )
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
@@ -656,7 +656,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             logging.debug(f"End timer for player : {self.state.current_player.id} ")
             logging.debug(f"with  : {self.state.current_player.timer.current_time} ")
             self.state.current_player.timer.end_turn()
@@ -665,7 +665,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.state.switch_player()
 
         logging.debug(f"Switch player : {self.state.current_player.id} ")
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             logging.debug(f"Begin timer for player : {self.state.current_player.id} ")
             logging.debug(f"with  : {self.state.current_player.timer.current_time} ")
             self.state.current_player.timer.start_turn()
@@ -774,7 +774,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._number_of_players = state.num_players
         self._board_size = state.size
         self._num_walls = state.initial_num_walls
-        self._blitz_mode = state.blitz_mode
+        self._game_mode = state.game_mode
         self._blitz_time = state.blitz_time
         self._ai_ids = state.ai_ids
 
@@ -793,10 +793,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.btn_normal.set_active(False)
         self.btn_blitz.set_active(False)
-        if self._blitz_mode is not None:
-            if self._blitz_mode == GameMode.BLITZ:
+        if self._game_mode is not None:
+            if self._game_mode == GameMode.BLITZ:
                 self.btn_blitz.set_active(True)
-                self.timer_text_box.set_value(self._blitz_time or DEFAULT_BLITZ_TIME)
+                self.timer_text_box.set_value(self._blitz_time or BLITZ_TIME)
             else:
                 self.btn_normal.set_active(True)
         else:
@@ -824,7 +824,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def clear_all_timer(self):
         if self.state is not None:
-            if self.state.blitz_mode == GameMode.BLITZ:
+            if self.state.game_mode == GameMode.BLITZ:
                 for player in self.state.players:
                     if player.timer.turn_start_time is not None:
                         player.timer.end_turn()

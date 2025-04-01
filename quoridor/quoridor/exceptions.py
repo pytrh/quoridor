@@ -43,3 +43,7 @@ class NoUndoableCommand(Exception):
 class NoRedoableCommand(Exception):
     """Exception raised when there is no command to redo."""
     pass
+
+class QuitApp(Exception):
+    """Exception raised when quitting the app."""
+    pass

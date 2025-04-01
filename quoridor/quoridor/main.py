@@ -20,13 +20,14 @@ from quoridor.config import (
     MIN_NUM_PLAYERS,
     MAX_NUM_PLAYERS,
     NOT_RECOMMENDED_NUM_PLAYERS,
-    DEFAULT_SIZE,
+    DEFAULT_GRID_SIZE,
     DEFAULT_NUM_PLAYERS,
     DEFAULT_BLITZ_TIME,
     DEFAULT_NUM_WALLS,
     DEFAULT_GAME_MODE,
     DEFAULT_AI_COLOR,
 )
+from quoridor.exceptions import QuitApp
 
 dirname = os.path.dirname(__file__)
 DEFAULT_CONFIG_FILE = os.path.join(dirname, ".quoridorrc")
@@ -59,17 +60,27 @@ def load_default_config():
     size = config.getint("Default", "size", fallback=9)
     players = config.getint("Default", "players", fallback=2)
     walls = config.getint("Default", "walls", fallback=20)
+    mode_name = config.get("Default", "mode", fallback="default_value")
+    time = config.getint("Default", "time", fallback=20)
 
-    return size, players, walls
+    mode = None
+    if mode_name == "normal":
+        mode = GameMode.NORMAL # TODO: check is better way to get game mode from quoridorc
+    elif mode_name == "blitz":
+        mode = GameMode.BLITZ
+    
+    return size, players, walls, mode, time
 
 
-def update_default_config(size: int, num_players: int, num_walls: int) -> None:
+def update_default_config(size: int, num_players: int, num_walls: int, game_mode: str, blitz_time: int) -> None:
     config = configparser.ConfigParser()
     config.read(DEFAULT_CONFIG_FILE)
 
     config["Default"]["size"] = str(size)
     config["Default"]["players"] = str(num_players)
     config["Default"]["walls"] = str(num_walls)
+    config["Default"]["mode"] = str(game_mode)
+    config["Default"]["time"] = str(blitz_time)
 
     logging.debug("Updated Config:")
     for section in config.sections():
@@ -81,7 +92,7 @@ def update_default_config(size: int, num_players: int, num_walls: int) -> None:
         config.write(default_config)
 
 
-def update_config_file(size: int, num_players: int, num_walls: int) -> None:
+def update_config_file(size: int, num_players: int, num_walls: int, game_mode: GameMode, blitz_time: int) -> None:
     with open(CONFIG_FILE, "r+") as config_file:
         lines = config_file.readlines()
         config_file.seek(0)
@@ -92,7 +103,15 @@ def update_config_file(size: int, num_players: int, num_walls: int) -> None:
                 line = f"NUM_PLAYERS = {num_players}\n"
             elif line.strip().startswith("NUM_WALLS"):
                 line = f"NUM_WALLS = {num_walls}\n"
+            elif line.strip().startswith("GAME_MODE"):
+                line = f"GAME_MODE = {game_mode}\n"
+            elif line.strip().startswith("BLITZ_TIME"):
+                line = f"BLITZ_TIME = {blitz_time}\n"
             config_file.write(line)
+            # TODO: bug when putting more than one param on command line
+
+def restore_default_config_file() -> None:
+    update_default_config(DEFAULT_GRID_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_NUM_WALLS, DEFAULT_GAME_MODE.display_name, DEFAULT_BLITZ_TIME)
 
 
 def main():
@@ -185,12 +204,9 @@ def main():
         logging.debug("File found in arguments")
         # game = GameState.load_game_from_file(args.file)
 
-    size = DEFAULT_SIZE
-    num_players = DEFAULT_NUM_PLAYERS
-    num_walls = DEFAULT_NUM_WALLS
-    blitz_time = DEFAULT_BLITZ_TIME
-    blitz_mode = DEFAULT_GAME_MODE
-    current_ai_color = DEFAULT_AI_COLOR
+    size, num_players, num_walls, game_mode, blitz_time = load_default_config()
+
+    current_ai_color = DEFAULT_AI_COLOR # TODO: read from config
     ai_ids = set()
 
     changed = False
@@ -224,10 +240,6 @@ def main():
         num_players = args.players
         changed = True
 
-    if changed:
-        update_config_file(size, num_players, num_walls)
-        update_default_config(size, num_players, num_walls)
-
     # Gesstion des paramètres d'IA
     if args.ai:
         for ai in args.ai:
@@ -247,13 +259,15 @@ def main():
                 ai_ids.add(color - 1)
 
     if args.blitz:
-        blitz_mode = GameMode.BLITZ
+        game_mode = GameMode.BLITZ
+        changed = True
 
     if args.time:
-        if blitz_mode != GameMode.BLITZ:
+        if game_mode != GameMode.BLITZ:
             logging.warning("blitz mode is not activated. You cannot set a time.")
         else:
             blitz_time = args.time
+            changed = True
 
     if (args.players is not None) and (args.ai is not None):
         if num_players < max(len(ai_ids), max(ai_ids) + 1):
@@ -261,24 +275,37 @@ def main():
             num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
     elif args.ai is not None:
         num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
+        changed = True
+
+    
+    if changed:
+        update_config_file(size, num_players, num_walls, game_mode, blitz_time)
+        update_default_config(size, num_players, num_walls, game_mode.display_name, blitz_time) 
 
     initial_state = GameState(
         size=size,
         num_players=num_players,
         num_walls=num_walls,
-        blitz_mode=blitz_mode,
+        game_mode=game_mode,
         blitz_time=blitz_time,
         ai_ids=ai_ids,
     )
-    if args.gui and not any(getattr(args, arg) for arg in game_related_args):
-        engine = GUIEngine(None)
-        engine.run()
-    elif args.gui:
-        engine = GUIEngine(initial_state)
-        engine.run()
-    else:
-        cli_engine = CLIEngine(initial_state)
-        cli_engine.start_game()
+
+    try:
+        if args.gui and not any(getattr(args, arg) for arg in game_related_args):
+            engine = GUIEngine(None)
+            engine.run()
+        elif args.gui:
+            engine = GUIEngine(initial_state)
+            engine.run()
+        else:
+            cli_engine = CLIEngine(initial_state)
+            cli_engine.start_game()
+    except QuitApp:
+        pass
+
+    # not run if exited using ctrl-C or ctrl-Z
+    restore_default_config_file()
     sys.exit(0)
 
 
