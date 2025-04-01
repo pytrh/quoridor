@@ -240,7 +240,6 @@ def main():
         num_players = args.players
         changed = True
 
-    # Gesstion des paramètres d'IA
     if args.ai:
         for ai in args.ai:
             if ai is True:
