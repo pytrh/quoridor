@@ -503,12 +503,13 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.clear_board_gui()
         self.state = GameState()
         self.execute_command(RestartCommand(self.state, self.initial_state))
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
         self.create_board()
         self.render_board()
+        self.handle_ai_player()
         self.stack.set_visible_child_name("running_game")
 
     def on_load_game_clicked(self, button):
@@ -631,7 +632,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             game_mode=self._game_mode,
             blitz_time=self._blitz_time,
             ai_ids=self._ai_ids,
-            history = self._history
+            history=self._history,
         )
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
@@ -925,7 +926,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._game_mode = state.game_mode
         self._blitz_time = state.blitz_time
         self._ai_ids = state.ai_ids
-        self._history = state.history
 
         if self._number_of_players == 2:
             self.btn_nb_players_2.set_active(True)
@@ -958,6 +958,22 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 button.set_active(i in self._ai_ids)
         else:
             self.switch_ai.set_active(False)
+
+        # test for -r
+        self._history = state.history
+        if self._history:
+            logging.debug(f"Loading Game from History . . .")
+            self.state = state
+            self.initial_state = self.state.copy_state()
+            self.stack.set_visible_child_name("running_game")
+            if self.state.game_mode == GameMode.BLITZ:
+                self.initialise_timer()
+                self.state.current_player.timer.start_turn()
+                self.state.current_player.timer.display_lock.set()
+            self.create_box_players(self.game_players_box)
+            self.create_board()
+            self.render_board()
+            self.handle_ai_player()
 
     def execute_command(self, command: Command) -> bool:
         """
@@ -1011,8 +1027,8 @@ class MyApplication(Gtk.Application):
         self.window.connect("close-request", self.on_close_request)
         self.window.present()
         if self.state is not None:
-            self.window.set_parameters(self.state)
             self.window.on_new_game_clicked(None)
+            self.window.set_parameters(self.state)
 
     def on_close_request(self, window):
         logging.debug("Window closing")

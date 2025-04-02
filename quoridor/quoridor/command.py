@@ -37,6 +37,7 @@ from quoridor.exceptions import (
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
 
+
 class Command(ABC):
     """Abstract base class for all commands in the game."""
 
@@ -354,7 +355,7 @@ class UndoCommand(Command):
         if not self.state.history:
             raise NoUndoableCommand
 
-        player_id,last_command = self.state.history.pop()
+        player_id, last_command = self.state.history.pop()
         self.state.redo_stack.append((player_id, last_command))
         print(f"Last command: {last_command}")
         print(f"Size of redo stack: {len(self.state.redo_stack)}")
@@ -397,6 +398,8 @@ class RestartCommand(Command):
     def execute(self) -> bool:
         """Restart the game to its initial state."""
         self.state.set_state(self.restart_state)
+        self.state.redo_stack.clear()
+        self.state.history.clear()
         return False
 
     def __str__(self) -> str:
@@ -504,11 +507,17 @@ class SaveCommand(Command):
 
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
-        ReadWriteHistory.write_history(self.filename, ReadWriteHistory.parse_history_to_list_of_str(self.state.history, self.state))
+        ReadWriteHistory.write_history(
+            self.filename,
+            ReadWriteHistory.parse_history_to_list_of_str(
+                self.state.history, self.state
+            ),
+        )
         return False
 
     def __str__(self) -> str:
         return "Time player"
+
 
 class HistoryCommand(Command):
     """Command to display the time remaining on the player's timer."""
@@ -518,12 +527,14 @@ class HistoryCommand(Command):
 
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
-        history = ReadWriteHistory.parse_history_to_list_of_str(self.state.history, self.state)
+        history = ReadWriteHistory.parse_history_to_list_of_str(
+            self.state.history, self.state
+        )
         for turn_index, turn in enumerate(history, start=1):
             print(f"Turn {turn_index}:", end=" ")
             for move in turn:
                 print(move, end=" ")
-            print() 
+            print()
         return False
 
     def __str__(self) -> str:

@@ -21,7 +21,7 @@ from quoridor.command import (
     AbandonCommand,
     HelpCommand,
     SaveCommand,
-    HistoryCommand
+    HistoryCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -93,7 +93,7 @@ class CLIEngine:
         """
         result = command.execute()
         if result:
-            self.state.history.append((self.state.current_player.id,command))
+            self.state.history.append((self.state.current_player.id, command))
             logging.debug(f"Executed command: {command}")
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():
@@ -284,7 +284,7 @@ class CLIEngine:
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
         elif input == "save":
-            return SaveCommand(self.state, "toto.txt")
+            return SaveCommand(self.state, "outputHisotry.txt")
         elif input == "time":
             if self.state.game_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)
