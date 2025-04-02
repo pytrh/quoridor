@@ -145,20 +145,24 @@ class GameState:
         :rtype: Graph
         """
         board = deepcopy(self.board)
-        p = [(), (), (), ()]
+        position_players = [(), (), (), ()]
         for i in range(self.num_players):
-            p[i] = self.players[i].position
+            position_players[i] = self.players[i].position
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-        x, y = p[self.current_player.id]
+        x, y = position_players[self.current_player.id]
         for dx, dy in directions:
             adj = (x + dx, y + dy)
             jump = (x + 2 * dx, y + 2 * dy)
 
-            if adj in p and board.edge_exists((x, y), adj):
+            if adj in position_players and board.edge_exists((x, y), adj):
                 board.remove_edge((x, y), adj)
 
-                if board.node_exists(jump) and board.edge_exists(adj, jump):
+                if (
+                    board.node_exists(jump)
+                    and board.edge_exists(adj, jump)
+                    and jump not in position_players
+                ):
                     # Straight jump
                     board.add_edge((x, y), jump)
                 else:
@@ -167,7 +171,10 @@ class GameState:
 
                     for pdx, pdy in side_directions:
                         side_jump = (x + dx + pdx, y + dy + pdy)
-                        if board.edge_exists(side_jump, adj):
+                        if (
+                            board.edge_exists(side_jump, adj)
+                            and side_jump not in position_players
+                        ):
                             board.add_edge((x, y), side_jump)
 
         return board
