@@ -1,4 +1,5 @@
 import copy
+import importlib
 import logging
 import time
 import gi
@@ -197,6 +198,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.game_grid = Gtk.Grid()
         self.game_grid.set_row_homogeneous(True)
         self.game_grid.set_column_homogeneous(True)
+        self.game_grid.set_size_request(300, 300)
+        self.game_grid.set_vexpand(False)
+        self.game_grid.set_hexpand(False)
         # Game walls
         walls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         walls_box.set_halign(Gtk.Align.CENTER)
@@ -263,22 +267,24 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         )
         title.set_halign(Gtk.Align.CENTER)
         box.append(title)
-        info = """<span size="12000" weight="bold">Version:</span> <span size="12000">0.2.0</span>
-                <span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>
-                <span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>
-                <span size="12000" weight="bold">Description:</span> 
-                <span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game. 
-                    The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>
-                """
 
+        version = importlib.metadata.version("quoridor")
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Version:</span> <span size="12000">{version}</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Description:</span> """))
+        box.append(self.create_label_for_about(f"""<span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="10000">The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>"""))
+
+        return box
+    
+    def create_label_for_about(self, text):
         label = Gtk.Label()
-        label.set_markup(info)
+        label.set_markup(text)
         label.set_justify(Gtk.Justification.CENTER)
         label.set_halign(Gtk.Align.CENTER)
         label.set_wrap(True)
-        box.append(label)
-
-        return box
+        return label
 
     def create_end_page(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -514,11 +520,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_back_home(self, button):
         self.clear_board_gui()
-        self.state.history.clear()
-        self.state.redo_stack.clear()
+        if self.state is not None:
+            self.state.history.clear()
+            self.state.redo_stack.clear()
+            self.state.current_player.is_dead = True
         self.scrolled_window_history.set_child(None)
         self.game_is_over = True
-        self.state.current_player.is_dead = True
         self.stack.set_visible_child_name("home")
         logging.debug("Button was clicked")
 
