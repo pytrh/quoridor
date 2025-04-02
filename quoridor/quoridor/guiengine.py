@@ -239,8 +239,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.scrolled_window_history = Gtk.ScrolledWindow()
         self.scrolled_window_history.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.scrolled_window_history.set_vexpand(True)
-        self.scrolled_window_history.set_size_request(300, -1)
-        right_box.append(self.scrolled_window_history)
+        self.scrolled_window_history.set_size_request(600, 100)
+        game_box.append(self.scrolled_window_history)
 
         main_box.append(right_box)
 
@@ -514,13 +514,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_back_home(self, button):
         self.clear_board_gui()
+        self.state.history.clear()
+        self.state.redo_stack.clear()
+        self.scrolled_window_history.set_child(None)
+        self.game_is_over = True
+        self.state.current_player.is_dead = True
         self.stack.set_visible_child_name("home")
         logging.debug("Button was clicked")
 
     def on_restart_clicked(self, button):
-        self.clear_board_gui()
         self.state = GameState()
         self.execute_command(RestartCommand(self.state, self.initial_state))
+        self.clear_board_gui()
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
@@ -528,6 +533,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.create_board()
         self.render_board()
         self.handle_ai_player()
+        self.game_is_over = False
         self.stack.set_visible_child_name("running_game")
 
     def on_load_game_clicked(self, button):
@@ -632,6 +638,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
+        self.game_is_over = False
         if self._game_mode == GameMode.BLITZ:
             self._blitz_time = self.timer_text_box.get_value_as_int()
             logging.debug("Temps sélectionné :", self._blitz_time)
@@ -820,15 +827,21 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.display_game_over_window()
 
     def handle_ai_player(self):
-        if self.state.current_player.id in self.state.ai_controllers:
+        if self.game_is_over:
+            pass
+        elif self.state.current_player.id in self.state.ai_controllers:
+            print(f"an ai want to play {self.state.current_player.id}")
             command = self.state.ai_controllers[
                 self.state.current_player.id
             ].suggest_move(self.state, heuristic)
             # Exécute la commande après 0,3 seconde
-            GLib.timeout_add(300, lambda: self.execute_command(command) or False)
+            GLib.timeout_add(300, lambda: self.execute_command(command))
 
             # Met à jour le plateau après 0,4 secondes
             GLib.timeout_add(400, lambda: self.render_board() or False)
+            print(f"an ai has played {self.state.current_player.id}")
+        else :
+            pass
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
@@ -874,7 +887,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             move_pawn = MovePawnCommand(self.state, (last_row, last_col), (row, col))
             self.execute_command(move_pawn)
-            self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
@@ -885,7 +897,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             place_wall = PlaceWallCommand(self.state, (row, col), wall_type)
             self.execute_command(place_wall)
-            self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
@@ -934,9 +945,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 elif self.state.wall_exist(row, col, Direction.V):
                     self.cells[(row, col)].get_style_context().add_class("wall-v")
                     self.cells[(row + 1, col)].get_style_context().add_class("wall-v")
-
-        self.update_players_box()
-        self.update_current_player_label()
         return
 
     def update_current_player_label(self):
@@ -1042,6 +1050,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         Execute a command and add it to the command history.
         """
         try:
+            logging.debug(f"command from {self.state.current_player.id}")
             result = command.execute()
             if result:
                 self.state.history.append((self.state.current_player.id, command))
@@ -1054,7 +1063,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.display_game_over_window()
                 else:
                     self.handle_switch_player()
-            return result
         except Exception as e:
             if self.state.current_player.id in self.state.ai_controllers:
                 return False
@@ -1062,19 +1070,16 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             logging.error(f"Error of type {error_type} while executing command: {e}")
             popup = AutoClosePopup(f"Error ({error_type}) : {e}")
             popup.show()
-            return False
+        
+        self.update_players_box()
+        self.update_current_player_label()
+        self.render_board()
 
     def on_undo_clicked(self, button):
         self.execute_command(UndoCommand(self.state))
-        self.update_players_box()
-        self.update_current_player_label()
-        self.render_board()
 
     def on_redo_clicked(self, button):
         self.execute_command(RedoCommand(self.state))
-        self.update_players_box()
-        self.update_current_player_label()
-        self.render_board()
 
     def clear_all_timer(self):
         if self.state is not None:
