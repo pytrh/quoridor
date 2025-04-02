@@ -38,7 +38,7 @@ class AI(ABC):
 
     def possible_moves(self, state: "GameState") -> list[tuple[int, int]]:
         pos = state.players[state.current_player.id].position
-        return list(state.board._graph[pos])
+        return list(state.temp_board()._graph[pos])
 
     def possible_walls(self, state: "GameState") -> list[tuple[int, int, Direction]]:
         walls = []
