@@ -622,8 +622,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             if player.is_dead:
                 label.get_style_context().add_class("player-is-dead")
             box.append(label)
-            print(f"adddd player {player.id}")
-        print(self.state.players)
 
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
@@ -905,7 +903,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             for col in range(self.state.size):
                 button = self.cells[(row, col)]
                 button.set_label("")
-            # button.get_style_context().clear() TODO
+                button.get_style_context().remove_class("wall-h")
+                button.get_style_context().remove_class("wall-v")
 
         for i in range(self.state.num_players):
             emoji = "🔵"
