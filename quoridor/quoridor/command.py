@@ -520,13 +520,13 @@ class SaveCommand(Command):
 
 
 class HistoryCommand(Command):
-    """Command to display the time remaining on the player's timer."""
+    """Command to display the history of the current game."""
 
     def __init__(self, state: "GameState"):
         super().__init__(state)
 
     def execute(self) -> bool:
-        """Display the time remaining on the player's timer"""
+        """Display the history of the current game"""
         history = ReadWriteHistory.parse_history_to_list_of_str(
             self.state.history, self.state
         )
