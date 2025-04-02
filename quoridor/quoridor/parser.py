@@ -4,7 +4,7 @@ from quoridor.cliengine import CLIEngine
 from quoridor.direction import Direction
 from quoridor.gamestate import GameState
 from quoridor.graph import Graph
-from quoridor.command import PlaceWallCommand
+from quoridor.command import HistoryCommand, PlaceWallCommand
 from quoridor.player import Player
 
 
@@ -185,8 +185,15 @@ def parse_string_to_state(state_string: str) -> GameState:
             else:
                 logging.warning("Impossible to parse board before initializing size")
         elif line.startswith("history"):
-            history_string = "".join(state_lines[i + 1 :])
-            # history = parse_list_of_str_to_history(history_string) # TODO : mohamad
+            from quoridor.io import ReadWriteHistory
+
+            state_temp = GameState(size=size, num_players=num_players)
+            history_to_string = ReadWriteHistory._get_game_info_from_file(
+                state_lines[i + 1 :]
+            )
+            history = ReadWriteHistory.parse_list_of_str_to_history(
+                state_temp, history_to_string
+            )
             break
         i += 1
 
@@ -199,9 +206,11 @@ def parse_string_to_state(state_string: str) -> GameState:
         "players": players,
         "num_players": num_players,
         "board": board,
-        "blitz": blitz,
         "num_walls": num_walls,
         "history": history,
+        "game_mode": blitz,
+        # blitz_time ?
+        # ai_ids ?
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
     return GameState(**filtered_kwargs)
@@ -212,7 +221,7 @@ def _print_state(state: GameState):
     print(f"Board size : {state.size}")
     print(f"Current player id : {state.current_player.id}")
     print(f"Number of players : {state.num_players}")
-    print(f"Blitz mode : {state.blitz}")
+    print(f"Blitz mode : {state.game_mode}")
     print(f"Number of walls per players : {state.initial_num_walls}")
 
     # Players
@@ -226,6 +235,7 @@ def _print_state(state: GameState):
     _print_graph(state.board)
 
     # History
+    HistoryCommand(state).execute()
 
 
 def _test_parse_string_to_state():

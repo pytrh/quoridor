@@ -15,8 +15,13 @@ turns = [["e2", "e3"], ["d4", "d5"]]
 ReadWriteHistory.write_history("output_history.txt", turns)
 """
 
+from typing import TYPE_CHECKING
 from quoridor.graph import Graph
-from quoridor.command import Command
+from quoridor.exceptions import InvalidMoveError
+if TYPE_CHECKING:
+    from quoridor.command import Command
+    from quoridor.gamestate import GameState
+
 
 
 def parse_graph(string: str) -> Graph:
@@ -56,7 +61,7 @@ class ReadWriteHistory:
     """
 
     @staticmethod
-    def read_history(input_file_path: str) -> list[list[str]]:
+    def read_history(input_file_path: str) -> list[list[tuple[int,str]]]:
         """
         Reads the history from a text input file and returns an array containing
         the game information, a list of game moves per player per turn.
@@ -91,7 +96,7 @@ class ReadWriteHistory:
         into an array.
         game_info = [nb_of_turns][nb_of_players].
         """
-        game_info: list[list[str]] = []
+        game_info: list[tuple[int,str]] = []
         max_players = 0
         try:
             for turn_nb, turn in enumerate(history_array):
@@ -100,12 +105,11 @@ class ReadWriteHistory:
                 if not line_sections or not line_sections[0].endswith("."):
                     print(f"Invalid line for turn: {turn_nb + 1}")
                     continue  # Skip invalid line
-
                 turn_nb = int(line_sections[0][:-1])
                 max_players = max(max_players, (len(line_sections) - 1) // 2)
                 while len(game_info) < turn_nb:
                     game_info.append(
-                        [""] * max_players
+                        [(-1,"")] * max_players
                     )  # Initialize turn with empty moves
 
                 ReadWriteHistory._process_moves(turn_nb, line_sections, game_info)
@@ -118,7 +122,7 @@ class ReadWriteHistory:
 
     @staticmethod
     def _process_moves(
-        turn_nb: int, line_sections: list[str], game_info: list[list[str]]
+        turn_nb: int, line_sections: list[str], game_info: list[tuple[int,str]]
     ) -> None:
         """Extract and process player moves for a given turn."""
         for i in range(1, len(line_sections), 2):
@@ -126,7 +130,8 @@ class ReadWriteHistory:
             try:
                 player_id = int(line_sections[i])
                 move = line_sections[i + 1]
-                game_info[turn_nb - 1][player_id - 1] = move
+                # print(player_id,move)
+                game_info[turn_nb - 1][player_id - 1] = (player_id, move)
 
             except (IndexError, ValueError) as error:
                 print(
@@ -138,13 +143,13 @@ class ReadWriteHistory:
     def write_history(output_file_path: str, turns: list[list[str]]):
         """Writes a history text file with the game information in the 'turns' parameter."""
         try:
-            with open(output_file_path, "a", encoding="utf-8") as history_file:
+            with open(output_file_path, "w", encoding="utf-8") as history_file:
                 history_file.write(
                     "# Quoridor Game History"
                 )  # EOF should be positioned new line
                 for turn_nb, turn in enumerate(turns):
                     turn_str = " ".join(
-                        f"{player + 1} {move}" for player, move in enumerate(turn)
+                        f"{move}" for player, move in enumerate(turn)
                     )
                     history_file.write(f"\n{turn_nb + 1}. {turn_str} ")
 
@@ -154,8 +159,76 @@ class ReadWriteHistory:
         except IOError:
             print(f"Error: Could not write to file '{output_file_path}'.")
 
-    def parse_history_to_list_of_str(history: list[Command]) -> list[list[str]]:
-        pass
+    @staticmethod
+    def parse_history_to_list_of_str(history: list[tuple[int, "Command"]], state: "GameState") -> list[list[str]]:
+        from quoridor.command import AbandonCommand
+        game_info: list[list[str]] = []
+        current_turn: list[str] = []
 
-    def parse_list_of_str_to_history(str: list[list[str]]) -> list[Command]:
-        pass
+        players_alive = {p.id for p in state.players if not p.is_dead}
+        players_this_turn = set()
+
+        for player_id, cmd in history:
+            if isinstance(cmd, AbandonCommand):
+                cmd_str = f"{player_id + 1} SURRENDER"
+                players_alive.discard(player_id)
+            else:
+                cmd_str = f"{player_id + 1} {str(cmd)}"
+            current_turn.append(cmd_str)
+            players_this_turn.add(player_id)
+
+            if players_alive.issubset(players_this_turn):
+                game_info.append(current_turn)
+                current_turn = []
+                players_this_turn = set()
+
+        if current_turn:
+            game_info.append(current_turn)
+
+        return game_info
+
+        
+    @staticmethod
+    def parse_list_of_str_to_history(state: "GameState", turns: list[list[tuple[int,str]]]) -> list[tuple[int, "Command"]]:
+        from quoridor.cliengine import CLIEngine
+        from quoridor.command import (AbandonCommand,
+                                      MovePawnCommand,
+                                      PlaceWallCommand)
+        c = CLIEngine(state)
+        cmds: list[tuple[int, Command]] = []
+        for turn in turns:
+            for player_id, cmd_str in turn:
+                try:
+                    if(player_id >= 0):
+                        pid = player_id - 1
+                        if cmd_str == "SURRENDER":
+                            cmd = AbandonCommand(state, pid)
+                            c.execute_command(cmd)
+                        elif len(cmd_str) == 2 or (len(cmd_str) >= 3 and not cmd_str[-1] in "hv"):
+                            _, to_case = cmd_str.strip().lower().split('-')
+                            to_pos = c.translate_move(to_case)
+                            from_pos = state.players[pid].position
+                            cmd = MovePawnCommand(state, from_pos, to_pos)
+                            c.execute_command(cmd)
+                        elif len(cmd_str) >= 3 and cmd_str[-1] in "hv":
+                            x, y, direction = c.translate_wall(cmd_str)
+                            cmd = PlaceWallCommand(state, (x, y), direction)
+                            c.execute_command(cmd)
+                        else:
+                            raise InvalidMoveError(f"Command not found : {cmd_str}")
+                        cmds.append((pid, cmd))
+
+                except (InvalidMoveError, ValueError, IndexError) as e:
+                    print(f"Commande ignorée pour le joueur {player_id} : '{cmd_str}' → {e}")
+        c = None
+        return cmds
+
+
+    @staticmethod
+    def num_players_from_file(turns: list[list[tuple[int,str]]]) -> int:
+        num_players = 0
+        for turn in turns:
+            for i in turn:
+                id,_ = i
+                num_players = max(id,num_players)
+        return num_players

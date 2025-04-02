@@ -37,7 +37,7 @@ class GameState:
         num_players: int = NUM_PLAYERS,
         board: Graph = None,
         num_walls: int = NUM_WALLS,
-        history: List["Command"] = None,
+        history: list[tuple[int, "Command"]] = None,
         game_mode: GameMode = DEFAULT_GAME_MODE,
         blitz_time: int = BLITZ_TIME,
         ai_ids: set = [],
@@ -75,18 +75,7 @@ class GameState:
         self.ai_ids = ai_ids
 
         if players is None:
-            middle_board = size // 2
-
-            self.players = [
-                Player(0, (middle_board, 0), size, num_walls),
-                Player(1, (middle_board, size - 1), size, num_walls),
-            ]
-            if self.num_players > 2:
-                self.players.append(Player(2, (0, middle_board), size, num_walls))
-            if self.num_players > 3:
-                self.players.append(
-                    Player(3, (size - 1, middle_board), size, num_walls)
-                )
+            self.players = self.createPlayer()
         else:
             self.players = players
         self.current_player = (
@@ -112,6 +101,24 @@ class GameState:
             self.ai_controllers = {}
 
         logging.debug(f"List ai : {self.ai_controllers}")
+
+    def createPlayer(self) -> list[Player]:
+        middle_board = self.size // 2
+        players = [
+            Player(0, (middle_board, 0), self.size, self.initial_num_walls),
+            Player(1, (middle_board, self.size - 1), self.size, self.initial_num_walls),
+        ]
+        if self.num_players > 2:
+            players.append(
+                Player(2, (0, middle_board), self.size, self.initial_num_walls)
+            )
+        if self.num_players > 3:
+            players.append(
+                Player(
+                    3, (self.size - 1, middle_board), self.size, self.initial_num_walls
+                )
+            )
+        return players
 
     def create_board(self, size: int = 9) -> Graph:
         """
@@ -235,24 +242,28 @@ class GameState:
         """
         copy game state
         """
-        new_list_players = [
-            Player(
-                player.id,
-                player.position,
-                self.size,
-                player.walls_remaining,
-                None,
-                player.goal_line,
-            )
-            for player in self.players
-        ]
+        new_list_players = None
+        try:
+            new_list_players = [
+                Player(
+                    player.id,
+                    player.position,
+                    self.size,
+                    player.walls_remaining,
+                    None,
+                    player.goal_line,
+                )
+                for player in self.players
+            ]
+        except ValueError:
+            new_list_players = self.createPlayer()
 
         cloned_state = GameState(
             size=self.size,
             current_player_id=self.current_player.id,
             players=new_list_players,
             num_players=self.num_players,
-            board=deepcopy(self.board),
+            board=self.create_board(self.size),
             num_walls=self.initial_num_walls,
             history=deepcopy(self.history),
             game_mode=self.game_mode,
@@ -262,10 +273,16 @@ class GameState:
         return cloned_state
 
     def set_state(self, state: "GameState"):  # type: ignore
-        new_list_players = [
-            Player(player.id, player.position, state.size, player.walls_remaining, None)
-            for player in state.players
-        ]
+        new_list_players = None
+        try:
+            new_list_players = [
+                Player(
+                    player.id, player.position, state.size, player.walls_remaining, None
+                )
+                for player in state.players
+            ]
+        except ValueError:
+            new_list_players = self.createPlayer()
 
         self.size = state.size
         self.current_player_id = state.current_player.id

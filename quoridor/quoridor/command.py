@@ -21,6 +21,7 @@ from copy import deepcopy
 from typing import Optional, Tuple, List, TYPE_CHECKING
 import os
 
+from quoridor.io import ReadWriteHistory
 from quoridor.graph import Graph
 from quoridor.direction import Direction
 from quoridor.gamemode import GameMode
@@ -354,8 +355,8 @@ class UndoCommand(Command):
         if not self.state.history:
             raise NoUndoableCommand
 
-        last_command = self.state.history.pop()
-        self.state.redo_stack.append(last_command)
+        player_id, last_command = self.state.history.pop()
+        self.state.redo_stack.append((player_id, last_command))
         print(f"Last command: {last_command}")
         print(f"Size of redo stack: {len(self.state.redo_stack)}")
         last_command.undo()
@@ -377,10 +378,10 @@ class RedoCommand(Command):
         if not self.state.redo_stack:
             raise NoRedoableCommand
 
-        command = self.state.redo_stack.pop()
+        player_id, command = self.state.redo_stack.pop()
         print(f"Command to redo: {command}")
         command.redo()
-        self.state.history.append(command)
+        self.state.history.append((player_id, command))
         return False
 
     def __str__(self) -> str:
@@ -397,6 +398,8 @@ class RestartCommand(Command):
     def execute(self) -> bool:
         """Restart the game to its initial state."""
         self.state.set_state(self.restart_state)
+        self.state.redo_stack.clear()
+        self.state.history.clear()
         return False
 
     def __str__(self) -> str:
@@ -496,28 +499,43 @@ class HelpCommand(Command):
 
 
 class SaveCommand(Command):
-    """Command to save the current game to a file."""
+    """Command to display the time remaining on the player's timer."""
 
     def __init__(self, state: "GameState", filename: str):
         super().__init__(state)
         self.filename = filename
 
     def execute(self) -> bool:
-        """Save the current game to a file."""
-        # Create a string representation of the current game state
-        # First line is the current player ID
-        state_string = f"{self.state.current_player.id}\n"
-
-        # Add the board representation
-        state_string += self.get_string_from_board()
-
-        # Get parent directory of the parent directory
-        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(self.filename)))
-        os.makedirs(parent_dir, exist_ok=True)
-        save_path = os.path.join(parent_dir, os.path.basename(self.filename))
-        with open(save_path, "w") as f:
-            f.write(state_string)
+        """Display the time remaining on the player's timer"""
+        ReadWriteHistory.write_history(
+            self.filename,
+            ReadWriteHistory.parse_history_to_list_of_str(
+                self.state.history, self.state
+            ),
+        )
         return False
 
     def __str__(self) -> str:
-        return f"Save game to {self.filename}"
+        return "Time player"
+
+
+class HistoryCommand(Command):
+    """Command to display the history of the current game."""
+
+    def __init__(self, state: "GameState"):
+        super().__init__(state)
+
+    def execute(self) -> bool:
+        """Display the history of the current game"""
+        history = ReadWriteHistory.parse_history_to_list_of_str(
+            self.state.history, self.state
+        )
+        for turn_index, turn in enumerate(history, start=1):
+            print(f"Turn {turn_index}:", end=" ")
+            for move in turn:
+                print(move, end=" ")
+            print()
+        return False
+
+    def __str__(self) -> str:
+        return "History"

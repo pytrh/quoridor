@@ -3,7 +3,7 @@
 num_players = 2
 current_player_id = 1
 board_size = 5
-num_walls = 8
+num_walls = 10
 blitz = False
 
 # players
@@ -14,19 +14,19 @@ player_position = 1, 0
 player_walls = 9
 player_id = 0
 
-player_position = 2, 8
-player_walls = 10
+player_position = 2, 4
+player_walls = 9
 player_id = 1
 
 # board
 board =
-    0   1   2   3   4
+    1   2   3   4   5
   +---+---+---+---+---+
 a |                   |
   +   +   +   +   +   +
-b | 1         |       |
+b | 1     |           |
   +   +   +   +   +   +
-c |           |     2 |
+c |       |         2 |
   +---+---+   +   +   +
 d |                   |
   +   +   +   +   +   +
@@ -35,5 +35,6 @@ e |                   |
 
 # history
 history =
-1 c1-b1 c0h
-2 b3v
+# Quoridor Game History
+1. 1 c1-b1 2 b2v 
+2. 1 c1h 

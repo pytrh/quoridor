@@ -10,6 +10,7 @@ import logging
 import sys
 import os
 
+from quoridor.io import ReadWriteHistory
 from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode
@@ -191,12 +192,18 @@ def main():
         const=True,
         action="append",
     )
+    parser.add_argument(
+        "-r",
+        "--replay",
+        help="replay game from file saved during pending play",
+        required=False,
+    )
 
     args = parser.parse_args()
-    game_related_args = ["players", "blitz", "time", "size", "walls", "ai"]
+    game_related_args = ["players", "blitz", "time", "size", "walls", "ai","replay"]
 
     setup_logging(verbose=args.verbose, debug=args.debug)
-
+    
     if args.version:
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
@@ -283,6 +290,11 @@ def main():
         update_config_file(size, num_players, num_walls, game_mode, blitz_time)
         update_default_config(size, num_players, num_walls, game_mode.display_name, blitz_time) 
 
+    if args.replay:
+        lines = ReadWriteHistory.read_history(args.replay)
+        new_num_players = ReadWriteHistory.num_players_from_file(lines)
+        num_players = max(new_num_players,num_players)
+
     initial_state = GameState(
         size=size,
         num_players=num_players,
@@ -291,6 +303,9 @@ def main():
         blitz_time=blitz_time,
         ai_ids=ai_ids,
     )
+    if args.replay:
+        lines = ReadWriteHistory.read_history(args.replay)
+        ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)
 
     try:
         if args.gui and not any(getattr(args, arg) for arg in game_related_args):

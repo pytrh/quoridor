@@ -20,6 +20,8 @@ from quoridor.command import (
     QuitCommand,
     AbandonCommand,
     HelpCommand,
+    SaveCommand,
+    HistoryCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -91,7 +93,7 @@ class CLIEngine:
         """
         result = command.execute()
         if result:
-            self.state.history.append(command)
+            self.state.history.append((self.state.current_player.id, command))
             logging.debug(f"Executed command: {command}")
             self.state.redo_stack.clear()  # Clear redo stack when new command is executed
             if self.state.game_over():
@@ -281,12 +283,15 @@ class CLIEngine:
             return RestartCommand(self.state, self.initial_state)
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
+        elif input == "save":
+            return SaveCommand(self.state, "outputHisotry.txt")
         elif input == "time":
             if self.state.game_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)
             else:
                 raise InvalidCommandError("Mode blitz is disabled")
-        # elif input == "save": # TODO save history F35 (mohamad)
+        elif input == "history":
+            return HistoryCommand(self.state)
         elif input == "h" or input == "help":
             return HelpCommand(self.state)
         elif self.well_formed_pawn_move(input):
@@ -345,7 +350,6 @@ class CLIEngine:
                     raise GameOver
                     # self.render_game_over()
                     # exit()
-
             except InvalidMoveError as e:
                 self.end_blitz_turn()
                 print(f"Invalid move: {str(e)}")
