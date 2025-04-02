@@ -1,13 +1,7 @@
 [Default]
 size = 9
-players = 3
-walls = 20
-blitz = false
-time = 30
-ai = None
-ai-mode = minimax
-ai-depth = 3
-ai-heuristic = default
-ai-time = 5
-ai-level = medium
+players = 2
+walls = 10
+mode = normal
+time = 15
 

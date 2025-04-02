@@ -25,10 +25,10 @@ def __check_game_parameters(
     game: GameState,
     size: int,
     num_players: int,
-    blitz_mode: bool,
+    game_mode: bool, # TODO: GameMode not bool
     history: list[list[str]],
 ) -> None:
-    assert game.blitz_mode == blitz_mode
+    assert game.game_mode == game_mode
     assert game.size == size
     assert game.num_players == num_players
     assert game.history == history
@@ -60,7 +60,7 @@ def test_default_game():
 
 def test_game():
     """Test a game with 3 players"""
-    game = GameState(size=9, num_players=3, blitz_mode=False, num_walls=5)
+    game = GameState(size=9, num_players=3, game_mode=False, num_walls=5)
     __check_create_board(game)
     __check_game_parameters(game, 9, 3, False, [[]])
     assert game.current_player == 0
@@ -69,7 +69,7 @@ def test_game():
     __check_player(game, players)
 
     # test a game with 4 players
-    game = GameState(size=9, num_players=4, blitz_mode=False, num_walls=5)
+    game = GameState(size=9, num_players=4, game_mode=False, num_walls=5)
     __check_create_board(game)
     __check_game_parameters(game, 9, 4, False, [[]])
     assert game.current_player == 0

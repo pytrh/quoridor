@@ -227,7 +227,7 @@ class CLIEngine:
         buffer = ""
 
         while True:
-            if self.state.blitz_mode == GameMode.BLITZ:
+            if self.state.game_mode == GameMode.BLITZ:
                 if (
                     self.state.players[self.state.current_player.id].timer.current_time
                     <= 0
@@ -286,7 +286,7 @@ class CLIEngine:
         elif input == "save":
             return SaveCommand(self.state, "toto.txt")
         elif input == "time":
-            if self.state.blitz_mode == GameMode.BLITZ:
+            if self.state.game_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)
             else:
                 raise InvalidCommandError("Mode blitz is disabled")
@@ -308,7 +308,7 @@ class CLIEngine:
         """
         end timer
         """
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             self.state.current_player.timer.end_turn()
             self.state.current_player.timer.display_lock.clear()
 
@@ -316,7 +316,7 @@ class CLIEngine:
         """
         get and start timer
         """
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
 

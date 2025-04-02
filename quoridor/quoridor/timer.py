@@ -9,15 +9,15 @@ from quoridor.observer import Observer
 
 class Timer:
 
-    def __init__(self, blitz_time: int, blitz_mode: GameMode, player_id: int):
+    def __init__(self, blitz_time: int, game_mode: GameMode, player_id: int):
         """
         Initialize a Timer object to manage countdown timing in blitz game modes.
 
         Args:
             blitz_time (int): The amount of time (in seconds) assigned to a player per turn.
-            blitz_mode (GameMode): The current game mode (e.g., BLITZ, BLITZ_LONG).
+            game_mode (GameMode): The current game mode (e.g., BLITZ, BLITZ_LONG).
         """
-        self.game_mode = blitz_mode
+        self.game_mode = game_mode
         self.initial_time = blitz_time
         self.current_time = blitz_time
         self.turn_start_time = None
