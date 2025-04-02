@@ -985,19 +985,26 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         """
         Execute a command and add it to the command history.
         """
-        result = command.execute()
-        if result:
-            self.state.history.append(command)
-            self.state.redo_stack.clear()  # Clear redo stack when new command is executed
+        try:
+            result = command.execute()
+            if result:
+                self.state.history.append(command)
+                self.state.redo_stack.clear()  # Clear redo stack when new command is executed
 
-            if self.state.game_over():
-                logging.info("-------- GameOver --------")
-                if type(command) == AbandonCommand:
-                    self.state.switch_player()
-                self.display_game_over_window()
-            else:
-                self.handle_switch_player()
-        return result
+                if self.state.game_over():
+                    logging.info("-------- GameOver --------")
+                    if type(command) == AbandonCommand:
+                        self.state.switch_player()
+                    self.display_game_over_window()
+                else:
+                    self.handle_switch_player()
+            return result
+        except Exception as e:
+            error_type = type(e).__name__
+            logging.error(f"Error of type {error_type} while executing command: {e}")
+            popup = AutoClosePopup(f"Error : ({error_type})")
+            popup.show()
+            return False
 
     def clear_all_timer(self):
         if self.state is not None:
@@ -1006,6 +1013,17 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     if player.timer.turn_start_time is not None:
                         player.timer.end_turn()
                         player.timer.display_lock.clear()
+
+
+class AutoClosePopup(Gtk.Window):
+    def __init__(self, message):
+        super().__init__(title="Popup")
+        self.set_default_size(200, 100)
+        self.set_transient_for(None)
+        self.set_modal(True)
+        label = Gtk.Label(label=message)
+        self.set_child(label)
+        GLib.timeout_add(3000, self.destroy)
 
 
 class MyApplication(Gtk.Application):
