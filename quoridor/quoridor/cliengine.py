@@ -21,6 +21,7 @@ from quoridor.command import (
     AbandonCommand,
     HelpCommand,
     SaveCommand,
+    HistoryCommand
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -289,7 +290,8 @@ class CLIEngine:
                 return TimeCommand(self.state)
             else:
                 raise InvalidCommandError("Mode blitz is disabled")
-        # elif input == "save": # TODO save history F35 (mohamad)
+        elif input == "history":
+            return HistoryCommand(self.state)
         elif input == "h" or input == "help":
             return HelpCommand(self.state)
         elif self.well_formed_pawn_move(input):
@@ -348,7 +350,6 @@ class CLIEngine:
                     raise GameOver
                     # self.render_game_over()
                     # exit()
-
             except InvalidMoveError as e:
                 self.end_blitz_turn()
                 print(f"Invalid move: {str(e)}")

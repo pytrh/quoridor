@@ -160,7 +160,7 @@ class ReadWriteHistory:
             print(f"Error: Could not write to file '{output_file_path}'.")
 
     @staticmethod
-    def parse_history_to_list_of_str(history: list["Command"], state: "GameState") -> list[list[str]]:
+    def parse_history_to_list_of_str(history: list[tuple[int, "Command"]], state: "GameState") -> list[list[str]]:
         from quoridor.command import AbandonCommand
         game_info: list[list[str]] = []
         current_turn: list[str] = []
@@ -232,6 +232,3 @@ class ReadWriteHistory:
                 id,_ = i
                 num_players = max(id,num_players)
         return num_players
-
-    
-

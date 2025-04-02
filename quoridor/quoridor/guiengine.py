@@ -44,6 +44,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._blitz_mode = None
         self._blitz_time = None
         self._ai_ids = None
+        self._history = None
 
         GLib.set_application_name("quoridor")
 
@@ -505,6 +506,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             blitz_mode=self._blitz_mode,
             blitz_time=self._blitz_time,
             # self._ai_ids
+            history = self._history
         )
         if self.state.blitz_mode == GameMode.BLITZ:
             self.initialise_timer()
@@ -777,6 +779,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._blitz_mode = state.blitz_mode
         self._blitz_time = state.blitz_time
         self._ai_ids = state.ai_ids
+        self._history = state.history
 
         if self._number_of_players == 2:
             self.btn_nb_players_2.set_active(True)

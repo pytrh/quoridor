@@ -508,3 +508,22 @@ class SaveCommand(Command):
 
     def __str__(self) -> str:
         return "Time player"
+
+class HistoryCommand(Command):
+    """Command to display the time remaining on the player's timer."""
+
+    def __init__(self, state: "GameState"):
+        super().__init__(state)
+
+    def execute(self) -> bool:
+        """Display the time remaining on the player's timer"""
+        history = ReadWriteHistory.parse_history_to_list_of_str(self.state.history, self.state)
+        for turn_index, turn in enumerate(history, start=1):
+            print(f"Turn {turn_index}:", end=" ")
+            for move in turn:
+                print(move, end=" ")
+            print() 
+        return False
+
+    def __str__(self) -> str:
+        return "History"
