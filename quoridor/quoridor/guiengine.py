@@ -27,7 +27,7 @@ from quoridor.config import (
     MAX_GRID_SIZE,
     NUM_WALLS,
 )
-from quoridor.ai import heuristic
+from quoridor.ai import GreedyAI, heuristic
 
 
 gi.require_version("Gtk", "4.0")
@@ -49,6 +49,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._game_mode = None
         self._blitz_time = None
         self._ai_ids = set()
+
+        self.hint_cases = []
+        self.hint_activate = False
+        self.hint_symbole = "⏺️"
 
         GLib.set_application_name("quoridor")
 
@@ -162,7 +166,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         power_button.set_halign(Gtk.Align.START)
         power_button.connect("clicked", self.on_back_home)
 
-        btn_abandon = Gtk.Button(label="Abandon")
+        btn_abandon = Gtk.Button(label="🏳️ Abandon")
         btn_abandon.set_size_request(20, 10)
         btn_abandon.set_halign(Gtk.Align.START)
         btn_abandon.connect("clicked", self.on_abandon_game)
@@ -212,7 +216,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         # Right column (Chrono and arrows undo / redo)
         right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        main_box.append(right_box)
+        hint_button = Gtk.Button(label="hint")
+        hint_button.set_size_request(20, 10)
+        hint_button.set_halign(Gtk.Align.START)
+        hint_button.connect("clicked", self.on_hint_clicked)
+        right_box.append(hint_button)
 
         self.timer_label = Gtk.Label(label="00:00")
         right_box.append(self.timer_label)
@@ -224,6 +232,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         right_arrow = Gtk.Button(label="Redo ➡")
         arrow_box.append(left_arrow)
         arrow_box.append(right_arrow)
+        main_box.append(right_box)
 
         return main_box
 
@@ -502,7 +511,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.clear_board_gui()
         self.state = GameState()
         self.execute_command(RestartCommand(self.state, self.initial_state))
-        if self.state.blitz_mode == GameMode.BLITZ:
+        if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
@@ -651,6 +660,21 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.update_players_box()
             self.update_current_player_label()
 
+    def on_hint_clicked(self, button):
+        self.hint_cases.clear()
+        if self.hint_activate:
+            self.hint_activate = False
+        else:
+            self.hint_activate = True
+
+        ai_temp = GreedyAI(0)
+        for case in ai_temp.possible_moves(self.state):
+            self.hint_cases.append(case)
+            self.draw_hint_on_case(case)
+
+    def draw_hint_on_case(self, case):
+        self.cells[case].set_label(self.hint_symbole)
+
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
         self.cells = {}
@@ -788,11 +812,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             command = self.state.ai_controllers[
                 self.state.current_player.id
             ].suggest_move(self.state, heuristic)
-            # Exécute la commande après 1 seconde
-            GLib.timeout_add(100, lambda: self.execute_command(command) or False)
+            # Exécute la commande après 0,3 seconde
+            GLib.timeout_add(300, lambda: self.execute_command(command) or False)
 
-            # Met à jour le plateau après 2 secondes
-            GLib.timeout_add(200, lambda: self.render_board() or False)
+            # Met à jour le plateau après 0,4 secondes
+            GLib.timeout_add(400, lambda: self.render_board() or False)
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
@@ -869,6 +893,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.stack.set_visible_child_name("end")
 
     def render_board(self):
+        # clear label in self.cells
         for row in range(self.state.size):
             for col in range(self.state.size):
                 button = self.cells[(row, col)]
