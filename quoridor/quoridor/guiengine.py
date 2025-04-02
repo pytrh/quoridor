@@ -1,4 +1,5 @@
 import copy
+import importlib
 import logging
 import time
 import gi
@@ -197,6 +198,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.game_grid = Gtk.Grid()
         self.game_grid.set_row_homogeneous(True)
         self.game_grid.set_column_homogeneous(True)
+        self.game_grid.set_size_request(300, 300)
+        self.game_grid.set_vexpand(False)
+        self.game_grid.set_hexpand(False)
         # Game walls
         walls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         walls_box.set_halign(Gtk.Align.CENTER)
@@ -230,9 +234,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         right_box.append(arrow_box)
 
         left_arrow = Gtk.Button(label="⬅ Undo")
+        left_arrow.connect("clicked", self.on_undo_clicked)
         right_arrow = Gtk.Button(label="Redo ➡")
+        right_arrow.connect("clicked", self.on_redo_clicked)
         arrow_box.append(left_arrow)
         arrow_box.append(right_arrow)
+
+        self.scrolled_window_history = Gtk.ScrolledWindow()
+        self.scrolled_window_history.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.scrolled_window_history.set_vexpand(True)
+        self.scrolled_window_history.set_size_request(600, 100)
+        game_box.append(self.scrolled_window_history)
+
         main_box.append(right_box)
 
         return main_box
@@ -254,22 +267,24 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         )
         title.set_halign(Gtk.Align.CENTER)
         box.append(title)
-        info = """<span size="12000" weight="bold">Version:</span> <span size="12000">0.2.0</span>
-                <span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>
-                <span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>
-                <span size="12000" weight="bold">Description:</span> 
-                <span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game. 
-                    The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>
-                """
 
+        version = importlib.metadata.version("quoridor")
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Version:</span> <span size="12000">{version}</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Description:</span> """))
+        box.append(self.create_label_for_about(f"""<span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.</span>"""))
+        box.append(self.create_label_for_about(f"""<span size="10000">The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>"""))
+
+        return box
+    
+    def create_label_for_about(self, text):
         label = Gtk.Label()
-        label.set_markup(info)
+        label.set_markup(text)
         label.set_justify(Gtk.Justification.CENTER)
         label.set_halign(Gtk.Align.CENTER)
         label.set_wrap(True)
-        box.append(label)
-
-        return box
+        return label
 
     def create_end_page(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -505,13 +520,19 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_back_home(self, button):
         self.clear_board_gui()
+        if self.state is not None:
+            self.state.history.clear()
+            self.state.redo_stack.clear()
+            self.state.current_player.is_dead = True
+        self.scrolled_window_history.set_child(None)
+        self.game_is_over = True
         self.stack.set_visible_child_name("home")
         logging.debug("Button was clicked")
 
     def on_restart_clicked(self, button):
-        self.clear_board_gui()
         self.state = GameState()
         self.execute_command(RestartCommand(self.state, self.initial_state))
+        self.clear_board_gui()
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
@@ -519,6 +540,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.create_board()
         self.render_board()
         self.handle_ai_player()
+        self.game_is_over = False
         self.stack.set_visible_child_name("running_game")
 
     def on_load_game_clicked(self, button):
@@ -623,6 +645,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
+        self.game_is_over = False
         if self._game_mode == GameMode.BLITZ:
             self._blitz_time = self.timer_text_box.get_value_as_int()
             logging.debug("Temps sélectionné :", self._blitz_time)
@@ -811,15 +834,21 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.display_game_over_window()
 
     def handle_ai_player(self):
-        if self.state.current_player.id in self.state.ai_controllers:
+        if self.game_is_over:
+            pass
+        elif self.state.current_player.id in self.state.ai_controllers:
+            print(f"an ai want to play {self.state.current_player.id}")
             command = self.state.ai_controllers[
                 self.state.current_player.id
             ].suggest_move(self.state, heuristic)
             # Exécute la commande après 0,3 seconde
-            GLib.timeout_add(300, lambda: self.execute_command(command) or False)
+            GLib.timeout_add(300, lambda: self.execute_command(command))
 
             # Met à jour le plateau après 0,4 secondes
             GLib.timeout_add(400, lambda: self.render_board() or False)
+            print(f"an ai has played {self.state.current_player.id}")
+        else :
+            pass
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
@@ -865,7 +894,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             move_pawn = MovePawnCommand(self.state, (last_row, last_col), (row, col))
             self.execute_command(move_pawn)
-            self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
@@ -876,7 +904,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             place_wall = PlaceWallCommand(self.state, (row, col), wall_type)
             self.execute_command(place_wall)
-            self.render_board()
         except InvalidMoveError as e:
             logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
 
@@ -901,6 +928,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             for col in range(self.state.size):
                 button = self.cells[(row, col)]
                 button.set_label("")
+                button.get_style_context().remove_class("wall-h")
+                button.get_style_context().remove_class("wall-v")
 
         for i in range(self.state.num_players):
             emoji = "🔵"
@@ -923,10 +952,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 elif self.state.wall_exist(row, col, Direction.V):
                     self.cells[(row, col)].get_style_context().add_class("wall-v")
                     self.cells[(row + 1, col)].get_style_context().add_class("wall-v")
-
-        self.update_players_box()
-        self.update_current_player_label()
-
         return
 
     def update_current_player_label(self):
@@ -943,6 +968,33 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def update_players_box(self):
         self.create_box_players(self.game_players_box)
+        self.update_scrolled_window_history()
+
+    def update_scrolled_window_history(self):
+        # Boîte pour le texte
+        text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        text_box.set_size_request(300, -1)
+        text_box.set_vexpand(True)
+        text_list = []
+
+        from quoridor.io import ReadWriteHistory
+        history = ReadWriteHistory.parse_history_to_list_of_str(
+            self.state.history, self.state
+        )
+        for turn_index, turn in enumerate(history, start=1):
+            line = ""
+            line += f"Turn {turn_index}: "
+            for move in turn:
+                line += move + " "
+            text_list.append(line)
+        
+        # Ajouter chaque ligne de texte sous forme de label
+        for line in text_list:
+            label = Gtk.Label(label=line)
+            label.set_xalign(0)  # Alignement à gauche
+            text_box.append(label)
+
+        self.scrolled_window_history.set_child(text_box)
 
     def set_parameters(self, state: GameState):
         self._number_of_players = state.num_players
@@ -1005,9 +1057,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         Execute a command and add it to the command history.
         """
         try:
+            logging.debug(f"command from {self.state.current_player.id}")
             result = command.execute()
             if result:
-                self.state.history.append(command)
+                self.state.history.append((self.state.current_player.id, command))
                 self.state.redo_stack.clear()  # Clear redo stack when new command is executed
 
                 if self.state.game_over():
@@ -1017,7 +1070,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.display_game_over_window()
                 else:
                     self.handle_switch_player()
-            return result
         except Exception as e:
             if self.state.current_player.id in self.state.ai_controllers:
                 return False
@@ -1025,7 +1077,16 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             logging.error(f"Error of type {error_type} while executing command: {e}")
             popup = AutoClosePopup(f"Error ({error_type}) : {e}")
             popup.show()
-            return False
+        
+        self.update_players_box()
+        self.update_current_player_label()
+        self.render_board()
+
+    def on_undo_clicked(self, button):
+        self.execute_command(UndoCommand(self.state))
+
+    def on_redo_clicked(self, button):
+        self.execute_command(RedoCommand(self.state))
 
     def clear_all_timer(self):
         if self.state is not None:

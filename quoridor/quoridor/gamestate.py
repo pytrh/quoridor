@@ -310,4 +310,5 @@ class GameState:
         Change the current player to the previous one
         If current player is the first one, the previous one will the last
         """
-        self.current_player.id = (self.current_player.id - 1) % self.num_players
+        new_player_id = (self.current_player.id - 1) % self.num_players
+        self.current_player = self.players[new_player_id]
