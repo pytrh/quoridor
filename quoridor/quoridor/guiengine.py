@@ -235,6 +235,13 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         right_arrow.connect("clicked", self.on_redo_clicked)
         arrow_box.append(left_arrow)
         arrow_box.append(right_arrow)
+
+        self.scrolled_window_history = Gtk.ScrolledWindow()
+        self.scrolled_window_history.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.scrolled_window_history.set_vexpand(True)
+        self.scrolled_window_history.set_size_request(300, -1)
+        right_box.append(self.scrolled_window_history)
+
         main_box.append(right_box)
 
         return main_box
@@ -930,7 +937,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.update_players_box()
         self.update_current_player_label()
-
         return
 
     def update_current_player_label(self):
@@ -947,6 +953,33 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def update_players_box(self):
         self.create_box_players(self.game_players_box)
+        self.update_scrolled_window_history()
+
+    def update_scrolled_window_history(self):
+        # Boîte pour le texte
+        text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        text_box.set_size_request(300, -1)
+        text_box.set_vexpand(True)
+        text_list = []
+
+        from quoridor.io import ReadWriteHistory
+        history = ReadWriteHistory.parse_history_to_list_of_str(
+            self.state.history, self.state
+        )
+        for turn_index, turn in enumerate(history, start=1):
+            line = ""
+            line += f"Turn {turn_index}: "
+            for move in turn:
+                line += move + " "
+            text_list.append(line)
+        
+        # Ajouter chaque ligne de texte sous forme de label
+        for line in text_list:
+            label = Gtk.Label(label=line)
+            label.set_xalign(0)  # Alignement à gauche
+            text_box.append(label)
+
+        self.scrolled_window_history.set_child(text_box)
 
     def set_parameters(self, state: GameState):
         self._number_of_players = state.num_players
