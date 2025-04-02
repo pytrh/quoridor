@@ -230,7 +230,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         right_box.append(arrow_box)
 
         left_arrow = Gtk.Button(label="⬅ Undo")
+        left_arrow.connect("clicked", self.on_undo_clicked)
         right_arrow = Gtk.Button(label="Redo ➡")
+        right_arrow.connect("clicked", self.on_redo_clicked)
         arrow_box.append(left_arrow)
         arrow_box.append(right_arrow)
         main_box.append(right_box)
@@ -620,6 +622,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             if player.is_dead:
                 label.get_style_context().add_class("player-is-dead")
             box.append(label)
+            print(f"adddd player {player.id}")
+        print(self.state.players)
 
     def on_start_game_clicked(self, button):
         self.stack.set_visible_child_name("running_game")
@@ -901,6 +905,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             for col in range(self.state.size):
                 button = self.cells[(row, col)]
                 button.set_label("")
+            # button.get_style_context().clear() TODO
 
         for i in range(self.state.num_players):
             emoji = "🔵"
@@ -1007,7 +1012,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         try:
             result = command.execute()
             if result:
-                self.state.history.append(command)
+                self.state.history.append((self.state.current_player.id, command))
                 self.state.redo_stack.clear()  # Clear redo stack when new command is executed
 
                 if self.state.game_over():
@@ -1026,6 +1031,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             popup = AutoClosePopup(f"Error ({error_type}) : {e}")
             popup.show()
             return False
+
+    def on_undo_clicked(self, button):
+        self.execute_command(UndoCommand(self.state))
+        self.update_players_box()
+        self.update_current_player_label()
+        self.render_board()
+
+    def on_redo_clicked(self, button):
+        self.execute_command(RedoCommand(self.state))
+        self.update_players_box()
+        self.update_current_player_label()
+        self.render_board()
 
     def clear_all_timer(self):
         if self.state is not None:

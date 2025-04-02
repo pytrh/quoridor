@@ -18,6 +18,7 @@ Commands of which execute() return False:
 """
 from abc import ABC, abstractmethod
 from copy import deepcopy
+import logging
 from typing import Optional, Tuple, List, TYPE_CHECKING
 import os
 
@@ -357,8 +358,8 @@ class UndoCommand(Command):
 
         player_id, last_command = self.state.history.pop()
         self.state.redo_stack.append((player_id, last_command))
-        print(f"Last command: {last_command}")
-        print(f"Size of redo stack: {len(self.state.redo_stack)}")
+        logging.debug(f"Last command: {last_command}")
+        logging.debug(f"Size of redo stack: {len(self.state.redo_stack)}")
         last_command.undo()
         return False
 
@@ -374,12 +375,14 @@ class RedoCommand(Command):
 
     def execute(self) -> bool:
         """Redo the last undone command."""
-        print(f"Size of redo stack right before bug: {len(self.state.redo_stack)}")
+        logging.debug(
+            f"Size of redo stack right before bug: {len(self.state.redo_stack)}"
+        )
         if not self.state.redo_stack:
             raise NoRedoableCommand
 
         player_id, command = self.state.redo_stack.pop()
-        print(f"Command to redo: {command}")
+        logging.debug(f"Command to redo: {command}")
         command.redo()
         self.state.history.append((player_id, command))
         return False
