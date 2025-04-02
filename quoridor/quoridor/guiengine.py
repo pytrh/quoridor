@@ -1019,9 +1019,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.handle_switch_player()
             return result
         except Exception as e:
+            if self.state.current_player.id in self.state.ai_controllers:
+                return False
             error_type = type(e).__name__
             logging.error(f"Error of type {error_type} while executing command: {e}")
-            popup = AutoClosePopup(f"Error : ({error_type})")
+            popup = AutoClosePopup(f"Error ({error_type}) : {e}")
             popup.show()
             return False
 

@@ -322,11 +322,11 @@ class MovePawnCommand(Command):
         :raises InvalidMoveError: if the parameters lead to an invalid move
         """
         if not (self.state.players[self.state.current_player.id].position == start):
-            raise InvalidMoveError
+            raise InvalidMoveError(f"Try to move from {start} to {end}")
         else:
             board_temp = self.state.temp_board()
             if not board_temp.edge_exists(start, end):
-                raise InvalidMoveError
+                raise InvalidMoveError(f"Try to move from {start} to {end}")
             self.state.players[self.state.current_player.id].position = end
 
     def undo(self) -> None:
