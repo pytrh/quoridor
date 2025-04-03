@@ -36,94 +36,20 @@ class AI(ABC):
         """
         pass
 
-    def possible_moves(self, state: "GameState") -> list[tuple[int, int]]:
+    def get_possible_moves(self, state: "GameState") -> list[tuple[int, int]]:
         pos = state.players[state.current_player.id].position
         return list(state.temp_board()._graph[pos])
-
+    
     def possible_walls(self, state: "GameState") -> list[tuple[int, int, Direction]]:
         walls = []
         for x in range(state.size - 1):
             for y in range(state.size - 1):
                 for direction in [Direction.H, Direction.V]:
-                    try:
-                        temp_state = state.copy_state()
-                        if temp_state.current_player.walls_remaining == 0:
-                            continue
-                        if not temp_state.wall_exist(x, y, direction.inverse()):
-                            if direction == Direction.H:
-                                temp_state.board.remove_edge((x, y), (x + 1, y))
-                                temp_state.board.remove_edge((x, y + 1), (x + 1, y + 1))
-                            elif direction == Direction.V:
-                                temp_state.board.remove_edge((x, y), (x, y + 1))
-                                temp_state.board.remove_edge((x + 1, y), (x + 1, y + 1))
-                            for player in temp_state.players:
-                                temp_state.board.a_star(
-                                    player.position, player.goal_line[0]
-                                )
-                            walls.append((x, y, direction))
-                    except:
+                    if state.current_player.walls_remaining == 0:
                         continue
+                    if not state.wall_exist(x, y, direction.inverse()):
+                        walls.append((x, y, direction))
         return walls
-
-    def minimax(self, state: "GameState", depth: int, maximizing: bool) -> int:
-        if depth <= 0 or state.game_over():
-            return self.evaluate(state)
-
-        moves = self.possible_moves(state)
-        walls = self.possible_walls(state)
-
-        if maximizing:
-            max_eval = float("-inf")
-            for move in moves:
-                new_state = state.copy_state()
-                new_state.current_player.position = move
-                new_state.switch_player()
-                eval = self.minimax(new_state, depth - 1, False)
-                max_eval = max(max_eval, eval)
-
-            print(walls)
-            for x, y, direction in walls:
-                try:
-                    new_state = state.copy_state()
-                    if direction == Direction.H:
-                        new_state.board.remove_edge((x, y), (x + 1, y))
-                        new_state.board.remove_edge((x, y + 1), (x + 1, y + 1))
-                    elif direction == Direction.V:
-                        new_state.board.remove_edge((x, y), (x, y + 1))
-                        new_state.board.remove_edge((x + 1, y), (x + 1, y + 1))
-                    new_state.current_player.walls_remaining -= 1
-                    new_state.switch_player()
-                    eval = self.minimax(new_state, depth - 1, False)
-                    max_eval = max(max_eval, eval)
-                except:
-                    continue
-            return max_eval
-        else:
-            min_eval = float("inf")
-            for move in moves:
-                new_state = state.copy_state()
-                new_state.current_player.position = move
-                new_state.switch_player()
-                eval = self.minimax(new_state, depth - 1, True)
-                min_eval = min(min_eval, eval)
-
-            for x, y, direction in walls:
-                try:
-                    new_state = state.copy_state()
-                    if direction == Direction.H:
-                        new_state.board.remove_edge((x, y), (x + 1, y))
-                        new_state.board.remove_edge((x, y + 1), (x + 1, y + 1))
-                    elif direction == Direction.V:
-                        new_state.board.remove_edge((x, y), (x, y + 1))
-                        new_state.board.remove_edge((x + 1, y), (x + 1, y + 1))
-                    new_state.current_player.walls_remaining -= 1
-                    new_state.switch_player()
-                    eval = self.minimax(new_state, depth - 1, True)
-                    min_eval = min(min_eval, eval)
-                except:
-                    continue
-            return min_eval
-
 
 class GreedyAI(AI):
     """
@@ -148,65 +74,111 @@ class GreedyAI(AI):
                 best_path = path
         return MovePawnCommand(state, current_pos, best_path[1])
 
-
-class EasyAI(AI):
+class MinimaxAI(AI):
     """
-    Returns a pawn move that has the shortest path to a winning position.
+    AI using Minimax algorithm to select the best move.
     """
 
     def suggest_move(
         self, state: "GameState", heuristic: Callable[["GameState"], int]
-    ) -> MovePawnCommand:
-        """
-        :param state: The current game state
-        :return: A MovePawnCommand.
-        """
-        self.evaluate = heuristic
-        return self.best_action_minimax(state)
+    ) -> Command:
+        _, best_move = self._minimax(state, self.depth, True, heuristic)
+        if best_move:
+            return best_move
 
-    def best_action_minimax(self, state: "GameState") -> Command:
-        player = state.players[state.current_player.id]
-        current_pos = player.position
-        best_val = float("-inf")
-        best_action = None
+    def _minimax(self, state: "GameState", depth: int, maximizing: bool, heuristic: Callable[["GameState"], int]):
+        from quoridor.cliengine import CLIEngine
+        if depth == 0 or state.game_over():
+            return heuristic(state), None  
 
-        for move in self.possible_moves(state):
-            new_state = state.copy_state()
-            new_state.players[state.current_player.id].position = move
-            new_state.switch_player()
-            val = self.minimax(new_state, self.depth - 1, False)
-            if val > best_val:
-                best_val = val
-                best_action = MovePawnCommand(state, current_pos, move)
+        best_move = None
+        cli = CLIEngine(state)
 
-        for x, y, direction in self.possible_walls(state):
-            try:
-                new_state = state.copy_state()
-                if direction == Direction.H:
-                    new_state.board.remove_edge((x, y), (x + 1, y))
-                    new_state.board.remove_edge((x, y + 1), (x + 1, y + 1))
-                elif direction == Direction.V:
-                    new_state.board.remove_edge((x, y), (x, y + 1))
-                    new_state.board.remove_edge((x + 1, y), (x + 1, y + 1))
-                new_state.current_player.walls_remaining -= 1
-                new_state.switch_player()
-                val = self.minimax(new_state, self.depth - 1, False)
-                if val > best_val:
-                    best_val = val
-                    best_action = PlaceWallCommand(state, (x, y), direction)
-            except:
-                continue
+        if maximizing:
+            max_eval = float('-inf')
+            for new_x, new_y in self.get_possible_moves(state):
+                command = MovePawnCommand(state, state.current_player.position, (new_x, new_y))
+                try:
+                    cli.execute_command(command)
+                    eval, _ = self._minimax(state, depth - 1, False, heuristic)
+                    command.undo()
+                    print(command)
+                    if eval > max_eval:
+                        max_eval = eval
+                        best_move = command
+                except Exception:
+                    continue
+            
+            for (x, y, d) in self.possible_walls(state):
+                command = PlaceWallCommand(state, (x, y), d)
+                try:
+                    cli.execute_command(command)
+                    eval,_ = self._minimax(state, depth - 1, False, heuristic)
+                    command.undo()
+                    print(command)
+                    if eval > max_eval:
+                        max_eval = eval
+                        best_move = command
+                except Exception:
+                    continue
 
-        return best_action
+            return max_eval, best_move
+
+        else:  # Minimizing player
+            min_eval = float('inf')
+            for new_x, new_y in self.get_possible_moves(state):
+                command = MovePawnCommand(state, state.current_player.position, (new_x, new_y))
+                try:
+                    cli.execute_command(command)
+                    eval, _ = self._minimax(state, depth - 1, True, heuristic)
+                    command.undo()
+
+                    if eval < min_eval:
+                        min_eval = eval
+                        best_move = command
+                except Exception:
+                    continue
+
+            for (x, y, d) in self.possible_walls(state):
+                command = PlaceWallCommand(state, (x, y), d)
+                try:
+                    cli.execute_command(command)
+                    eval,_ = self._minimax(state, depth - 1, True, heuristic)
+                    command.undo()
+
+                    if eval < min_eval:
+                        min_eval = eval
+                        best_move = command
+                except Exception:
+                    continue
+            return min_eval, best_move
+
+
 
 
 def heuristic(state: "GameState") -> int:
-    me = state.current_player
-    id_next_opn = state.current_player.id + 1 % state.num_players
-    opn = state.players[id_next_opn]
-    try:
-        my_path = state.board.a_star(me.position, me.goal_line[0])
-        adv_path = state.board.a_star(opn.position, opn.goal_line[0])
-        return len(adv_path) - len(my_path)
-    except PathNotFoundError:
-        return -9999
+    """Heuristic based on the shortest path to the goal for both players."""
+    graph = state.temp_board()
+    
+    player = state.players[state.current_player.id]
+    current_pos = player.position
+
+    best_path_for_player = None
+    for goal in player.goal_line:
+        path = graph.a_star(current_pos, goal)
+        if best_path_for_player is None or len(path) < len(best_path_for_player):
+            best_path_for_player = path
+
+
+
+    opponent = state.players[state.current_player.id + 1]  
+    current_pos = opponent.position
+
+    best_path_for_opponent = None
+    for goal in opponent.goal_line:
+        path = graph.a_star(current_pos, goal)
+        if best_path_for_opponent is None or len(path) < len(best_path_for_opponent):
+            best_path_for_opponent = path
+    
+    return len(best_path_for_player) - len(best_path_for_opponent)
+    

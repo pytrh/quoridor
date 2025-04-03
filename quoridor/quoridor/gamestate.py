@@ -5,7 +5,7 @@ GameState module.
 from copy import deepcopy
 import logging
 from typing import List, TYPE_CHECKING
-from quoridor.ai import AI, GreedyAI, EasyAI
+from quoridor.ai import AI, GreedyAI, MinimaxAI
 from quoridor.config import (
     GRID_SIZE,
     NUM_PLAYERS,
@@ -96,7 +96,7 @@ class GameState:
                 self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
-            self.ai_controllers = {id: GreedyAI(0) for id in ai_ids}
+            self.ai_controllers = {id: MinimaxAI(2) for id in ai_ids}
         else:
             self.ai_controllers = {}
 
