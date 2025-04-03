@@ -241,7 +241,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         arrow_box.append(right_arrow)
 
         self.scrolled_window_history = Gtk.ScrolledWindow()
-        self.scrolled_window_history.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.scrolled_window_history.set_policy(
+            Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC
+        )
         self.scrolled_window_history.set_vexpand(True)
         self.scrolled_window_history.set_size_request(600, 100)
         game_box.append(self.scrolled_window_history)
@@ -269,15 +271,39 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(title)
 
         version = importlib.metadata.version("quoridor")
-        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Version:</span> <span size="12000">{version}</span>"""))
-        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>"""))
-        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>"""))
-        box.append(self.create_label_for_about(f"""<span size="12000" weight="bold">Description:</span> """))
-        box.append(self.create_label_for_about(f"""<span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.</span>"""))
-        box.append(self.create_label_for_about(f"""<span size="10000">The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>"""))
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Version:</span> <span size="12000">{version}</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Description:</span> """
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="10000">The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>"""
+            )
+        )
 
         return box
-    
+
     def create_label_for_about(self, text):
         label = Gtk.Label()
         label.set_markup(text)
@@ -837,7 +863,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if self.game_is_over:
             pass
         elif self.state.current_player.id in self.state.ai_controllers:
-            print(f"an ai want to play {self.state.current_player.id}")
             command = self.state.ai_controllers[
                 self.state.current_player.id
             ].suggest_move(self.state, heuristic)
@@ -846,8 +871,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
             # Met à jour le plateau après 0,4 secondes
             GLib.timeout_add(400, lambda: self.render_board() or False)
-            print(f"an ai has played {self.state.current_player.id}")
-        else :
+        else:
             pass
 
     def handle_switch_player(self):
@@ -978,6 +1002,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         text_list = []
 
         from quoridor.io import ReadWriteHistory
+
         history = ReadWriteHistory.parse_history_to_list_of_str(
             self.state.history, self.state
         )
@@ -987,7 +1012,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             for move in turn:
                 line += move + " "
             text_list.append(line)
-        
+
         # Ajouter chaque ligne de texte sous forme de label
         for line in text_list:
             label = Gtk.Label(label=line)
@@ -1077,7 +1102,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             logging.error(f"Error of type {error_type} while executing command: {e}")
             popup = AutoClosePopup(f"Error ({error_type}) : {e}")
             popup.show()
-        
+
         self.update_players_box()
         self.update_current_player_label()
         self.render_board()
