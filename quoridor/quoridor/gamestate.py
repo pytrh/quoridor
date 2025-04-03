@@ -97,7 +97,7 @@ class GameState:
                 self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
-            self.ai_controllers = {id: MinimaxAI(2) for id in ai_ids}
+            self.ai_controllers = {id: MinimaxAI(1) for id in ai_ids}
         else:
             self.ai_controllers = {}
 
@@ -212,7 +212,7 @@ class GameState:
                             x, y, direction.inverse()
                         ):
                             continue
-                        temp_board = deepcopy(self.board)
+                        temp_board = deepcopy(self.temp_board())
 
                         if direction == Direction.H:
                             if temp_board.edge_exists(
