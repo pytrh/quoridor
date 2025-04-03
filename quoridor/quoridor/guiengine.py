@@ -6,6 +6,7 @@ import gi
 
 from quoridor.command import (
     Command,
+    PassCommand,
     PlaceWallCommand,
     MovePawnCommand,
     UndoCommand,
@@ -217,15 +218,19 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         game_box.append(Gtk.Label(label="Drag n Drop to play"))
         game_box.append(self.game_grid)
         game_box.append(walls_box)
+
+        # list history
+        self.scrolled_window_history = Gtk.ScrolledWindow()
+        self.scrolled_window_history.set_policy(
+            Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC
+        )
+        self.scrolled_window_history.set_vexpand(True)
+        self.scrolled_window_history.set_size_request(600, 100)
+        game_box.append(self.scrolled_window_history)
         main_box.append(game_box)
 
         # Right column (Chrono and arrows undo / redo)
         right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        hint_button = Gtk.Button(label="hint")
-        hint_button.set_size_request(20, 10)
-        hint_button.set_halign(Gtk.Align.START)
-        hint_button.connect("clicked", self.on_hint_clicked)
-        right_box.append(hint_button)
 
         self.timer_label = Gtk.Label(label="00:00")
         right_box.append(self.timer_label)
@@ -240,14 +245,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         arrow_box.append(left_arrow)
         arrow_box.append(right_arrow)
 
-        self.scrolled_window_history = Gtk.ScrolledWindow()
-        self.scrolled_window_history.set_policy(
-            Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC
-        )
-        self.scrolled_window_history.set_vexpand(True)
-        self.scrolled_window_history.set_size_request(600, 100)
-        game_box.append(self.scrolled_window_history)
+        hint_button = Gtk.Button(label="💡 Hint")
+        hint_button.set_size_request(20, 10)
+        hint_button.set_halign(Gtk.Align.CENTER)
+        hint_button.connect("clicked", self.on_hint_clicked)
+        right_box.append(hint_button)
 
+        self.btn_pass_turn = Gtk.Button(label="⏭ Pass turn")
+        self.btn_pass_turn.set_size_request(20, 10)
+        self.btn_pass_turn.set_halign(Gtk.Align.CENTER)
+        self.btn_pass_turn.connect("clicked", self.on_pass_turn)
+        self.btn_pass_turn.set_visible(False)
+        right_box.append(self.btn_pass_turn)
         main_box.append(right_box)
 
         return main_box
@@ -727,6 +736,16 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def draw_hint_on_case(self, case):
         self.cells[case].set_label(self.hint_symbole)
 
+    def display_pass_button(self):
+        self.btn_pass_turn.set_visible(True)
+
+    def remove_pass_button(self):
+        self.btn_pass_turn.set_visible(False)
+
+    def on_pass_turn(self, button):
+        self.remove_pass_button()
+        self.execute_command(PassCommand(self.state))
+
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
         self.cells = {}
@@ -863,9 +882,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if self.game_is_over:
             pass
         elif self.state.current_player.id in self.state.ai_controllers:
-            command = self.state.ai_controllers[
-                self.state.current_player.id
-            ].suggest_move(self.state, heuristic)
+            if self.state.check_pass_player(self.state.current_player.id):
+                command = PassCommand(self.state)
+            else:
+                command = self.state.ai_controllers[
+                    self.state.current_player.id
+                ].suggest_move(self.state, heuristic)
             # Exécute la commande après 0,3 seconde
             GLib.timeout_add(300, lambda: self.execute_command(command))
 
@@ -873,6 +895,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             GLib.timeout_add(400, lambda: self.render_board() or False)
         else:
             pass
+
+    def handle_pass_player(self):
+        if self.state.check_pass_player(self.state.current_player.id):
+            self.display_pass_button()
+        else:
+            self.remove_pass_button()
 
     def handle_switch_player(self):
         logging.debug(f"Switching player : {self.state.current_player.id} ")
@@ -891,7 +919,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
 
-        self.handle_ai_player()
+        self.remove_pass_button()
+        if self.state.current_player.id in self.state.ai_controllers:
+            self.handle_ai_player()
+        else:
+            self.handle_pass_player()
 
     def handle_pawn_move(self, row: int, col: int, player_id):
         """Manages pawn movement"""
@@ -1103,6 +1135,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             popup = AutoClosePopup(f"Error ({error_type}) : {e}")
             popup.show()
 
+        self.handle_pass_player()
         self.update_players_box()
         self.update_current_player_label()
         self.render_board()
