@@ -36,20 +36,11 @@ class AI(ABC):
         """
         pass
 
-    def get_possible_moves(self, state: "GameState") -> list[tuple[int, int]]:
-        pos = state.players[state.current_player.id].position
-        return list(state.temp_board()._graph[pos])
-    
+    def possible_moves(self, state: "GameState") -> list[tuple[int, int]]:
+        return state.possible_moves(state.current_player.id)
+
     def possible_walls(self, state: "GameState") -> list[tuple[int, int, Direction]]:
-        walls = []
-        for x in range(state.size - 1):
-            for y in range(state.size - 1):
-                for direction in [Direction.H, Direction.V]:
-                    if state.current_player.walls_remaining == 0:
-                        continue
-                    if not state.wall_exist(x, y, direction.inverse()):
-                        walls.append((x, y, direction))
-        return walls
+        return state.possible_walls(state.current_player.id)
 
 class GreedyAI(AI):
     """
