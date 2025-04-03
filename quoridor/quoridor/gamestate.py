@@ -167,6 +167,7 @@ class GameState:
 
                 if (
                     board.node_exists(jump)
+                    and board.node_exists(adj)
                     and board.edge_exists(adj, jump)
                     and jump not in position_players
                 ):
@@ -179,7 +180,9 @@ class GameState:
                     for pdx, pdy in side_directions:
                         side_jump = (x + dx + pdx, y + dy + pdy)
                         if (
-                            board.edge_exists(side_jump, adj)
+                            board.node_exists(side_jump)
+                            and board.node_exists(adj)
+                            and board.edge_exists(side_jump, adj)
                             and side_jump not in position_players
                         ):
                             board.add_edge((x, y), side_jump)
