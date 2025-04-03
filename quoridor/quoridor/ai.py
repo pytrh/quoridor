@@ -37,33 +37,10 @@ class AI(ABC):
         pass
 
     def possible_moves(self, state: "GameState") -> list[tuple[int, int]]:
-        pos = state.players[state.current_player.id].position
-        return list(state.temp_board()._graph[pos])
+        return state.possible_moves(state.current_player.id)
 
     def possible_walls(self, state: "GameState") -> list[tuple[int, int, Direction]]:
-        walls = []
-        for x in range(state.size - 1):
-            for y in range(state.size - 1):
-                for direction in [Direction.H, Direction.V]:
-                    try:
-                        temp_state = state.copy_state()
-                        if temp_state.current_player.walls_remaining == 0:
-                            continue
-                        if not temp_state.wall_exist(x, y, direction.inverse()):
-                            if direction == Direction.H:
-                                temp_state.board.remove_edge((x, y), (x + 1, y))
-                                temp_state.board.remove_edge((x, y + 1), (x + 1, y + 1))
-                            elif direction == Direction.V:
-                                temp_state.board.remove_edge((x, y), (x, y + 1))
-                                temp_state.board.remove_edge((x + 1, y), (x + 1, y + 1))
-                            for player in temp_state.players:
-                                temp_state.board.a_star(
-                                    player.position, player.goal_line[0]
-                                )
-                            walls.append((x, y, direction))
-                    except:
-                        continue
-        return walls
+        return state.possible_walls(state.current_player.id)
 
     def minimax(self, state: "GameState", depth: int, maximizing: bool) -> int:
         if depth <= 0 or state.game_over():

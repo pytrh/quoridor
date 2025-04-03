@@ -17,6 +17,7 @@ from quoridor.config import (
 from quoridor.direction import Direction
 from quoridor.graph import Graph
 from quoridor.player import Player
+from quoridor.exceptions import PathNotFoundError
 from quoridor.timer import Timer
 
 if TYPE_CHECKING:
@@ -189,6 +190,80 @@ class GameState:
 
         return board
 
+    def possible_moves(self, player_id: int) -> list[tuple[int, int]]:
+        pos = self.players[player_id].position
+        return list(self.temp_board()._graph[pos])
+
+    def possible_walls(self, player_id: int) -> list[tuple[int, int, Direction]]:
+        walls = []
+
+        for x in range(self.size - 1):
+            for y in range(self.size - 1):
+                for direction in [Direction.H, Direction.V]:
+                    try:
+                        selected_player = self.players[player_id]
+                        if selected_player.walls_remaining == 0:
+                            continue
+
+                        if x >= self.size - 1 or y >= self.size - 1:
+                            continue
+
+                        if self.wall_exist(x, y, direction) or self.wall_exist(
+                            x, y, direction.inverse()
+                        ):
+                            continue
+                        temp_board = deepcopy(self.board)
+
+                        if direction == Direction.H:
+                            if temp_board.edge_exists(
+                                (x, y), (x + 1, y)
+                            ) and temp_board.edge_exists((x, y + 1), (x + 1, y + 1)):
+                                temp_board.remove_edge((x, y), (x + 1, y))
+                                temp_board.remove_edge((x, y + 1), (x + 1, y + 1))
+                            else:
+                                continue
+
+                        elif direction == Direction.V:
+                            if temp_board.edge_exists(
+                                (x, y), (x, y + 1)
+                            ) and temp_board.edge_exists((x + 1, y), (x + 1, y + 1)):
+                                temp_board.remove_edge((x, y), (x, y + 1))
+                                temp_board.remove_edge((x + 1, y), (x + 1, y + 1))
+                            else:
+                                continue
+
+                        all_players_can_reach_goal = True
+                        for player in self.players:
+                            path_found = False
+                            for goal in player.goal_line:
+                                try:
+                                    temp_board.a_star(player.position, goal)
+                                    path_found = True
+                                    break
+                                except PathNotFoundError:
+                                    continue
+                            if not path_found:
+                                all_players_can_reach_goal = False
+                                break
+
+                        if all_players_can_reach_goal:
+                            walls.append((x, y, direction))
+
+                    except Exception as e:
+                        continue
+
+        return walls
+
+    def check_pass_player(self, player_id) -> bool:
+        total_pawn_moves = self.possible_moves(player_id)
+        logging.debug(f"Possible moves for player {player_id} : {total_pawn_moves}")
+        total_wall_placements = self.possible_walls(player_id)
+        logging.debug(
+            f"Possible wall placements for player {player_id} : {total_wall_placements}"
+        )
+
+        return not total_pawn_moves and not total_wall_placements
+
     def wall_exist(self, x: int, y: int, direction: Direction) -> bool:
         """
         Check if a wall exist in this position (that both path that should be
@@ -315,3 +390,9 @@ class GameState:
         """
         new_player_id = (self.current_player.id - 1) % self.num_players
         self.current_player = self.players[new_player_id]
+        max = 4
+
+        while self.current_player.is_dead or max <= 0:
+            new_player_id = (self.current_player.id - 1) % self.num_players
+            self.current_player = self.players[new_player_id]
+            max -= 1
