@@ -435,7 +435,18 @@ class AbandonCommand(Command):
         """Append the abandonned player into players list"""
         self.state.num_players_remaining += 1
         self.player.is_dead = False
-        self.current_player = self.player
+        self.state.backward_player()
+
+    def redo(self) -> None:
+        self.state.num_players_remaining -= 1
+        self.player.is_dead = True
+
+        if self.state.game_mode == GameMode.BLITZ:
+            if self.player.timer.turn_start_time is not None:
+                self.player.timer.end_turn()
+                self.player.timer.display_lock.clear()
+
+        self.state.switch_player()
 
     def __str__(self) -> str:
         return f"Abandon game (Player {self.state.current_player.id} surrenders)"
@@ -502,14 +513,14 @@ class HelpCommand(Command):
 
 
 class SaveCommand(Command):
-    """Command to display the time remaining on the player's timer."""
+    """Command to save history."""
 
     def __init__(self, state: "GameState", filename: str):
         super().__init__(state)
         self.filename = filename
 
     def execute(self) -> bool:
-        """Display the time remaining on the player's timer"""
+        """Command to save history"""
         ReadWriteHistory.write_history(
             self.filename,
             ReadWriteHistory.parse_history_to_list_of_str(
@@ -519,7 +530,7 @@ class SaveCommand(Command):
         return False
 
     def __str__(self) -> str:
-        return "Time player"
+        return "Save history"
 
 
 class HistoryCommand(Command):
@@ -541,4 +552,24 @@ class HistoryCommand(Command):
         return False
 
     def __str__(self) -> str:
-        return "History"
+        return "Display History"
+
+
+class PassCommand(Command):
+    """Command to pass the player's turn."""
+
+    def __init__(self, state: "GameState"):
+        super().__init__(state)
+
+    def execute(self) -> bool:
+        """Command to pass the player's turn."""
+        return True
+
+    def __str__(self) -> str:
+        return "Pass player"
+
+    def undo(self) -> None:
+        self.state.backward_player()
+
+    def redo(self) -> None:
+        self.state.switch_player()
