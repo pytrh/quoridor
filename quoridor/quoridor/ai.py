@@ -78,41 +78,51 @@ class MinimaxAI(AI):
             best_move.state = state
             return best_move
 
-    def _minimax(self, temp_state: "GameState", depth: int, maximizing: bool, heuristic: Callable[["GameState"], int]):
+    def _minimax(self, state: "GameState", depth: int, maximizing: bool, heuristic: Callable[["GameState"], int]):
         from quoridor.cliengine import CLIEngine
-        state = temp_state.copy_state()
+
+        cli = CLIEngine(state)
         if depth == 0 or state.game_over():
             return heuristic(state), None  
 
         best_move = None
-        cli = CLIEngine(state)
-
         if maximizing:
             max_eval = float('-inf')
-            for new_x, new_y in self.possible_moves(state):
-                command = MovePawnCommand(state, state.current_player.position, (new_x, new_y))
+            for pos in self.possible_moves(state):
+                command = MovePawnCommand(state, state.current_player.position, pos)
                 try:
-                    cli.execute_command(command)
+
+                    # execute_command(command)
+                    command.execute()
+                    state.history.append((state.current_player.id, command))
+                    state.redo_stack.clear()
+                    state.switch_player()
+
                     eval, _ = self._minimax(state, depth - 1, False, heuristic)
                     command.undo()
-                    print(command)
                     if eval > max_eval:
                         max_eval = eval
                         best_move = command
                 except Exception:
+                    command.undo()
                     continue
             
             for (x, y, d) in self.possible_walls(state):
                 command = PlaceWallCommand(state, (x, y), d)
                 try:
-                    cli.execute_command(command)
+                    # execute_command(command)
+                    command.execute()
+                    state.history.append((state.current_player.id, command))
+                    state.redo_stack.clear()
+                    state.switch_player()
+                    
                     eval,_ = self._minimax(state, depth - 1, False, heuristic)
                     command.undo()
-                    print(command)
                     if eval > max_eval:
                         max_eval = eval
                         best_move = command
                 except Exception:
+                    command.undo()
                     continue
 
             return max_eval, best_move
@@ -130,6 +140,7 @@ class MinimaxAI(AI):
                         min_eval = eval
                         best_move = command
                 except Exception:
+                    command.undo()
                     continue
 
             for (x, y, d) in self.possible_walls(state):
@@ -137,12 +148,12 @@ class MinimaxAI(AI):
                 try:
                     cli.execute_command(command)
                     eval,_ = self._minimax(state, depth - 1, True, heuristic)
-                    command.undo()
-
                     if eval < min_eval:
                         min_eval = eval
                         best_move = command
+                    command.undo()
                 except Exception:
+                    command.undo()
                     continue
             return min_eval, best_move
 
@@ -153,7 +164,7 @@ def heuristic(state: "GameState") -> int:
     """Heuristic based on the shortest path to the goal for both players."""
     graph = state.temp_board()
     
-    player = state.players[state.current_player.id]
+    player = state.players[(state.current_player.id + 1) % state.num_players]
     current_pos = player.position
 
     best_path_for_player = None
@@ -162,9 +173,7 @@ def heuristic(state: "GameState") -> int:
         if best_path_for_player is None or len(path) < len(best_path_for_player):
             best_path_for_player = path
 
-
-
-    opponent = state.players[state.current_player.id + 1]  
+    opponent = state.players[(state.current_player.id)% state.num_players ] 
     current_pos = opponent.position
 
     best_path_for_opponent = None
@@ -172,6 +181,7 @@ def heuristic(state: "GameState") -> int:
         path = graph.a_star(current_pos, goal)
         if best_path_for_opponent is None or len(path) < len(best_path_for_opponent):
             best_path_for_opponent = path
-    
-    return len(best_path_for_player) - len(best_path_for_opponent)
-    
+    score = len(best_path_for_opponent) - len(best_path_for_player)
+    if state.game_over():
+        score +=100 
+    return  score
