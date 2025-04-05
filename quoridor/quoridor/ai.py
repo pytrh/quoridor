@@ -81,7 +81,6 @@ class MinimaxAI(AI):
     def _minimax(self, state: "GameState", depth: int, maximizing: bool, heuristic: Callable[["GameState"], int]):
         from quoridor.cliengine import CLIEngine
 
-        cli = CLIEngine(state)
         if depth == 0 or state.game_over():
             return heuristic(state), None  
 
@@ -91,7 +90,6 @@ class MinimaxAI(AI):
             for pos in self.possible_moves(state):
                 command = MovePawnCommand(state, state.current_player.position, pos)
                 try:
-
                     # execute_command(command)
                     command.execute()
                     state.history.append((state.current_player.id, command))
@@ -132,7 +130,11 @@ class MinimaxAI(AI):
             for new_x, new_y in self.possible_moves(state):
                 command = MovePawnCommand(state, state.current_player.position, (new_x, new_y))
                 try:
-                    cli.execute_command(command)
+                    command.execute()
+                    state.history.append((state.current_player.id, command))
+                    state.redo_stack.clear()
+                    state.switch_player()
+
                     eval, _ = self._minimax(state, depth - 1, True, heuristic)
                     command.undo()
 
@@ -146,7 +148,11 @@ class MinimaxAI(AI):
             for (x, y, d) in self.possible_walls(state):
                 command = PlaceWallCommand(state, (x, y), d)
                 try:
-                    cli.execute_command(command)
+                    command.execute()
+                    state.history.append((state.current_player.id, command))
+                    state.redo_stack.clear()
+                    state.switch_player()
+
                     eval,_ = self._minimax(state, depth - 1, True, heuristic)
                     if eval < min_eval:
                         min_eval = eval
