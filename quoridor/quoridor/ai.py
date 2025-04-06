@@ -92,8 +92,6 @@ class MinimaxAI(AI):
                 try:
                     # execute_command(command)
                     command.execute()
-                    state.history.append((state.current_player.id, command))
-                    state.redo_stack.clear()
                     state.switch_player()
 
                     eval, _ = self._minimax(state, depth - 1, False, heuristic)
@@ -110,8 +108,6 @@ class MinimaxAI(AI):
                 try:
                     # execute_command(command)
                     command.execute()
-                    state.history.append((state.current_player.id, command))
-                    state.redo_stack.clear()
                     state.switch_player()
                     
                     eval,_ = self._minimax(state, depth - 1, False, heuristic)
@@ -131,10 +127,7 @@ class MinimaxAI(AI):
                 command = MovePawnCommand(state, state.current_player.position, (new_x, new_y))
                 try:
                     command.execute()
-                    state.history.append((state.current_player.id, command))
-                    state.redo_stack.clear()
                     state.switch_player()
-
                     eval, _ = self._minimax(state, depth - 1, True, heuristic)
                     command.undo()
 
@@ -149,15 +142,13 @@ class MinimaxAI(AI):
                 command = PlaceWallCommand(state, (x, y), d)
                 try:
                     command.execute()
-                    state.history.append((state.current_player.id, command))
-                    state.redo_stack.clear()
                     state.switch_player()
 
                     eval,_ = self._minimax(state, depth - 1, True, heuristic)
+                    command.undo()
                     if eval < min_eval:
                         min_eval = eval
                         best_move = command
-                    command.undo()
                 except Exception:
                     command.undo()
                     continue
@@ -170,7 +161,7 @@ class MinimaxAI(AI):
 #     """Heuristic based on the shortest path to the goal for both players."""
 #     graph = state.temp_board()
     
-#     player = state.players[(state.current_player.id + 1) % state.num_players]
+#     player = state.players[(state.current_player.id - 1) % state.num_players]
 #     current_pos = player.position
 
 #     best_path_for_player = None
@@ -188,8 +179,7 @@ class MinimaxAI(AI):
 #         if best_path_for_opponent is None or len(path) < len(best_path_for_opponent):
 #             best_path_for_opponent = path
 #     score = len(best_path_for_opponent) - len(best_path_for_player) 
-#     # if state.game_over():
-#     #     score +=100 
+    
 #     return  score
 
 def heuristic(state: "GameState") -> int:
