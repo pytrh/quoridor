@@ -55,9 +55,7 @@ class Player:
             elif self.id == 3:
                 self.goal_line = [(0, i) for i in range(size)]
             else:
-                raise ValueError(
-                    f"Invalid start position {self.start_position} for player {self.id}"
-                )
+                raise ValueError(f"Invalid player id{self.id}")
 
     def is_winning(self) -> bool:
         """

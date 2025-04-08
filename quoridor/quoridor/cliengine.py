@@ -24,6 +24,7 @@ from quoridor.command import (
     HelpCommand,
     SaveCommand,
     HistoryCommand,
+    PassCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -289,6 +290,8 @@ class CLIEngine:
             return AbandonCommand(self.state, self.state.current_player.id)
         elif input == "save":
             return SaveCommand(self.state, "outputHisotry.txt")
+        elif input == "pass":
+            return PassCommand(self.state)
         elif input == "time":
             if self.state.game_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)

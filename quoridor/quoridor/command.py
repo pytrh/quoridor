@@ -584,9 +584,10 @@ class PassCommand(Command):
 
     def execute(self) -> bool:
         """Command to pass the player's turn."""
-        return True
+        return self.state.check_pass_player(self.state.current_player.id)
 
     def __str__(self) -> str:
+
         return "Pass player"
 
     def undo(self) -> None:
