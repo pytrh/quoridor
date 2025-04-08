@@ -17,13 +17,13 @@ from quoridor.command import (
 )
 from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError
-from quoridor.gamemode import GameMode
+from quoridor.gamemode import GameMode, AiMode, AiHeuristic
 from quoridor.gamestate import GameState
 from quoridor.observer import Observer
 
 from quoridor.config import (
-    DEFAULT_AI_COLOR,
     BLITZ_TIME,
+    DEFAULT_AI_COLOR_ID,
     GRID_SIZE,
     MIN_GRID_SIZE,
     MAX_GRID_SIZE,
@@ -51,6 +51,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._game_mode = None
         self._blitz_time = None
         self._ai_ids = set()
+        self._ai_mode = None
+        self._ai_depth = None
+        self._ai_heuristic = None
         self._history = None
 
         self.hint_cases = []
@@ -477,7 +480,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         switch_box.append(self.switch_ai)
         box.append(switch_box)
 
-        self.create_on_off_buttons(box)
+        self.create_on_off_ai_players_buttons(box)
         self.create_ai_hidden_radio_buttons(box)
 
     def create_start_button(self, box):
@@ -494,24 +497,54 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(label)
 
     def create_ai_hidden_radio_buttons(self, box):
-        self.btn_ai_easy = Gtk.CheckButton(label="Easy")
+        self.btn_ai_easy = Gtk.CheckButton(label="Easy (default)")
+        self.btn_ai_easy.connect("toggled", self.on_button_ai_difficulty, "easy")
         self.btn_ai_medium = Gtk.CheckButton(label="Medium")
+        self.btn_ai_medium.connect("toggled", self.on_button_ai_difficulty, "normal")
         self.btn_ai_hard = Gtk.CheckButton(label="Hard")
+        self.btn_ai_hard.connect("toggled", self.on_button_ai_difficulty, "hard")
 
         self.btn_ai_easy.set_active(True)
 
         self.btn_ai_medium.set_group(self.btn_ai_easy)
         self.btn_ai_hard.set_group(self.btn_ai_medium)
 
+        self.ai_option = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self.depth_slider = Gtk.Scale()
+        self.depth_slider.set_digits(0)
+        self.depth_slider.set_range(1, 3)
+        self.depth_slider.set_draw_value(True)
+        self.depth_slider.set_value(1)
+        self.depth_slider.connect("value-changed", self.slider_changed_depth)
+        self.ai_option.append(self.depth_slider)
+
         self.radio_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.radio_box.append(self.btn_ai_easy)
         self.radio_box.append(self.btn_ai_medium)
         self.radio_box.append(self.btn_ai_hard)
 
+        self.radio_box.append(self.ai_option)
         self.radio_box.set_visible(False)  # Hide by default
         box.append(self.radio_box)
 
-    def create_on_off_buttons(self, box):
+    def slider_changed_depth(self, slider):
+        self._ai_depth = int(slider.get_value())
+
+    def on_button_ai_difficulty(self, button, mode):
+        if mode == "easy":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.RUNNER
+        elif mode == "normal":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.AGGRESSIVE
+        elif mode == "hard":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.DEFAULT
+
+    def create_on_off_ai_players_buttons(self, box):
         self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         label = Gtk.Label(label="AI player : ")
         label.get_style_context().add_class("big-red")
@@ -612,7 +645,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def manage_ai_parameters(self):
         """manage AI parameters, override -p option in case of conflict with -a"""
-        current_ai_color = DEFAULT_AI_COLOR
+        current_ai_color = DEFAULT_AI_COLOR_ID
         ai_ids = set()
         if len(self._ai_ids) > 0:
             for ai in self._ai_ids:
@@ -638,11 +671,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     "Warning: -p option ignored due to presence of -a options"
                 )
                 self._number_of_players = max(
-                    DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1)
+                    DEFAULT_AI_COLOR_ID, max(len(ai_ids), max(ai_ids) + 1)
                 )
         elif len(self._ai_ids) > 0 and len(ai_ids) > 0:
             self._number_of_players = max(
-                DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1)
+                DEFAULT_AI_COLOR_ID, max(len(ai_ids), max(ai_ids) + 1)
             )
 
         self._ai_ids = ai_ids
@@ -699,6 +732,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             blitz_time=self._blitz_time,
             ai_ids=self._ai_ids,
             history=self._history,
+            ai_mode=self._ai_mode,
+            ai_depth=self._ai_depth,
+            # todo heuristic
         )
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
@@ -1059,6 +1095,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._game_mode = state.game_mode
         self._blitz_time = state.blitz_time
         self._ai_ids = state.ai_ids
+        self._ai_depth = state.ai_depth
+        self._ai_mode = state.ai_mode
+        self._ai_heuristic = state.ai_heuristic
 
         if self._number_of_players == 2:
             self.btn_nb_players_2.set_active(True)
