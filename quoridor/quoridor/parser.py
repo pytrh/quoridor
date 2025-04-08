@@ -116,6 +116,8 @@ def _test_parse_string_to_graph():
 
 
 def parse_string_to_state(state_string: str) -> GameState:
+    from quoridor.io import ReadWriteHistory
+
     size = None
     current_player_id = None
     players = None
@@ -127,6 +129,7 @@ def parse_string_to_state(state_string: str) -> GameState:
 
     # player info
     player_data = {}
+    history_to_string = None
 
     state_lines = [
         line for line in state_string if not line.startswith("#") and line.strip()
@@ -185,8 +188,6 @@ def parse_string_to_state(state_string: str) -> GameState:
             else:
                 logging.warning("Impossible to parse board before initializing size")
         elif line.startswith("history"):
-            from quoridor.io import ReadWriteHistory
-
             state_temp = GameState(size=size, num_players=num_players)
             history_to_string = ReadWriteHistory._get_game_info_from_file(
                 state_lines[i + 1 :]
@@ -213,7 +214,105 @@ def parse_string_to_state(state_string: str) -> GameState:
         # ai_ids ?
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-    return GameState(**filtered_kwargs)
+    state = GameState(**filtered_kwargs)
+
+    for pid, cmd in state.history:
+        cmd.state = state
+    return state
+
+
+def parse_state_to_string(state: GameState) -> str:
+    state_string = f"num_players = {state.num_players}\n"
+    state_string += f"current_player_id = {state.current_player.id}\n"
+    state_string += f"board_size = {state.size}\n"
+    state_string += f"initial_num_walls = {state.initial_num_walls}\n"
+    state_string += f"blitz = {state.blitz_time}\n\n"
+
+    state_string += f"players =\n\n"
+
+    for i in range(state.num_players):
+        state_string += f"player_position = {state.players[i].position}\n"
+        state_string += f"player_walls = {state.players[i].walls_remaining}\n"
+        state_string += f"player_id = {state.players[i].id}\n\n"
+
+    # Add the board representation
+    state_string += f"board =\n"
+    state_string += get_string_from_board(state) + "\n"
+
+    state_string += parse_history_to_str
+    return str
+
+
+def parse_history_to_str(turns: list[list[str]]) -> str:
+    """Writes a history text file with the game information in the 'turns' parameter."""
+    history_string = ""
+    for turn_nb, turn in enumerate(turns):
+        turn_str = " ".join(f"{move}" for player, move in enumerate(turn))
+        history_string += f"\n{turn_nb + 1}. {turn_str} "
+
+    history_string += "\n"
+    return history_string
+
+
+def get_string_from_board(state: GameState) -> str:
+    """
+    Return the board in string format
+    """
+    rows = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+    ]
+    horizontal_wall = "---"
+    vertical_wall = "|"
+    interstice = "+"
+    horizontal_space = "   "  # Must be of the same size than horizontal_wall
+    big_space = "  "
+    small_space = " "  # Must be of the size of big_space -1
+    "  +" + "---+" * state.size
+
+    result = "    " + horizontal_space.join(str(i + 1) for i in range(state.size))
+    result += "\n"
+    result += big_space + interstice + (horizontal_wall + interstice) * state.size
+    for row in range(state.size):
+        result += f"\n{rows[row]}" + small_space + vertical_wall
+        for columns in range(state.size):
+            case = "   "
+            for player in range(state.num_players):
+                if (
+                    state.players[player].position[0] == row
+                    and state.players[player].position[1] == columns
+                ):
+                    # case = " " + str(self.state.players[player].id + 1) + " "
+                    case = " " + str(player + 1) + " "
+            if columns == state.size - 1 or not state.board.edge_exists(
+                (row, columns), (row, columns + 1)
+            ):
+                result += case + vertical_wall
+            else:
+                result += case + " "
+        result += "\n" + big_space + interstice
+        for columns in range(state.size):
+            if row == state.size - 1 or not state.board.edge_exists(
+                (row, columns), (row + 1, columns)
+            ):
+                result += horizontal_wall
+            else:
+                result += horizontal_space
+            result += interstice
+    return result
 
 
 def _print_state(state: GameState):

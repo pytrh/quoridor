@@ -15,6 +15,7 @@ from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode
 from quoridor.guiengine import GUIEngine
+from quoridor.parser import parse_string_to_state
 from quoridor.config import (
     MIN_GRID_SIZE,
     MAX_GRID_SIZE,
@@ -66,14 +67,18 @@ def load_default_config():
 
     mode = None
     if mode_name == "normal":
-        mode = GameMode.NORMAL # TODO: check is better way to get game mode from quoridorc
+        mode = (
+            GameMode.NORMAL
+        )  # TODO: check is better way to get game mode from quoridorc
     elif mode_name == "blitz":
         mode = GameMode.BLITZ
-    
+
     return size, players, walls, mode, time
 
 
-def update_default_config(size: int, num_players: int, num_walls: int, game_mode: str, blitz_time: int) -> None:
+def update_default_config(
+    size: int, num_players: int, num_walls: int, game_mode: str, blitz_time: int
+) -> None:
     config = configparser.ConfigParser()
     config.read(DEFAULT_CONFIG_FILE)
 
@@ -93,7 +98,9 @@ def update_default_config(size: int, num_players: int, num_walls: int, game_mode
         config.write(default_config)
 
 
-def update_config_file(size: int, num_players: int, num_walls: int, game_mode: GameMode, blitz_time: int) -> None:
+def update_config_file(
+    size: int, num_players: int, num_walls: int, game_mode: GameMode, blitz_time: int
+) -> None:
     with open(CONFIG_FILE, "r+") as config_file:
         lines = config_file.readlines()
         config_file.seek(0)
@@ -113,8 +120,15 @@ def update_config_file(size: int, num_players: int, num_walls: int, game_mode: G
             config_file.write(line)
             # TODO: bug when putting more than one param on command line
 
+
 def restore_default_config_file() -> None:
-    update_default_config(DEFAULT_GRID_SIZE, DEFAULT_NUM_PLAYERS, DEFAULT_NUM_WALLS, DEFAULT_GAME_MODE.display_name, DEFAULT_BLITZ_TIME)
+    update_default_config(
+        DEFAULT_GRID_SIZE,
+        DEFAULT_NUM_PLAYERS,
+        DEFAULT_NUM_WALLS,
+        DEFAULT_GAME_MODE.display_name,
+        DEFAULT_BLITZ_TIME,
+    )
 
 
 def main():
@@ -200,22 +214,25 @@ def main():
     )
 
     args = parser.parse_args()
-    game_related_args = ["players", "blitz", "time", "size", "walls", "ai","replay"]
+    game_related_args = ["players", "blitz", "time", "size", "walls", "ai", "replay"]
 
     setup_logging(verbose=args.verbose, debug=args.debug)
-    
+
     if args.version:
         version = importlib.metadata.version("quoridor")
         print(f"Quoridor : version {version}")
         sys.exit(0)
 
+    initial_state = None
+
     if args.file:
         logging.debug("File found in arguments")
-        # game = GameState.load_game_from_file(args.file)
+        with open(args.file, "r", encoding="utf-8") as file:
+            initial_state = parse_string_to_state(file)
 
     size, num_players, num_walls, game_mode, blitz_time = load_default_config()
 
-    current_ai_color = DEFAULT_AI_COLOR # TODO: read from config
+    current_ai_color = DEFAULT_AI_COLOR  # TODO: read from config
     ai_ids = set()
 
     changed = False
@@ -285,24 +302,27 @@ def main():
         num_players = max(DEFAULT_AI_COLOR, max(len(ai_ids), max(ai_ids) + 1))
         changed = True
 
-    
     if changed:
         update_config_file(size, num_players, num_walls, game_mode, blitz_time)
-        update_default_config(size, num_players, num_walls, game_mode.display_name, blitz_time) 
+        update_default_config(
+            size, num_players, num_walls, game_mode.display_name, blitz_time
+        )
 
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
         new_num_players = ReadWriteHistory.num_players_from_file(lines)
-        num_players = max(new_num_players,num_players)
+        num_players = max(new_num_players, num_players)
 
-    initial_state = GameState(
-        size=size,
-        num_players=num_players,
-        num_walls=num_walls,
-        game_mode=game_mode,
-        blitz_time=blitz_time,
-        ai_ids=ai_ids,
-    )
+    if not initial_state:
+        initial_state = GameState(
+            size=size,
+            num_players=num_players,
+            num_walls=num_walls,
+            game_mode=game_mode,
+            blitz_time=blitz_time,
+            ai_ids=ai_ids,
+        )
+
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
         ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)

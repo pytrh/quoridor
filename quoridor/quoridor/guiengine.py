@@ -88,8 +88,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         f = Gtk.FileFilter()
         f.set_name("Quoridor game file")
-        f.add_mime_type("image/jpeg")
-        f.add_mime_type("image/png")
+        f.add_mime_type("text/plain")
 
         self.open_dialog.set_filter(f)
         self.open_dialog.connect("response", self.open_response)
