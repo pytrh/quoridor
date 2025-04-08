@@ -475,17 +475,19 @@ def main():
         new_num_players = ReadWriteHistory.num_players_from_file(lines)
         num_players = max(new_num_players, num_players)
 
-    initial_state = GameState(
-        size=size,
-        num_players=num_players,
-        num_walls=num_walls,
-        game_mode=game_mode,
-        blitz_time=blitz_time,
-        ai_ids=ai_ids,
-        ai_mode=ai_mode,
-        ai_depth=ai_depth,
-        ai_heuristic=ai_heuristic,
-    )
+    if not initial_state:
+        initial_state = GameState(
+            size=size,
+            num_players=num_players,
+            num_walls=num_walls,
+            game_mode=game_mode,
+            blitz_time=blitz_time,
+            ai_ids=ai_ids,
+            ai_mode=ai_mode,
+            ai_depth=ai_depth,
+            ai_heuristic=ai_heuristic,
+        )
+
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
         ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)
