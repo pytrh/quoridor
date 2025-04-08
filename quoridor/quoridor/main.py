@@ -15,6 +15,7 @@ from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode, AiMode, AiHeuristic
 from quoridor.guiengine import GUIEngine
+from quoridor.parser import parse_string_to_state
 from quoridor.config import (
     DEFAULT_AI_COLOR_ID,
     DEFAULT_AI_DEPTH,
@@ -333,9 +334,14 @@ def main():
         print(f"Quoridor : version {version}")
         sys.exit(0)
 
+    initial_state = None
+    changed = False
+
     if args.file:
+        changed = True
         logging.debug("File found in arguments")
-        # game = GameState.load_game_from_file(args.file)
+        with open(args.file, "r", encoding="utf-8") as file:
+            initial_state = parse_string_to_state(file)
 
     (
         size,
@@ -348,8 +354,6 @@ def main():
         ai_depth,
         ai_heuristic,
     ) = load_default_config()
-
-    changed = False
 
     if args.walls:
         num_walls = args.walls
@@ -471,17 +475,19 @@ def main():
         new_num_players = ReadWriteHistory.num_players_from_file(lines)
         num_players = max(new_num_players, num_players)
 
-    initial_state = GameState(
-        size=size,
-        num_players=num_players,
-        num_walls=num_walls,
-        game_mode=game_mode,
-        blitz_time=blitz_time,
-        ai_ids=ai_ids,
-        ai_mode=ai_mode,
-        ai_depth=ai_depth,
-        ai_heuristic=ai_heuristic,
-    )
+    if not initial_state:
+        initial_state = GameState(
+            size=size,
+            num_players=num_players,
+            num_walls=num_walls,
+            game_mode=game_mode,
+            blitz_time=blitz_time,
+            ai_ids=ai_ids,
+            ai_mode=ai_mode,
+            ai_depth=ai_depth,
+            ai_heuristic=ai_heuristic,
+        )
+
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
         ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)

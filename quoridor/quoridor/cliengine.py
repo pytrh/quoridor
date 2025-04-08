@@ -10,6 +10,7 @@ from time import sleep
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
 from quoridor.gamemode import GameMode
+
 from quoridor.command import (
     Command,
     PlaceWallCommand,
@@ -19,10 +20,12 @@ from quoridor.command import (
     RedoCommand,
     RestartCommand,
     QuitCommand,
+    SaveAndQuitCommand,
     AbandonCommand,
     HelpCommand,
     SaveCommand,
     HistoryCommand,
+    PassCommand,
 )
 from quoridor.exceptions import (
     InvalidMoveError,
@@ -279,12 +282,16 @@ class CLIEngine:
             return RedoCommand(self.state)
         elif input == "quit":
             return QuitCommand(self.state)
+        elif len(input.split()) and input.split()[0] == "quit":
+            return SaveAndQuitCommand(self.state, input.split()[1])
         elif input == "restart":
             return RestartCommand(self.state, self.initial_state)
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
         elif input == "save":
             return SaveCommand(self.state, "outputHisotry.txt")
+        elif input == "pass":
+            return PassCommand(self.state)
         elif input == "time":
             if self.state.game_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)
