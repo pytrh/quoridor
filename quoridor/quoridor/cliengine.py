@@ -32,6 +32,7 @@ from quoridor.exceptions import (
     GameOver,
 )
 from quoridor.ai import heuristic
+from quoridor.translations import T_
 
 
 class CLIEngine:
@@ -220,7 +221,7 @@ class CLIEngine:
 
     def wait_for_input_with_timeout(self):
         print(
-            "Player " + str(self.state.current_player.id + 1) + " will play? ",
+            "Player " + str(self.state.current_player.id + 1) + T_(" will play? "),
             end="",
             flush=True,
         )

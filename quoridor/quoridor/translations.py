@@ -23,7 +23,7 @@ def setup_translation():
 
 setup_translation()
 
-_ = gettext.gettext  # or from i18n setup
+T_ = gettext.gettext  # or from i18n setup
 
 # Example usage:
-print(_("Player will play?"))  # This will output the translated text if available
+print(T_("Player will play?"))  # This will output the translated text if available
