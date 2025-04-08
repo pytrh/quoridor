@@ -157,6 +157,128 @@ class MinimaxAI(AI):
 
 
 
+class AlphaBetaAI(AI):
+    """
+    AI using Minimax algorithm to select the best move.
+    """
+
+    def suggest_move(
+        self, state: "GameState", heuristic: Callable[["GameState"], int]
+    ) -> Command:
+        _, best_move = self._minimax(state, self.depth, True, heuristic)
+        if best_move:
+            best_move.state = state
+            return best_move
+
+    def _minimax(self, state: "GameState", depth: int, maximizing: bool, heuristic: Callable[["GameState"], int],
+             alpha: float = float('-inf'), beta: float = float('inf')):
+
+
+        if depth == 0 or state.game_over():
+            return heuristic(state), None
+
+        best_move = None
+
+        if maximizing:
+            max_eval = float('-inf')
+
+            # Try all possible pawn moves
+            for pos in self.possible_moves(state):
+                command = MovePawnCommand(state, state.current_player.position, pos)
+                try:
+                    command.execute()
+                    state.switch_player()
+
+                    eval, _ = self._minimax(state, depth - 1, False, heuristic, alpha, beta)
+
+                    command.undo()
+
+                    if eval > max_eval:
+                        max_eval = eval
+                        best_move = command
+
+                    alpha = max(alpha, eval)
+                    if beta <= alpha:
+                        break  # Beta cut-off
+                except Exception:
+                    command.undo()
+                    continue
+
+            # Try all possible wall placements
+            for (x, y, d) in self.possible_walls(state):
+                command = PlaceWallCommand(state, (x, y), d)
+                try:
+                    command.execute()
+                    state.switch_player()
+
+                    eval, _ = self._minimax(state, depth - 1, False, heuristic, alpha, beta)
+
+                    command.undo()
+
+                    if eval > max_eval:
+                        max_eval = eval
+                        best_move = command
+
+                    alpha = max(alpha, eval)
+                    if beta <= alpha:
+                        break  # Beta cut-off
+                except Exception:
+                    command.undo()
+                    continue
+
+            return max_eval, best_move
+
+        else:  # Minimizing player
+            min_eval = float('inf')
+
+            # Try all possible pawn moves
+            for pos in self.possible_moves(state):
+                command = MovePawnCommand(state, state.current_player.position, pos)
+                try:
+                    command.execute()
+                    state.switch_player()
+
+                    eval, _ = self._minimax(state, depth - 1, True, heuristic, alpha, beta)
+
+                    command.undo()
+
+                    if eval < min_eval:
+                        min_eval = eval
+                        best_move = command
+
+                    beta = min(beta, eval)
+                    if beta <= alpha:
+                        break  # Alpha cut-off
+                except Exception:
+                    command.undo()
+                    continue
+
+            # Try all possible wall placements
+            for (x, y, d) in self.possible_walls(state):
+                command = PlaceWallCommand(state, (x, y), d)
+                try:
+                    command.execute()
+                    state.switch_player()
+
+                    eval, _ = self._minimax(state, depth - 1, True, heuristic, alpha, beta)
+
+                    command.undo()
+
+                    if eval < min_eval:
+                        min_eval = eval
+                        best_move = command
+
+                    beta = min(beta, eval)
+                    if beta <= alpha:
+                        break  # Alpha cut-off
+                except Exception:
+                    command.undo()
+                    continue
+
+            return min_eval, best_move
+
+
+
 # def heuristic(state: "GameState") -> int:
 #     """Heuristic based on the shortest path to the goal for both players."""
 #     graph = state.temp_board()
