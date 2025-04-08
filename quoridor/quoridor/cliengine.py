@@ -215,13 +215,13 @@ class CLIEngine:
         Print the remaining walls for each player.
         """
         print(
-            "Remaining walls: "
+            T_("Remaining walls: ")
             + str(self.state.players[self.state.current_player.id].walls_remaining)
         )
 
     def wait_for_input_with_timeout(self):
         print(
-            "Player " + str(self.state.current_player.id + 1) + T_(" will play? "),
+            T_("Player ") + str(self.state.current_player.id + 1) + T_(" will play? "),
             end="",
             flush=True,
         )
@@ -267,7 +267,7 @@ class CLIEngine:
         """
         Render the game over screen.
         """
-        print(f"Player {self.state.current_player.id + 1} has won the game!")
+        print(T_("Player ") + str(self.state.current_player.id + 1) + T_(" has won the game!"))
 
     def get_command_from_human_player(self) -> Command:
         """
@@ -353,17 +353,17 @@ class CLIEngine:
                     # exit()
             except InvalidMoveError as e:
                 self.end_blitz_turn()
-                print(f"Invalid move: {str(e)}")
+                print(T_("Invalid move: ") + str(e))
             except PathNotFoundError:
                 self.end_blitz_turn()
-                print("Cannot place wall: it would block a player's path to goal")
+                print(T_("Cannot place wall: it would block a player's path to goal"))
             except NoUndoableCommand:
-                print("No move to undo")
+                print(T_("No move to undo"))
             except NoRedoableCommand:
-                print("No command to redo")
+                print(T_("No command to redo"))
             except InvalidCommandError as e:
                 self.end_blitz_turn()
-                print(f"Invalid command: {str(e)}")
+                print(T_("Invalid command: ") + str(e)) # TODO: difference between invalid move and invalid command?
             except GameOver:
                 self.render_game_over()
                 exit()

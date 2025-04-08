@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: quoridor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-08 17:04+0200\n"
+"POT-Creation-Date: 2025-04-09 01:12+0200\n"
 "PO-Revision-Date: 2025-04-08 16:34+0200\n"
 "Last-Translator:  <lulu@grasspunk.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -17,10 +17,41 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: quoridor/cliengine.py:223
+#: quoridor/cliengine.py:218
+msgid "Remaining walls: "
+msgstr "Murs restant: "
+
+#: quoridor/cliengine.py:224 quoridor/cliengine.py:270
+msgid "Player "
+msgstr "Joueur "
+
+#: quoridor/cliengine.py:224
 msgid " will play? "
 msgstr " va jouer?"
 
-#: quoridor/translations.py:23
-msgid "Player will play?"
-msgstr "Le joueur va jouer?"
+#: quoridor/cliengine.py:270
+msgid " has won the game!"
+msgstr " a gagné le jeu!"
+
+#: quoridor/cliengine.py:356
+msgid "Invalid move: "
+msgstr "Coup invalide: "
+
+#: quoridor/cliengine.py:359
+msgid "Cannot place wall: it would block a player's path to goal"
+msgstr "Impossible de placer un mur: ça bloquerait un joueur a atteindre l'objectif"
+
+#: quoridor/cliengine.py:361
+msgid "No move to undo"
+msgstr "Aucun coup à annuler"
+
+#: quoridor/cliengine.py:363
+msgid "No command to redo"
+msgstr "Aucun coup à rejouer"
+
+#: quoridor/cliengine.py:366
+msgid "Invalid command: "
+msgstr "Commande invalide: "
+
+#~ msgid "Player will play?"
+#~ msgstr "Le joueur va jouer?"
