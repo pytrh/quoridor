@@ -4,4 +4,8 @@ players = 2
 walls = 10
 mode = normal
 time = 15
+ai = None
+ai-mode = minimax
+ai-depth = 1
+ai-heuristic = default
 
