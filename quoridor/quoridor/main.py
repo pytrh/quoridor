@@ -335,8 +335,10 @@ def main():
         sys.exit(0)
 
     initial_state = None
+    changed = False
 
     if args.file:
+        changed = True
         logging.debug("File found in arguments")
         with open(args.file, "r", encoding="utf-8") as file:
             initial_state = parse_string_to_state(file)
@@ -352,8 +354,6 @@ def main():
         ai_depth,
         ai_heuristic,
     ) = load_default_config()
-
-    changed = False
 
     if args.walls:
         num_walls = args.walls
