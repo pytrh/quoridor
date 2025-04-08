@@ -18,17 +18,18 @@ ReadWriteHistory.write_history("output_history.txt", turns)
 from typing import TYPE_CHECKING
 from quoridor.graph import Graph
 from quoridor.exceptions import InvalidMoveError
+
 if TYPE_CHECKING:
     from quoridor.command import Command
     from quoridor.gamestate import GameState
 
 
-
-def parse_graph(string: str) -> Graph:
+def write_to_file(file: str, content: str):
     """
-    Parse the graph from a string.
+    Write out the content of a string to a file
     """
-    pass
+    with open(file, "w") as file_to_write:
+        file_to_write.write(content)
 
 
 # TODO: Change legacy code to adopt a modular approach
@@ -61,7 +62,7 @@ class ReadWriteHistory:
     """
 
     @staticmethod
-    def read_history(input_file_path: str) -> list[list[tuple[int,str]]]:
+    def read_history(input_file_path: str) -> list[list[tuple[int, str]]]:
         """
         Reads the history from a text input file and returns an array containing
         the game information, a list of game moves per player per turn.
@@ -96,7 +97,7 @@ class ReadWriteHistory:
         into an array.
         game_info = [nb_of_turns][nb_of_players].
         """
-        game_info: list[tuple[int,str]] = []
+        game_info: list[tuple[int, str]] = []
         max_players = 0
         try:
             for turn_nb, turn in enumerate(history_array):
@@ -109,7 +110,7 @@ class ReadWriteHistory:
                 max_players = max(max_players, (len(line_sections) - 1) // 2)
                 while len(game_info) < turn_nb:
                     game_info.append(
-                        [(-1,"")] * max_players
+                        [(-1, "")] * max_players
                     )  # Initialize turn with empty moves
 
                 ReadWriteHistory._process_moves(turn_nb, line_sections, game_info)
@@ -122,7 +123,7 @@ class ReadWriteHistory:
 
     @staticmethod
     def _process_moves(
-        turn_nb: int, line_sections: list[str], game_info: list[tuple[int,str]]
+        turn_nb: int, line_sections: list[str], game_info: list[tuple[int, str]]
     ) -> None:
         """Extract and process player moves for a given turn."""
         for i in range(1, len(line_sections), 2):
@@ -148,9 +149,7 @@ class ReadWriteHistory:
                     "# Quoridor Game History"
                 )  # EOF should be positioned new line
                 for turn_nb, turn in enumerate(turns):
-                    turn_str = " ".join(
-                        f"{move}" for player, move in enumerate(turn)
-                    )
+                    turn_str = " ".join(f"{move}" for player, move in enumerate(turn))
                     history_file.write(f"\n{turn_nb + 1}. {turn_str} ")
 
                 history_file.write("\n")  # Add a new line for futur writing
@@ -160,8 +159,11 @@ class ReadWriteHistory:
             print(f"Error: Could not write to file '{output_file_path}'.")
 
     @staticmethod
-    def parse_history_to_list_of_str(history: list[tuple[int, "Command"]], state: "GameState") -> list[list[str]]:
+    def parse_history_to_list_of_str(
+        history: list[tuple[int, "Command"]], state: "GameState"
+    ) -> list[list[str]]:
         from quoridor.command import AbandonCommand
+
         game_info: list[list[str]] = []
         current_turn: list[str] = []
 
@@ -187,25 +189,27 @@ class ReadWriteHistory:
 
         return game_info
 
-        
     @staticmethod
-    def parse_list_of_str_to_history(state: "GameState", turns: list[list[tuple[int,str]]]) -> list[tuple[int, "Command"]]:
+    def parse_list_of_str_to_history(
+        state: "GameState", turns: list[list[tuple[int, str]]]
+    ) -> list[tuple[int, "Command"]]:
         from quoridor.cliengine import CLIEngine
-        from quoridor.command import (AbandonCommand,
-                                      MovePawnCommand,
-                                      PlaceWallCommand)
+        from quoridor.command import AbandonCommand, MovePawnCommand, PlaceWallCommand
+
         c = CLIEngine(state)
         cmds: list[tuple[int, Command]] = []
         for turn in turns:
             for player_id, cmd_str in turn:
                 try:
-                    if(player_id >= 0):
+                    if player_id >= 0:
                         pid = player_id - 1
                         if cmd_str == "SURRENDER":
                             cmd = AbandonCommand(state, pid)
                             c.execute_command(cmd)
-                        elif len(cmd_str) == 2 or (len(cmd_str) >= 3 and not cmd_str[-1] in "hv"):
-                            _, to_case = cmd_str.strip().lower().split('-')
+                        elif len(cmd_str) == 2 or (
+                            len(cmd_str) >= 3 and not cmd_str[-1] in "hv"
+                        ):
+                            _, to_case = cmd_str.strip().lower().split("-")
                             to_pos = c.translate_move(to_case)
                             from_pos = state.players[pid].position
                             cmd = MovePawnCommand(state, from_pos, to_pos)
@@ -219,16 +223,17 @@ class ReadWriteHistory:
                         cmds.append((pid, cmd))
 
                 except (InvalidMoveError, ValueError, IndexError) as e:
-                    print(f"Commande ignorée pour le joueur {player_id} : '{cmd_str}' → {e}")
+                    print(
+                        f"Commande ignorée pour le joueur {player_id} : '{cmd_str}' → {e}"
+                    )
         c = None
         return cmds
 
-
     @staticmethod
-    def num_players_from_file(turns: list[list[tuple[int,str]]]) -> int:
+    def num_players_from_file(turns: list[list[tuple[int, str]]]) -> int:
         num_players = 0
         for turn in turns:
             for i in turn:
-                id,_ = i
-                num_players = max(id,num_players)
+                id, _ = i
+                num_players = max(id, num_players)
         return num_players

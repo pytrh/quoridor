@@ -15,6 +15,7 @@ from quoridor.cliengine import CLIEngine
 from quoridor.gamestate import GameState
 from quoridor.gamemode import GameMode, AiMode, AiHeuristic
 from quoridor.guiengine import GUIEngine
+from quoridor.parser import parse_string_to_state
 from quoridor.config import (
     DEFAULT_AI_COLOR_ID,
     DEFAULT_AI_DEPTH,
@@ -333,9 +334,12 @@ def main():
         print(f"Quoridor : version {version}")
         sys.exit(0)
 
+    initial_state = None
+
     if args.file:
         logging.debug("File found in arguments")
-        # game = GameState.load_game_from_file(args.file)
+        with open(args.file, "r", encoding="utf-8") as file:
+            initial_state = parse_string_to_state(file)
 
     (
         size,

@@ -471,6 +471,27 @@ class QuitCommand(Command):
         return "Quit application"
 
 
+class SaveAndQuitCommand(Command):
+    """Command to quit the application."""
+
+    def __init__(self, state: "GameState", file: str):
+        super().__init__(state)
+        self.file = file
+
+    def execute(self) -> bool:
+        from quoridor.parser import parse_state_to_string
+        from quoridor.io import write_to_file
+
+        """Quit the application."""
+        # demander à l'utilisateur s'il veut sauvegarder la partie ou non dans un fichier
+        FileContent = parse_state_to_string(self.state)
+        write_to_file(self.file, FileContent)
+        raise QuitApp
+
+    def __str__(self) -> str:
+        return "Quit application"
+
+
 class TimeCommand(Command):
     """Command to display the time remaining on the player's timer."""
 
@@ -566,9 +587,10 @@ class PassCommand(Command):
 
     def execute(self) -> bool:
         """Command to pass the player's turn."""
-        return True
+        return self.state.check_pass_player(self.state.current_player.id)
 
     def __str__(self) -> str:
+
         return "Pass player"
 
     def undo(self) -> None:
