@@ -6,6 +6,7 @@ import logging
 import sys
 import select
 import copy
+from time import sleep
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
 from quoridor.gamemode import GameMode
@@ -34,7 +35,6 @@ from quoridor.exceptions import (
     NoRedoableCommand,
     GameOver,
 )
-from quoridor.ai import heuristic
 
 
 class CLIEngine:
@@ -344,7 +344,7 @@ class CLIEngine:
                 else:
                     command = self.state.ai_controllers[
                         self.state.current_player.id
-                    ].suggest_move(self.state, heuristic)
+                    ].suggest_move(self.state)
                 logging.debug(f"Command: {command}")
 
                 self.end_blitz_turn()
@@ -372,4 +372,4 @@ class CLIEngine:
                 print(f"Invalid command: {str(e)}")
             except GameOver:
                 self.render_game_over()
-                exit()
+                self.execute_command(QuitCommand(self.state))

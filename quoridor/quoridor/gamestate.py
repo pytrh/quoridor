@@ -4,16 +4,19 @@ GameState module.
 
 from copy import deepcopy
 import logging
-from typing import List, TYPE_CHECKING
-from quoridor.ai import AI, GreedyAI, EasyAI
+from typing import TYPE_CHECKING
+from quoridor.ai import AI, GreedyAI, MinimaxAI, AlphaBetaAI
 from quoridor.config import (
     GRID_SIZE,
     NUM_PLAYERS,
     NUM_WALLS,
-    DEFAULT_GAME_MODE,
+    GAME_MODE,
     BLITZ_TIME,
+    AI_MODE,
+    AI_DEPTH,
+    AI_HEURISTIC,
 )
-from quoridor.gamemode import GameMode
+from quoridor.gamemode import GameMode, AiMode, AiHeuristic
 from quoridor.direction import Direction
 from quoridor.graph import Graph
 from quoridor.player import Player
@@ -39,9 +42,12 @@ class GameState:
         board: Graph = None,
         num_walls: int = NUM_WALLS,
         history: list[tuple[int, "Command"]] = None,
-        game_mode: GameMode = DEFAULT_GAME_MODE,
+        game_mode: GameMode = GAME_MODE,
         blitz_time: int = BLITZ_TIME,
         ai_ids: set = [],
+        ai_mode: AiMode = AI_MODE,
+        ai_depth: int = AI_DEPTH,
+        ai_heuristic: AiHeuristic = AI_HEURISTIC,
     ):
         """
          Initialize a new game state.
@@ -67,6 +73,11 @@ class GameState:
         logging.debug(f"blitz mode activated : {game_mode}")
         logging.debug(f"blitz timer : {blitz_time}")
         logging.debug(f"ai ids : {ai_ids}")
+        if ai_mode:
+            logging.debug(f"ai mode : {ai_mode.display_name}")
+        logging.debug(f"ai depth : {ai_depth}")
+        if ai_heuristic:
+            logging.debug(f"ai heuristic : {ai_heuristic.display_name}")
 
         self.board = board if board is not None else self.create_board(size)
         self.size = size
@@ -74,9 +85,12 @@ class GameState:
         self.num_players_remaining = num_players
         self.initial_num_walls = num_walls
         self.ai_ids = ai_ids
+        self.ai_mode = ai_mode
+        self.ai_depth = ai_depth
+        self.ai_heuristic = ai_heuristic
 
         if players is None:
-            self.players = self.createPlayer()
+            self.players = self.create_player()
         else:
             self.players = players
         self.current_player = (
@@ -97,13 +111,27 @@ class GameState:
                 self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
-            self.ai_controllers = {id: GreedyAI(0) for id in ai_ids}
+            self.ai_controllers = {
+                id: self.create_ai(ai_mode, ai_depth, ai_heuristic) for id in ai_ids
+            }
         else:
             self.ai_controllers = {}
 
         logging.debug(f"List ai : {self.ai_controllers}")
 
-    def createPlayer(self) -> list[Player]:
+    def create_ai(self, ai_mode: AiMode, depth: int, heuristic: AiHeuristic) -> AI:
+        ai = None
+        if ai_mode == AiMode.GREEDY:
+            ai = GreedyAI(depth, heuristic.func)
+        elif ai_mode == AiMode.ALPHABETA:
+            ai = AlphaBetaAI(depth, heuristic.func)
+        elif ai_mode == AiMode.MINIMAX:
+            ai = MinimaxAI(depth, heuristic.func)
+        else:
+            raise Exception
+        return ai
+
+    def create_player(self) -> list[Player]:
         middle_board = self.size // 2
         players = [
             Player(0, (middle_board, 0), self.size, self.initial_num_walls),
@@ -212,7 +240,7 @@ class GameState:
                             x, y, direction.inverse()
                         ):
                             continue
-                        temp_board = deepcopy(self.board)
+                        temp_board = deepcopy(self.temp_board())
 
                         if direction == Direction.H:
                             if temp_board.edge_exists(
@@ -341,7 +369,7 @@ class GameState:
                 for player in self.players
             ]
         except ValueError:
-            new_list_players = self.createPlayer()
+            new_list_players = self.create_player()
 
         cloned_state = GameState(
             size=self.size,
@@ -354,8 +382,16 @@ class GameState:
             game_mode=self.game_mode,
             blitz_time=self.blitz_time,
             ai_ids=deepcopy(self.ai_ids),
+            ai_mode=self.ai_mode,
+            ai_depth=self.ai_depth,
+            ai_heuristic=self.ai_heuristic,
         )
         return cloned_state
+
+    def copy_state_ai(self):
+        state = self.copy_state()
+        state.board = self.temp_board()
+        return state
 
     def set_state(self, state: "GameState"):  # type: ignore
         new_list_players = None
@@ -367,7 +403,7 @@ class GameState:
                 for player in state.players
             ]
         except ValueError:
-            new_list_players = self.createPlayer()
+            new_list_players = self.create_player()
 
         self.size = state.size
         self.current_player_id = state.current_player.id
@@ -382,6 +418,9 @@ class GameState:
         self.blitz_time = state.blitz_time
         self.ai_ids = deepcopy(state.ai_ids)
         self.ai_controllers = deepcopy(state.ai_controllers)
+        self.ai_mode = state.ai_mode
+        self.ai_depth = state.ai_depth
+        self.ai_heuristic = state.ai_heuristic
 
     def backward_player(self):
         """

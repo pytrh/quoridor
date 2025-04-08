@@ -29,7 +29,7 @@ from quoridor.config import (
     MAX_GRID_SIZE,
     NUM_WALLS,
 )
-from quoridor.ai import GreedyAI, heuristic
+from quoridor.ai import GreedyAI
 
 
 gi.require_version("Gtk", "4.0")
@@ -886,7 +886,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             else:
                 command = self.state.ai_controllers[
                     self.state.current_player.id
-                ].suggest_move(self.state, heuristic)
+                ].suggest_move(self.state)
             # Exécute la commande après 0,3 seconde
             GLib.timeout_add(300, lambda: self.execute_command(command))
 
