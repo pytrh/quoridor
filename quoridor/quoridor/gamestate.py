@@ -12,8 +12,8 @@ from quoridor.config import (
     NUM_WALLS,
     DEFAULT_GAME_MODE,
     BLITZ_TIME,
-    GameMode,
 )
+from quoridor.gamemode import GameMode
 from quoridor.direction import Direction
 from quoridor.graph import Graph
 from quoridor.player import Player

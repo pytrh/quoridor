@@ -9,6 +9,7 @@ import copy
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
 from quoridor.gamemode import GameMode
+
 from quoridor.command import (
     Command,
     PlaceWallCommand,
@@ -18,6 +19,7 @@ from quoridor.command import (
     RedoCommand,
     RestartCommand,
     QuitCommand,
+    SaveAndQuitCommand,
     AbandonCommand,
     HelpCommand,
     SaveCommand,
@@ -279,6 +281,8 @@ class CLIEngine:
             return RedoCommand(self.state)
         elif input == "quit":
             return QuitCommand(self.state)
+        elif len(input.split()) and input.split()[0] == "quit":
+            return SaveAndQuitCommand(self.state, input.split()[1])
         elif input == "restart":
             return RestartCommand(self.state, self.initial_state)
         elif input == "abandon":

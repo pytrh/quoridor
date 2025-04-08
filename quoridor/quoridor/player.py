@@ -46,13 +46,13 @@ class Player:
         if goal_line is not None:
             self.goal_line = goal_line
         else:
-            if self.start_position[1] == 0:
+            if self.id == 0:
                 self.goal_line = [(i, size - 1) for i in range(size)]
-            elif self.start_position[1] == size - 1:
+            elif self.id == 1:
                 self.goal_line = [(i, 0) for i in range(size)]
-            elif self.start_position[0] == 0:
+            elif self.id == 2:
                 self.goal_line = [(size - 1, i) for i in range(size)]
-            elif self.start_position[0] == size - 1:
+            elif self.id == 3:
                 self.goal_line = [(0, i) for i in range(size)]
             else:
                 raise ValueError(

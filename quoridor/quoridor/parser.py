@@ -1,10 +1,7 @@
 import logging
 
-from quoridor.cliengine import CLIEngine
-from quoridor.direction import Direction
 from quoridor.gamestate import GameState
 from quoridor.graph import Graph
-from quoridor.command import HistoryCommand, PlaceWallCommand
 from quoridor.player import Player
 
 
@@ -95,24 +92,6 @@ def _print_graph(graph: Graph):
                 else:
                     edge_line += " H  "
             print(edge_line)
-
-
-def _test_parse_string_to_graph():
-    state = GameState(size=5)
-    place1 = PlaceWallCommand(state, (2, 2), Direction.V)
-    place2 = PlaceWallCommand(state, (1, 1), Direction.V)
-    place3 = PlaceWallCommand(state, (1, 0), Direction.H)
-
-    cli = CLIEngine(state)
-    cli.execute_command(place1)
-    cli.execute_command(place2)
-    cli.execute_command(place3)
-    string_board = cli.get_string_from_board()
-    print(string_board)
-
-    print("")
-    graph = parse_string_to_graph(string_board)
-    _print_graph(graph)
 
 
 def parse_string_to_state(state_string: str) -> GameState:
@@ -231,7 +210,7 @@ def parse_state_to_string(state: GameState) -> str:
     state_string += f"players =\n\n"
 
     for i in range(state.num_players):
-        state_string += f"player_position = {state.players[i].position}\n"
+        state_string += f"player_position = {state.players[i].position[0]}, {state.players[i].position[1]}\n"
         state_string += f"player_walls = {state.players[i].walls_remaining}\n"
         state_string += f"player_id = {state.players[i].id}\n\n"
 
@@ -239,15 +218,24 @@ def parse_state_to_string(state: GameState) -> str:
     state_string += f"board =\n"
     state_string += get_string_from_board(state) + "\n"
 
-    state_string += parse_history_to_str
-    return str
+    state_string += f"history =\n"
+    state_string += parse_history_to_str(state.history, state.num_players)
+    return state_string
 
 
-def parse_history_to_str(turns: list[list[str]]) -> str:
-    """Writes a history text file with the game information in the 'turns' parameter."""
+def parse_history_to_str(turns: list[list[str]], num_players: int) -> str:
+    """Writes a history text with the game information in the 'turns' parameter."""
     history_string = ""
-    for turn_nb, turn in enumerate(turns):
-        turn_str = " ".join(f"{move}" for player, move in enumerate(turn))
+    turn_nb = 0
+    turn_str = ""
+    for move_nb, turn in enumerate(turns):
+        turn_str += f"{turn[0]+1} {turn[1]} "
+        if turn[0] == num_players - 1:
+            history_string += f"\n{turn_nb + 1}. {turn_str} "
+            turn_nb = turn_nb + 1
+            turn_str = ""
+
+    if len(turns) % num_players != 0:
         history_string += f"\n{turn_nb + 1}. {turn_str} "
 
     history_string += "\n"
@@ -313,42 +301,3 @@ def get_string_from_board(state: GameState) -> str:
                 result += horizontal_space
             result += interstice
     return result
-
-
-def _print_state(state: GameState):
-    print("--- State ---")
-    print(f"Board size : {state.size}")
-    print(f"Current player id : {state.current_player.id}")
-    print(f"Number of players : {state.num_players}")
-    print(f"Blitz mode : {state.game_mode}")
-    print(f"Number of walls per players : {state.initial_num_walls}")
-
-    # Players
-    print("- Players -")
-    for player in state.players:
-        print(f"Id : {player.id}")
-        print(f"Position : {player.position}")
-        print(f"Walls remaining : {player.walls_remaining}")
-
-    # Board
-    _print_graph(state.board)
-
-    # History
-    HistoryCommand(state).execute()
-
-
-def _test_parse_string_to_state():
-    input_file_path = "quoridor/state.txt"
-    try:
-        # open file
-        with open(input_file_path, "r", encoding="utf-8") as input_file:
-            state = parse_string_to_state(input_file)
-            _print_state(state)
-
-    except FileNotFoundError:
-        print(f"Error: The file '{input_file_path}' was not found.")
-        return []
-
-
-if __name__ == "__main__":
-    _test_parse_string_to_state()
