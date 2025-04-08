@@ -25,7 +25,6 @@ import os
 from quoridor.io import ReadWriteHistory
 from quoridor.graph import Graph
 from quoridor.direction import Direction
-from quoridor.gamemode import GameMode
 from quoridor.exceptions import (
     InvalidMoveError,
     PathNotFoundError,
@@ -425,7 +424,9 @@ class AbandonCommand(Command):
             self.state.num_players_remaining -= 1
             self.player.is_dead = True
 
-            if self.state.game_mode == GameMode.BLITZ:
+            from quoridor.gamemode import GameMode
+
+            if self.state.game_mode.display_name == GameMode.BLITZ:
                 if self.player.timer.turn_start_time is not None:
                     self.player.timer.end_turn()
                     self.player.timer.display_lock.clear()
@@ -441,7 +442,9 @@ class AbandonCommand(Command):
         self.state.num_players_remaining -= 1
         self.player.is_dead = True
 
-        if self.state.game_mode == GameMode.BLITZ:
+        from quoridor.gamemode import GameMode
+
+        if self.state.game_mode.display_name == GameMode.BLITZ:
             if self.player.timer.turn_start_time is not None:
                 self.player.timer.end_turn()
                 self.player.timer.display_lock.clear()
