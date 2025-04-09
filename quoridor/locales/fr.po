@@ -1,0 +1,54 @@
+# French translations for quoridor package.
+# Copyright (C) 2025 THE quoridor'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the quoridor package.
+#  <lulu@grasspunk.com>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: quoridor\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-04-09 02:09+0200\n"
+"PO-Revision-Date: 2025-04-08 16:34+0200\n"
+"Last-Translator:  <lulu@grasspunk.com>\n"
+"Language-Team: French <traduc@traduc.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: quoridor/guiengine.py:356
+msgid "Go Home"
+msgstr "Revenir au menu"
+
+#~ msgid "Remaining walls: "
+#~ msgstr "Murs restant: "
+
+#~ msgid "Player "
+#~ msgstr "Joueur "
+
+#~ msgid " will play? "
+#~ msgstr " va jouer?"
+
+#~ msgid " has won the game!"
+#~ msgstr " a gagné le jeu!"
+
+#~ msgid "Invalid move: "
+#~ msgstr "Coup invalide: "
+
+#~ msgid "Cannot place wall: it would block a player's path to goal"
+#~ msgstr ""
+#~ "Impossible de placer un mur: ça bloquerait un joueur a atteindre "
+#~ "l'objectif"
+
+#~ msgid "No move to undo"
+#~ msgstr "Aucun coup à annuler"
+
+#~ msgid "No command to redo"
+#~ msgstr "Aucun coup à rejouer"
+
+#~ msgid "Invalid command: "
+#~ msgstr "Commande invalide: "
+
+#~ msgid "Player will play?"
+#~ msgstr "Le joueur va jouer?"
