@@ -9,6 +9,7 @@ from quoridor.command import (
     PassCommand,
     PlaceWallCommand,
     MovePawnCommand,
+    SaveAndQuitCommand,
     UndoCommand,
     RedoCommand,
     RestartCommand,
@@ -16,7 +17,7 @@ from quoridor.command import (
     AbandonCommand,
 )
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError
+from quoridor.exceptions import InvalidMoveError, QuitApp
 from quoridor.gamemode import GameMode, AiMode, AiHeuristic
 from quoridor.gamestate import GameState
 from quoridor.observer import Observer
@@ -173,7 +174,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         power_button = Gtk.Button(label="🚪 Quit")
         power_button.set_size_request(20, 10)
         power_button.set_halign(Gtk.Align.START)
-        power_button.connect("clicked", self.on_back_home)
+        power_button.connect("clicked", self.on_quit_game_and_save)
 
         btn_abandon = Gtk.Button(label="🏳️ Abandon")
         btn_abandon.set_size_request(20, 10)
@@ -598,7 +599,15 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.scrolled_window_history.set_child(None)
         self.game_is_over = True
         self.stack.set_visible_child_name("home")
-        logging.debug("Button was clicked")
+
+    def on_quit_game_and_save(self, button):
+        popup = SavePopup(self.state)
+        popup.connect("close-request", self.on_popup_closed)
+        popup.show()
+
+    def on_popup_closed(self, window):
+        self.on_back_home(None)
+        return False
 
     def on_restart_clicked(self, button):
         self.state = GameState()
@@ -1226,6 +1235,57 @@ class AutoClosePopup(Gtk.Window):
             self.set_child(label)
             GLib.timeout_add(2500, self.destroy)
 
+class SavePopup(Gtk.Window):
+    def __init__(self, state: 'GameState'):
+        super().__init__(title="Save and quit")
+        self.set_default_size(200, 100)
+        self.set_transient_for(None)
+        self.set_modal(True)
+
+        self.state = state
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=10, margin_bottom=10, margin_start=10, margin_end=10)
+        label = Gtk.Label(label="Do you want to save your game before quitting ?")
+        vbox.append(label)
+
+        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        yes_button = Gtk.Button(label="✅ Yes")
+        no_button = Gtk.Button(label="❌ No")
+        yes_button.connect("clicked", self.on_save_game_clicked)
+        no_button.connect("clicked", lambda btn: self.close())
+
+        button_box.append(yes_button)
+        button_box.append(no_button)
+
+        vbox.append(button_box)
+        self.set_child(vbox)
+
+        # Création de la boîte de dialogue de sélection de fichier
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title="Select a file", parent=self, action=Gtk.FileChooserAction.SAVE
+        )
+        self.open_dialog.set_modal(True)
+
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name("Quoridor game file")
+        file_filter.add_mime_type("text/plain")
+        self.open_dialog.set_filter(file_filter)
+
+        self.open_dialog.connect("response", self.open_response)
+
+    def on_save_game_clicked(self, button):
+        self.open_dialog.show()
+
+    def open_response(self, dialog, response):
+        if response == Gtk.ResponseType.ACCEPT:
+            file = dialog.get_file()
+            filename = file.get_path()
+            logging.debug(f"Save gamestate in {filename}")
+            try:
+                SaveAndQuitCommand(self.state, filename).execute()
+            except QuitApp:
+                pass
+        self.close()
 
 class MyApplication(Gtk.Application):
     def __init__(self, state: GameState, **kwargs):
