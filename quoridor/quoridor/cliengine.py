@@ -297,7 +297,7 @@ class CLIEngine:
             if self.state.game_mode == GameMode.BLITZ:
                 return TimeCommand(self.state)
             else:
-                raise InvalidCommandError("Mode blitz is disabled")
+                raise InvalidCommandError(T_("Mode blitz is disabled"))
         elif input == "history":
             return HistoryCommand(self.state)
         elif input == "h" or input == "help":
@@ -310,7 +310,7 @@ class CLIEngine:
             x, y, direction = self.translate_wall(input)
             return PlaceWallCommand(self.state, (x, y), direction)
         else:
-            raise InvalidCommandError("Invalid command format")
+            raise InvalidCommandError(T_("Invalid command format"))
 
     def end_blitz_turn(self):
         """

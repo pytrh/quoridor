@@ -170,7 +170,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         restart_button = Gtk.Button(label=T_("🔄 Restart"))
         restart_button.connect("clicked", self.on_restart_clicked)
 
-        download_button = Gtk.Button(label=T_(T_("📥 Save")))
+        download_button = Gtk.Button(label=T_("📥 Save"))
         download_button.set_size_request(20, 10)
         download_button.set_halign(Gtk.Align.START)
         download_button.connect("clicked", self.on_save_history)
@@ -408,7 +408,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(hbox)
 
     def create_board_size_slider(self, box):
-        self.create_option_label(box, T_("Board size:"))
+        self.create_option_label(box, T_("Board size:")) 
         self.board_slider = Gtk.Scale()
         self.board_slider.set_digits(0)
         self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
@@ -566,7 +566,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             button.get_style_context().add_class("on-off-button")
 
             def on_toggle(btn, i=i + 1):
-                btn.set_label(T_(f"AI {i}") if btn.get_active() else T_(f"AI {i}"))
+                btn.set_label(T_("AI {num}").format(num=i) if btn.get_active() else T_("AI {num}").format(num=i))
                 if btn.get_active():
                     self._ai_ids.add(i - 1)
                 else:
@@ -741,8 +741,13 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 is_ai = "AI "
             walls = ""
             if not player.is_dead:
-                walls = T_(f" : walls remaining = {player.walls_remaining}")
-            label = Gtk.Label(label=T_(f"{is_ai}Player {player.id} {emoji} {walls}"))
+                walls = T_(": walls remaining = %(walls)d") % {"walls": player.walls_remaining}
+
+            label = Gtk.Label(
+                label=T_("{is_ai}Player {id} {emoji} {walls}").format(
+                    is_ai=is_ai, id=player.id, emoji=emoji, walls=walls
+                )
+            )
             label.get_style_context().add_class("player")
             if player.is_dead:
                 label.get_style_context().add_class("player-is-dead")
@@ -1050,7 +1055,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.winner_label.set_markup(
-            T_(f'<span size="14000" weight="bold">{emoji} won!</span>')
+            T_('<span size="14000" weight="bold">%(emoji)s won!</span>') % {"emoji": emoji}
         )
         self.stack.set_visible_child_name("end")
 
@@ -1095,7 +1100,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             emoji = "🟢"
         elif id_player == 3:
             emoji = "🟡"
-        self.current_player_label.set_label(T_(f"Current player: {emoji}"))
+        self.current_player_label.set_label(T_("Current player: %(emoji)s") % {"emoji": emoji})
         logging.debug(f"Player {emoji} {id_player} must play")
 
     def update_players_box(self):
@@ -1245,7 +1250,7 @@ class AutoClosePopup(Gtk.Window):
 
 class SavePopup(Gtk.Window):
     def __init__(self, state: 'GameState'):
-        super().__init__(title="Save and quit")
+        super().__init__(title=T_("Save and quit"))
         self.set_default_size(200, 100)
         self.set_transient_for(None)
         self.set_modal(True)
@@ -1253,12 +1258,12 @@ class SavePopup(Gtk.Window):
         self.state = state
 
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=10, margin_bottom=10, margin_start=10, margin_end=10)
-        label = Gtk.Label(label="Do you want to save your game before quitting ?")
+        label = Gtk.Label(label=T_("Do you want to save your game before quitting ?"))
         vbox.append(label)
 
         button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        yes_button = Gtk.Button(label="✅ Yes")
-        no_button = Gtk.Button(label="❌ No")
+        yes_button = Gtk.Button(label=T_("✅ Yes"))
+        no_button = Gtk.Button(label=T_("❌ No"))
         yes_button.connect("clicked", self.on_save_game_clicked)
         no_button.connect("clicked", lambda btn: self.close())
 
@@ -1270,7 +1275,7 @@ class SavePopup(Gtk.Window):
 
         # Création de la boîte de dialogue de sélection de fichier
         self.open_dialog = Gtk.FileChooserNative.new(
-            title="Select a file", parent=self, action=Gtk.FileChooserAction.SAVE
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.SAVE
         )
         self.open_dialog.set_modal(True)
 
