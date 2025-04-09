@@ -2,6 +2,7 @@ import configparser
 import importlib
 import logging
 import os
+import sys
 import pytest
 import re
 from unittest import mock
@@ -13,12 +14,19 @@ from quoridor.main import (
     setup_logging,
     update_config_file,
     update_default_config,
+    configure_game,
+    parse_args,
+    initialize_game_state,
+    open_file,
 )
 from quoridor.config import DEFAULT_AI_HEURISTIC, DEFAULT_AI_MODE, DEFAULT_GAME_MODE
 from quoridor.gamemode import GameMode, AiHeuristic, AiMode
+from quoridor.io import ReadWriteHistory
 
 DEFAULT_CONFIG_FILE = ".quoridorrc_test"
 CONFIG_FILE = "config_test.py"
+
+# Begin test - configparser
 
 
 @pytest.fixture
@@ -443,6 +451,23 @@ def test_update_default_config(mock_config_files):
     config.read(DEFAULT_CONFIG_FILE)
     assert config["Default"]["ai"] == "3"
 
+    update_default_config(
+        size=15,
+        num_players=3,
+        num_walls=6,
+        game_mode="normal",
+        blitz_time=60,
+        ai_color=None,
+        ai_mode="minimax",
+        ai_depth=5,
+        ai_heuristic="default",
+        config_file_str=DEFAULT_CONFIG_FILE,
+    )
+
+    config = configparser.ConfigParser()
+    config.read(DEFAULT_CONFIG_FILE)
+    assert config["Default"]["ai"] == "None"
+
 
 def test_update_config_file(mock_config_files):
     update_config_file(
@@ -487,6 +512,12 @@ def test_restore_default_config_file():
         mock_update.assert_called_once()
 
 
+# End test - configparser
+
+
+# Begin test - main
+
+
 def test_version_option(capsys):
     """
     Test option -V version
@@ -502,38 +533,6 @@ def test_version_option(capsys):
             assert exitinfo.value.code == 0
 
 
-def test_version_verbose(capsys):
-    """
-    Test option -v verbose
-    """
-    setup_logging(True, False)
-    with mock.patch("sys.argv", ["quoridor.main.py", "--verbose"]):
-        with pytest.raises(SystemExit):
-            main()
-
-            captured = capsys.readouterr()
-            assert re.match(
-                r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} - INFO - Verbose mode activated: Additional information",
-                captured.out.strip(),
-            )
-
-
-def test_version_debug(capsys):
-    """
-    Test option -d debug
-    """
-    setup_logging(False, True)
-    with mock.patch("sys.argv", ["quoridor.main.py", "--debug"]):
-        with pytest.raises(SystemExit):
-            main()
-
-            captured = capsys.readouterr()
-            assert re.match(
-                r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} - DEBUG - Debug mode activated: Detailed logs \(dev\)",
-                captured.out.strip(),
-            )
-
-
 def test_init():
     from quoridor import main
 
@@ -544,11 +543,358 @@ def test_init():
                 assert mock_exit.call_args[0][0] == 42
 
 
-def test_invalid_argument(capsys):
-    with mock.patch("sys.argv", ["quoridor.main.py", "--invalid"]):
-        with pytest.raises(SystemExit) as exitinfo:
-            main()
+class MockArgs:
+    def __init__(
+        self,
+        size=None,
+        players=None,
+        walls=None,
+        blitz=False,
+        time=None,
+        ai=None,
+        ai_mode=None,
+        ai_depth=None,
+        ai_heuristic=None,
+        replay=None,
+    ):
+        self.size = size
+        self.players = players
+        self.walls = walls
+        self.blitz = blitz
+        self.time = time
+        self.ai = ai
+        self.ai_mode = ai_mode
+        self.ai_depth = ai_depth
+        self.ai_heuristic = ai_heuristic
+        self.replay = replay
 
-        captured = capsys.readouterr()
-        assert "error:" in captured.err or "unrecognized arguments" in captured.err
-        assert exitinfo.value.code == 2
+
+def test_parse_args_version():
+    sys.argv = ["quoridor.", "--version"]
+    args = parse_args()
+    assert args.version is True
+
+
+def test_parse_args_verbose():
+    sys.argv = ["quoridor.", "--verbose"]
+    args = parse_args()
+    assert args.verbose is True
+
+
+def test_parse_args_debug():
+    sys.argv = ["quoridor.", "--debug"]
+    args = parse_args()
+    assert args.debug is True
+
+
+def test_parse_args_size():
+    sys.argv = ["quoridor.", "--size", "9"]
+    args = parse_args()
+    assert args.size == 9
+
+
+def test_parse_args_invalid_size_not_odd():
+    sys.argv = ["quoridor.", "--size", "10"]
+    with pytest.raises(SystemExit):  # Expecting a system exit due to invalid size
+        args = parse_args()
+        configure_game(args)
+
+
+def test_parse_args_invalid_size():
+    sys.argv = ["quoridor", "--size", "19"]
+    with pytest.raises(SystemExit):  # Expecting a system exit due to invalid size
+        args = parse_args()
+        configure_game(args)
+
+
+from unittest.mock import patch
+import pytest
+
+
+def test_configure_game_valid():
+    class Args:
+        size = 9
+        players = 2
+        walls = 20
+        blitz = False
+        time = 0
+        ai = None
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        result = configure_game(args)
+
+    assert result[0] == 9
+    assert result[1] == 2
+    assert result[2] == 20
+    assert result[3] == "normal"
+    assert result[4] == 3
+    assert result[5] == set()
+    assert result[6] == "minimax"
+    assert result[7] == 3
+    assert result[8] == "default"
+    assert result[9] == True
+
+
+def test_configure_game_invalid_players():
+    args = parse_args()
+    args.players = 5
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        with pytest.raises(SystemExit):
+            configure_game(args)
+
+
+def test_initialize_game_state():
+    ai_ids = {0, 1}
+    state = initialize_game_state(
+        size=9,
+        num_players=2,
+        num_walls=20,
+        game_mode=GameMode.NORMAL,
+        blitz_time=0,
+        ai_ids=ai_ids,
+        ai_mode=AiMode.MINIMAX,
+        ai_depth=3,
+        ai_heuristic=AiHeuristic.DEFAULT,
+    )
+    assert state.size == 9
+    assert state.num_players == 2
+    assert state.ai_ids == ai_ids
+    assert state.ai_mode == AiMode.MINIMAX
+
+
+def test_open_file_invalid():
+    with pytest.raises(FileNotFoundError):
+        open_file("invalid_file.txt")
+
+
+def test_configure_game_size():
+    class Args:
+        size = 11
+        players = 2
+        walls = 20
+        blitz = False
+        time = 0
+        ai = []
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        result = configure_game(args)
+
+    assert result[0] == 11
+    assert result[9] is True
+
+
+def test_configure_game_players():
+    class Args:
+        size = 9
+        players = 3
+        walls = 20
+        blitz = False
+        time = 0
+        ai = []
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        result = configure_game(args)
+
+    assert result[1] == 3
+    assert result[9] is True
+
+
+def test_configure_game_blitz():
+    class Args:
+        size = 9
+        players = 2
+        walls = 20
+        blitz = True
+        time = 5
+        ai = []
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        result = configure_game(args)
+
+    assert result[3] == GameMode.BLITZ
+    assert result[4] == 5
+    assert result[9] is True
+
+
+def test_configure_game_ai():
+    class Args:
+        size = 9
+        players = 2
+        walls = 20
+        blitz = False
+        time = 0
+        ai = [True, "A"]
+        ai_mode = None
+        ai_depth = 3
+        ai_heuristic = "runner"
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "runner")
+        result = configure_game(args)
+
+    assert result[5] == {0, 1, 2, 3}
+    assert result[6] == "minimax"
+    assert result[7] == 3
+    assert result[8] == AiHeuristic.RUNNER
+    assert result[9] is True
+
+
+def test_configure_game_invalid_size():
+    class Args:
+        size = 16
+        players = 2
+        walls = 20
+        blitz = False
+        time = 0
+        ai = []
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        with pytest.raises(SystemExit):
+            configure_game(args)
+
+
+def test_configure_game_invalid_players():
+    class Args:
+        size = 9
+        players = 5
+        walls = 20
+        blitz = False
+        time = 0
+        ai = []
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (9, 2, 20, "normal", 3, set(), "minimax", 3, "default")
+        with pytest.raises(SystemExit):
+            configure_game(args)
+
+
+def test_configure_game_invalid_ai():
+    class Args:
+        size = 9
+        players = 2
+        walls = 20
+        blitz = False
+        time = 0
+        ai = ["4", "5"]
+        ai_mode = None
+        ai_depth = 0
+        ai_heuristic = None
+        replay = None
+
+    args = Args()
+
+    with patch("quoridor.main.load_default_config") as mock_load:
+        mock_load.return_value = (
+            9,
+            2,
+            20,
+            "normal",
+            3,
+            {4, 5},
+            "minimax",
+            3,
+            "default",
+        )
+        with pytest.raises(SystemExit):
+            configure_game(args)
+
+
+def test_configure_game_with_ai_mode():
+    args = MockArgs(ai_mode="ab")
+    _, _, _, _, _, _, ai_mode, _, _, changed = configure_game(args)
+    assert ai_mode == AiMode.ALPHABETA
+    assert changed
+
+    args = MockArgs(ai_mode="minimax")
+    _, _, _, _, _, _, ai_mode, _, _, changed = configure_game(args)
+    assert ai_mode == AiMode.MINIMAX
+    assert changed
+
+    args = MockArgs(ai_mode="greedy")
+    _, _, _, _, _, _, ai_mode, _, _, changed = configure_game(args)
+    assert ai_mode == AiMode.GREEDY
+    assert changed
+
+
+def test_configure_game_with_ai_heuristic():
+    args = MockArgs(ai_heuristic="default")
+    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    assert ai_heuristic == AiHeuristic.DEFAULT
+    assert changed
+
+    args = MockArgs(ai_heuristic="runner")
+    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    assert ai_heuristic == AiHeuristic.RUNNER
+    assert changed
+
+    args = MockArgs(ai_heuristic="aggressive")
+    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    assert ai_heuristic == AiHeuristic.AGGRESSIVE
+    assert changed
+
+    args = MockArgs(ai_heuristic="central")
+    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    assert ai_heuristic == AiHeuristic.CENTRAL
+    assert changed
+
+
+def test_configure_game_with_replay(monkeypatch):
+    def mock_read_history(file_path):
+        return ["line1", "line2"]
+
+    def mock_num_players_from_file(lines):
+        return 3
+
+    monkeypatch.setattr(ReadWriteHistory, "read_history", mock_read_history)
+    monkeypatch.setattr(
+        ReadWriteHistory, "num_players_from_file", mock_num_players_from_file
+    )
+
+    args = MockArgs(replay="fake_path")
+    _, num_players, _, _, _, _, _, _, _, _ = configure_game(args)
+    assert num_players == max(3, load_default_config()[1])

@@ -54,7 +54,10 @@ def test_default_game():
     __check_game_parameters(game, 9, 2, GameMode.NORMAL, [])
     assert game.current_player.id == 0
 
-    players = [Player(1, (4, 8), 10), Player(0, (4, 0), 10)]
+    players = [
+        Player(1, (4, 8), size=9, walls_remaining=10),
+        Player(0, (4, 0), size=9, walls_remaining=10),
+    ]
     __check_player(game, players)
 
 

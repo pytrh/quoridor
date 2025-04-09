@@ -223,14 +223,9 @@ def restore_default_config_file() -> None:
     )
 
 
-def main():
-    """
-    Main function
-    Handles command line arguments with argparse
-    """
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", default=None, nargs="?")
-
     parser.add_argument(
         "-V",
         "--version",
@@ -296,7 +291,6 @@ def main():
         const=True,
         action="append",
     )
-    # todo add parameter –-ai-mode/--ai-m --ai-depth/--ai-d --ai-heuristic/--ai-h
     parser.add_argument(
         "--ai-m",
         "--ai-mode",
@@ -333,38 +327,10 @@ def main():
         help="replay game from file saved during pending play",
         required=False,
     )
+    return parser.parse_args()
 
-    args = parser.parse_args()
-    game_related_args = [
-        "players",
-        "blitz",
-        "time",
-        "size",
-        "walls",
-        "ai",
-        "ai_mode",
-        "ai_depth",
-        "ai_heuristic",
-        "replay",
-        "file",
-    ]
 
-    setup_logging(verbose=args.verbose, debug=args.debug)
-
-    if args.version:
-        version = importlib.metadata.version("quoridor")
-        print(f"Quoridor : version {version}")
-        sys.exit(0)
-
-    initial_state = None
-    changed = False
-
-    if args.file:
-        changed = True
-        logging.debug("File found in arguments")
-        with open(args.file, "r", encoding="utf-8") as file:
-            initial_state = parse_string_to_state(file)
-
+def configure_game(args):
     (
         size,
         num_players,
@@ -376,12 +342,7 @@ def main():
         ai_depth,
         ai_heuristic,
     ) = load_default_config()
-
-    if args.walls:
-        num_walls = args.walls
-        if args.walls < 0:
-            num_walls = 999
-        changed = True
+    changed = False
 
     if args.size:
         error = False
@@ -395,7 +356,6 @@ def main():
             sys.exit(1)
         size = args.size
         changed = True
-
     if args.players:
         error = False
         if args.players not in range(MIN_NUM_PLAYERS, MAX_NUM_PLAYERS + 1):
@@ -405,7 +365,20 @@ def main():
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
         num_players = args.players
         changed = True
-
+    if args.walls:
+        num_walls = args.walls
+        if args.walls < 0:
+            num_walls = 999
+        changed = True
+    if args.blitz:
+        game_mode = GameMode.BLITZ
+        changed = True
+    if args.time:
+        if game_mode != GameMode.BLITZ:
+            logging.warning("blitz mode is not activated. You cannot set a time.")
+        else:
+            blitz_time = args.time
+            changed = True
     if args.ai:
         current_ai_color = DEFAULT_AI_COLOR_ID
         for ai in args.ai:
@@ -424,24 +397,18 @@ def main():
                     current_ai_color += 1
                 ai_ids.add(color - 1)
 
-    if args.blitz:
-        game_mode = GameMode.BLITZ
-        changed = True
-
-    if args.time:
-        if game_mode != GameMode.BLITZ:
-            logging.warning("blitz mode is not activated. You cannot set a time.")
-        else:
-            blitz_time = args.time
-            changed = True
-
-    if (args.players is not None) and (args.ai is not None):
-        if num_players < max(len(ai_ids), max(ai_ids) + 1):
-            logging.warning("Warning: -p option ignored due to presence of -a options")
+    if ai_ids:
+        if (args.players is not None) and (args.ai is not None):
+            if num_players < max(len(ai_ids), max(ai_ids) + 1):
+                logging.warning(
+                    "Warning: -p option ignored due to presence of -a options"
+                )
+                num_players = max(
+                    DEFAULT_AI_COLOR_ID, max(len(ai_ids), max(ai_ids) + 1)
+                )
+        elif args.ai is not None:
             num_players = max(DEFAULT_AI_COLOR_ID, max(len(ai_ids), max(ai_ids) + 1))
-    elif args.ai is not None:
-        num_players = max(DEFAULT_AI_COLOR_ID, max(len(ai_ids), max(ai_ids) + 1))
-        changed = True
+            changed = True
 
     if args.ai_mode:
         if args.ai_mode == AiMode.ALPHABETA.display_name:
@@ -468,37 +435,126 @@ def main():
             ai_heuristic = AiHeuristic.CENTRAL
         changed = True
 
-    if changed:
-        update_config_file(
-            size,
-            num_players,
-            num_walls,
-            game_mode,
-            blitz_time,
-            ai_ids,
-            ai_mode,
-            ai_depth,
-            ai_heuristic,
-        )
-        update_default_config(
-            size,
-            num_players,
-            num_walls,
-            game_mode.display_name,
-            blitz_time,
-            ai_ids,
-            ai_mode.display_name,
-            ai_depth,
-            ai_heuristic.display_name,
-        )
-
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
         new_num_players = ReadWriteHistory.num_players_from_file(lines)
         num_players = max(new_num_players, num_players)
 
-    if not initial_state:
-        initial_state = GameState(
+    return (
+        size,
+        num_players,
+        num_walls,
+        game_mode,
+        blitz_time,
+        ai_ids,
+        ai_mode,
+        ai_depth,
+        ai_heuristic,
+        changed,
+    )
+
+
+def initialize_game_state(
+    size: int,
+    num_players: int,
+    num_walls: int,
+    game_mode: GameMode,
+    blitz_time: int,
+    ai_ids: set,
+    ai_mode: AiMode,
+    ai_depth: int,
+    ai_heuristic: AiHeuristic,
+) -> GameState:
+    return GameState(
+        size=size,
+        num_players=num_players,
+        num_walls=num_walls,
+        game_mode=game_mode,
+        blitz_time=blitz_time,
+        ai_ids=ai_ids,
+        ai_mode=ai_mode,
+        ai_depth=ai_depth,
+        ai_heuristic=ai_heuristic,
+    )
+
+
+def update_config(
+    size,
+    num_players,
+    num_walls,
+    game_mode,
+    blitz_time,
+    ai_ids,
+    ai_mode,
+    ai_depth,
+    ai_heuristic,
+):
+    update_config_file(
+        size,
+        num_players,
+        num_walls,
+        game_mode,
+        blitz_time,
+        ai_ids,
+        ai_mode,
+        ai_depth,
+        ai_heuristic,
+    )
+    update_default_config(
+        size,
+        num_players,
+        num_walls,
+        game_mode.display_name,
+        blitz_time,
+        ai_ids,
+        ai_mode.display_name,
+        ai_depth,
+        ai_heuristic.display_name,
+    )
+
+
+def open_file(filename: str) -> GameState:
+    initial_state = None
+    with open(filename, "r", encoding="utf-8") as file:
+        initial_state = parse_string_to_state(file)
+    return initial_state
+
+
+def main():
+    """
+    Main function
+    Handles command line arguments with argparse
+    """
+    args = parse_args()
+
+    setup_logging(verbose=args.verbose, debug=args.debug)
+
+    if args.version:
+        version = importlib.metadata.version("quoridor")
+        print(f"Quoridor : version {version}")
+        sys.exit(0)
+
+    (
+        size,
+        num_players,
+        num_walls,
+        game_mode,
+        blitz_time,
+        ai_ids,
+        ai_mode,
+        ai_depth,
+        ai_heuristic,
+        changed,
+    ) = configure_game(args)
+
+    initial_state = None
+
+    if args.file:
+        changed = True
+        logging.debug("File found in arguments")
+        initial_state = open_file(args.file)
+    else:
+        initial_state = initialize_game_state(
             size=size,
             num_players=num_players,
             num_walls=num_walls,
@@ -510,10 +566,36 @@ def main():
             ai_heuristic=ai_heuristic,
         )
 
+    if changed:
+        update_config(
+            size,
+            num_players,
+            num_walls,
+            game_mode,
+            blitz_time,
+            ai_ids,
+            ai_mode,
+            ai_depth,
+            ai_heuristic,
+        )
+
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
         ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)
 
+    game_related_args = [
+        "players",
+        "blitz",
+        "time",
+        "size",
+        "walls",
+        "ai",
+        "ai_mode",
+        "ai_depth",
+        "ai_heuristic",
+        "replay",
+        "file",
+    ]
     try:
         if args.gui:
             if args.gui and not any(getattr(args, arg) for arg in game_related_args):
