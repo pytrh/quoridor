@@ -572,6 +572,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 else:
                     self._ai_ids.remove(i - 1)
 
+            if i + 1 == DEFAULT_AI_COLOR_ID:
+                button.set_active(True)
             button.connect("toggled", on_toggle)
             self.ai_player_buttons.append(button)
             self.player_box.append(button)
