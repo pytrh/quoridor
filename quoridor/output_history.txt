@@ -1,4 +1,0 @@
-# Quoridor Game History
-1. e1-e2 a10-a9 e2-e3 a9v 
-2. a6v a9-a8 e4-e5 a8-a7 
-3. e3-e4 a7-a6 e5-e6 a6-a5 
