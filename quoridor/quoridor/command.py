@@ -598,7 +598,7 @@ class PassCommand(Command):
 
     def __str__(self) -> str:
 
-        return "Pass player"
+        return "Pass"
 
     def undo(self) -> None:
         self.state.backward_player()

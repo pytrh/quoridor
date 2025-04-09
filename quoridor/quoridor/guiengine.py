@@ -572,6 +572,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 else:
                     self._ai_ids.remove(i - 1)
 
+            if i + 1 == DEFAULT_AI_COLOR_ID:
+                button.set_active(True)
             button.connect("toggled", on_toggle)
             self.ai_player_buttons.append(button)
             self.player_box.append(button)
@@ -678,7 +680,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.initial_state = self.state.copy_state()
         self.stack.set_visible_child_name("running_game")
         self.initialize_begining_game()
-        
+
     ### --- Loading Game
 
     def manage_ai_parameters(self):
@@ -786,6 +788,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
+        self.update_current_player_label()
         self.create_box_players(self.game_players_box)
         self.create_board()
         self.render_board()
@@ -842,6 +845,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
                 drop_target.connect("drop", self.on_drop)
                 cell.add_controller(drop_target)
+
+                click_target = Gtk.GestureClick.new()
+                click_target.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+                click_target.connect("released", self.on_click)
+                cell.add_controller(click_target)
 
                 self.cells[(row, col)] = cell
 
@@ -904,6 +912,16 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         drag_source.connect("prepare", self.on_drag_prepare, wall_type)
         button.add_controller(drag_source)
 
+        click_gesture = Gtk.GestureClick.new()
+        click_gesture.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        click_gesture.connect("released", self.nothing)  # No-op
+        button.add_controller(click_gesture)
+
+    def nothing(self, click_target, value, z, a):
+        popup = AutoClosePopup(f"Drag the piece of wall to the board", True)
+        popup.show()
+        return True
+
     def on_drag_prepare(self, drag_source, x, y, emoji, pos=None):
         """Prepares the piece for dragging by storing its last position."""
         data = Gdk.ContentProvider.new_for_value(emoji)
@@ -935,6 +953,22 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         elif value in [Direction.H, Direction.V]:
             self.handle_place_wall(row, col, value)
+
+        return True
+
+    def on_click(self, click_target, value, x, y):
+        cell = click_target.get_widget()
+
+        row, col = None, None
+        for (r, c), button in self.cells.items():
+            if button == cell:
+                row, col = r, c
+                break
+
+        if row is None or col is None:
+            logging.debug("Error : no cell found in the grid")
+
+        self.handle_pawn_move_click(row, col, value)
 
         return True
 
@@ -1021,6 +1055,22 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             return
 
         last_pos = getattr(self, last_pos_attr, None)
+        if not last_pos:
+            logging.debug("Error: last position not found")
+            return
+
+        logging.debug(f"Moving pawn to : ({row}, {col})")
+
+        last_row, last_col = last_pos
+        try:
+            move_pawn = MovePawnCommand(self.state, (last_row, last_col), (row, col))
+            self.execute_command(move_pawn)
+        except InvalidMoveError as e:
+            logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
+
+    def handle_pawn_move_click(self, row: int, col: int, player_id):
+        """Manages pawn movement"""
+        last_pos = self.state.current_player.position
         if not last_pos:
             logging.debug("Error: last position not found")
             return
@@ -1209,7 +1259,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.handle_switch_player()
         except Exception as e:
             if self.state.current_player.id in self.state.ai_controllers:
-                popup = AutoClosePopup(f"This AI try an \"Invalid Move\". To continue please play for him", self.popup_activated)
+                popup = AutoClosePopup(
+                    f'This AI try an "Invalid Move". To continue please play for him',
+                    self.popup_activated,
+                )
                 popup.show()
                 return False
             error_type = type(e).__name__
@@ -1247,6 +1300,7 @@ class AutoClosePopup(Gtk.Window):
             label = Gtk.Label(label=message)
             self.set_child(label)
             GLib.timeout_add(2500, self.destroy)
+
 
 class SavePopup(Gtk.Window):
     def __init__(self, state: 'GameState'):
@@ -1299,6 +1353,7 @@ class SavePopup(Gtk.Window):
             except QuitApp:
                 pass
         self.close()
+
 
 class MyApplication(Gtk.Application):
     def __init__(self, state: GameState, **kwargs):
