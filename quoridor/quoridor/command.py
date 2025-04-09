@@ -25,7 +25,6 @@ import os
 from quoridor.io import ReadWriteHistory
 from quoridor.graph import Graph
 from quoridor.direction import Direction
-from quoridor.gamemode import GameMode
 from quoridor.exceptions import (
     InvalidMoveError,
     PathNotFoundError,
@@ -425,7 +424,9 @@ class AbandonCommand(Command):
             self.state.num_players_remaining -= 1
             self.player.is_dead = True
 
-            if self.state.game_mode == GameMode.BLITZ:
+            from quoridor.gamemode import GameMode
+
+            if self.state.game_mode.display_name == GameMode.BLITZ:
                 if self.player.timer.turn_start_time is not None:
                     self.player.timer.end_turn()
                     self.player.timer.display_lock.clear()
@@ -441,7 +442,9 @@ class AbandonCommand(Command):
         self.state.num_players_remaining -= 1
         self.player.is_dead = True
 
-        if self.state.game_mode == GameMode.BLITZ:
+        from quoridor.gamemode import GameMode
+
+        if self.state.game_mode.display_name == GameMode.BLITZ:
             if self.player.timer.turn_start_time is not None:
                 self.player.timer.end_turn()
                 self.player.timer.display_lock.clear()
@@ -462,6 +465,27 @@ class QuitCommand(Command):
         """Quit the application."""
         # demander à l'utilisateur s'il veut sauvegarder la partie ou non dans un fichier
         # elif input == "save": # TODO save state F34 (bastien)
+        raise QuitApp
+
+    def __str__(self) -> str:
+        return "Quit application"
+
+
+class SaveAndQuitCommand(Command):
+    """Command to quit the application."""
+
+    def __init__(self, state: "GameState", file: str):
+        super().__init__(state)
+        self.file = file
+
+    def execute(self) -> bool:
+        from quoridor.parser import parse_state_to_string
+        from quoridor.io import write_to_file
+
+        """Quit the application."""
+        # demander à l'utilisateur s'il veut sauvegarder la partie ou non dans un fichier
+        FileContent = parse_state_to_string(self.state)
+        write_to_file(self.file, FileContent)
         raise QuitApp
 
     def __str__(self) -> str:
@@ -563,9 +587,10 @@ class PassCommand(Command):
 
     def execute(self) -> bool:
         """Command to pass the player's turn."""
-        return True
+        return self.state.check_pass_player(self.state.current_player.id)
 
     def __str__(self) -> str:
+
         return "Pass player"
 
     def undo(self) -> None:
