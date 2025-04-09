@@ -194,7 +194,12 @@ class ReadWriteHistory:
         state: "GameState", turns: list[list[tuple[int, str]]]
     ) -> list[tuple[int, "Command"]]:
         from quoridor.cliengine import CLIEngine
-        from quoridor.command import AbandonCommand, MovePawnCommand, PlaceWallCommand
+        from quoridor.command import (
+            AbandonCommand,
+            MovePawnCommand,
+            PlaceWallCommand,
+            PassCommand,
+        )
 
         c = CLIEngine(state)
         cmds: list[tuple[int, Command]] = []
@@ -205,6 +210,9 @@ class ReadWriteHistory:
                         pid = player_id - 1
                         if cmd_str == "SURRENDER":
                             cmd = AbandonCommand(state, pid)
+                            c.execute_command(cmd)
+                        elif cmd_str == "Pass":
+                            cmd = PassCommand(state)
                             c.execute_command(cmd)
                         elif len(cmd_str) == 2 or (
                             len(cmd_str) >= 3 and not cmd_str[-1] in "hv"
