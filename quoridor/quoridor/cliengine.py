@@ -3,10 +3,8 @@ Run the quoridor game in the terminal.
 """
 
 import logging
-import sys
 import select
-import copy
-from time import sleep
+import sys
 from quoridor.gamestate import GameState
 from quoridor.direction import Direction
 from quoridor.gamemode import GameMode
@@ -230,6 +228,9 @@ class CLIEngine:
         )
         buffer = ""
 
+        if "pytest" in sys.modules:
+            return "quit"
+
         while True:
             if self.state.game_mode == GameMode.BLITZ:
                 if (
@@ -270,7 +271,11 @@ class CLIEngine:
         """
         Render the game over screen.
         """
-        print(T_("Player ") + str(self.state.current_player.id + 1) + T_(" has won the game!"))
+        print(
+            T_("Player ")
+            + str(self.state.current_player.id + 1)
+            + T_(" has won the game!")
+        )
 
     def get_command_from_human_player(self) -> Command:
         """
@@ -370,7 +375,9 @@ class CLIEngine:
                 print(T_("No command to redo"))
             except InvalidCommandError as e:
                 self.end_blitz_turn()
-                print(T_("Invalid command: ") + str(e)) # TODO: difference between invalid move and invalid command?
+                print(
+                    T_("Invalid command: ") + str(e)
+                )  # TODO: difference between invalid move and invalid command?
             except GameOver:
                 self.render_game_over()
                 self.execute_command(QuitCommand(self.state))

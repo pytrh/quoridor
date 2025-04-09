@@ -20,7 +20,8 @@ class Graph:
 
     def add_node(self, node: tuple[int, int]) -> None:
         """
-        Add a node to the graph, if it is not already in the graph by adding a integer tuple as a key to the dictionary.
+        Add a node to the graph, if it is not already in the graph by
+        adding a integer tuple as a key to the dictionary.
 
         :param node: The node to add to the graph.
         :type node: tuple[int, int]
@@ -81,8 +82,8 @@ class Graph:
         :raises NodeNotFoundError: If the node is not found in the graph.
         """
         if node in self._graph:
-            for v in self._graph[node]:
-                self._graph[v].remove(node)
+            for connect_node in self._graph[node]:
+                self._graph[connect_node].remove(node)
             del self._graph[node]
         else:
             raise NodeNotFoundError(f"Node {node} not found in graph")
@@ -230,19 +231,16 @@ class Graph:
         if goal not in self._graph:
             raise NodeNotFoundError(f"Node {goal} not found in graph")
 
-        visited = set()
         queue = [[start]]
         while queue:
             path = queue.pop(0)
             node = path[-1]
             if node == goal:
                 return path
-            if node not in visited:
-                for adjacent in self._graph[node]:
-                    new_path = list(path)
-                    new_path.append(adjacent)
-                    queue.append(new_path)
-                visited.add(node)
+            for adjacent in self._graph[node]:
+                new_path = list(path)
+                new_path.append(adjacent)
+                queue.append(new_path)
         raise PathNotFoundError(f"No path found between {start} and {goal}")
 
     def depth_first_search(
