@@ -1,0 +1,2 @@
+# Quoridor Game History
+1. 1 e1-e2 

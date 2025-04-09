@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: quoridor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-09 02:09+0200\n"
+"POT-Creation-Date: 2025-04-09 15:20+0200\n"
 "PO-Revision-Date: 2025-04-08 16:34+0200\n"
 "Last-Translator:  <lulu@grasspunk.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -17,38 +17,223 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: quoridor/guiengine.py:356
+#: quoridor/command.py:507
+#, python-format
+msgid "[⏳ Remaining: %(seconds)s] "
+msgstr "[⏳ Restant: %(seconds)s] "
+
+#: quoridor/cliengine.py:227 quoridor/cliengine.py:273
+msgid "Player "
+msgstr "Joueur "
+
+#: quoridor/cliengine.py:227
+msgid " will play? "
+msgstr " va jouer?"
+
+#: quoridor/cliengine.py:273
+msgid " has won the game!"
+msgstr " a gagné le jeu!"
+
+#: quoridor/cliengine.py:300
+msgid "Mode blitz is disabled"
+msgstr "Le mode blitz est desactivé"
+
+#: quoridor/cliengine.py:313
+msgid "Invalid command format"
+msgstr "Format de commande invalide"
+
+#: quoridor/cliengine.py:363
+msgid "Invalid move: "
+msgstr "Coup invalide: "
+
+#: quoridor/cliengine.py:366
+msgid "Cannot place wall: it would block a player's path to goal"
+msgstr ""
+"Impossible de placer un mur: ça bloquerait un joueur a atteindre l'objectif"
+
+#: quoridor/cliengine.py:368
+msgid "No move to undo"
+msgstr "Aucun coup à annuler"
+
+#: quoridor/cliengine.py:370
+msgid "No command to redo"
+msgstr "Aucun coup à rejouer"
+
+#: quoridor/cliengine.py:373
+msgid "Invalid command: "
+msgstr "Commande invalide: "
+
+#: quoridor/guiengine.py:94 quoridor/guiengine.py:1278
+msgid "Select a file"
+msgstr "Sélectionner un fichier"
+
+#: quoridor/guiengine.py:123
+msgid "New Game"
+msgstr "Nouvelle partie"
+
+#: quoridor/guiengine.py:124
+msgid "Load Game"
+msgstr "Charger une partie"
+
+#: quoridor/guiengine.py:125
+msgid "About"
+msgstr "À propos de l'application"
+
+#: quoridor/guiengine.py:170
+msgid "🔄 Restart"
+msgstr "🔄 Recommencer"
+
+#: quoridor/guiengine.py:173
+msgid "📥 Save"
+msgstr "📥 Sauvegarder"
+
+#: quoridor/guiengine.py:178
+msgid "🚪 Quit"
+msgstr "🚪 Quitter"
+
+#: quoridor/guiengine.py:183
+msgid "🏳️ Abandon"
+msgstr "🏳️ Abandonner"
+
+#: quoridor/guiengine.py:227
+msgid "Current player"
+msgstr "Joueur actuel"
+
+#: quoridor/guiengine.py:229
+msgid "Drag n Drop to play"
+msgstr "Glissez-déposez pour jouer"
+
+#: quoridor/guiengine.py:252
+msgid "⬅ Undo"
+msgstr "⬅ Annuler"
+
+#: quoridor/guiengine.py:254
+msgid "Redo ➡"
+msgstr "Rétablir ➡"
+
+#: quoridor/guiengine.py:259
+msgid "💡 Hint"
+msgstr "💡 Indice"
+
+#: quoridor/guiengine.py:265
+msgid "⏭ Pass turn"
+msgstr "⏭ Passer le tour"
+
+#: quoridor/guiengine.py:361
+msgid "Play Again"
+msgstr "Rejouer"
+
+#: quoridor/guiengine.py:365
 msgid "Go Home"
 msgstr "Revenir au menu"
 
-#~ msgid "Remaining walls: "
-#~ msgstr "Murs restant: "
+#: quoridor/guiengine.py:380
+msgid "Back"
+msgstr "Retour"
 
-#~ msgid "Player "
-#~ msgstr "Joueur "
+#: quoridor/guiengine.py:387
+msgid "Number of players:"
+msgstr "Nombre de joueurs:"
 
-#~ msgid " will play? "
-#~ msgstr " va jouer?"
+#: quoridor/guiengine.py:392
+msgid "3 (not recommended)"
+msgstr "3 (déconseillé)"
 
-#~ msgid " has won the game!"
-#~ msgstr " a gagné le jeu!"
+#: quoridor/guiengine.py:411
+msgid "Board size:"
+msgstr "Taille du plateau:"
 
-#~ msgid "Invalid move: "
-#~ msgstr "Coup invalide: "
+#: quoridor/guiengine.py:429
+msgid "Number of walls per player:"
+msgstr "Nombre de murs par joueur:"
 
-#~ msgid "Cannot place wall: it would block a player's path to goal"
-#~ msgstr ""
-#~ "Impossible de placer un mur: ça bloquerait un joueur a atteindre "
-#~ "l'objectif"
+#: quoridor/guiengine.py:442
+msgid "Game Mode:"
+msgstr "Mode de jeu:"
 
-#~ msgid "No move to undo"
-#~ msgstr "Aucun coup à annuler"
+#: quoridor/guiengine.py:482
+msgid "AI Mode:"
+msgstr "Mode IA:"
 
-#~ msgid "No command to redo"
-#~ msgstr "Aucun coup à rejouer"
+#: quoridor/guiengine.py:496
+msgid "Start"
+msgstr "Commencer la partie"
 
-#~ msgid "Invalid command: "
-#~ msgstr "Commande invalide: "
+#: quoridor/guiengine.py:509
+msgid "Easy (default)"
+msgstr "Facile (par défaut)"
 
-#~ msgid "Player will play?"
-#~ msgstr "Le joueur va jouer?"
+#: quoridor/guiengine.py:511
+msgid "Medium"
+msgstr "Moyen"
+
+#: quoridor/guiengine.py:513
+msgid "Hard"
+msgstr "Difficle"
+
+#: quoridor/guiengine.py:558
+msgid "AI player: "
+msgstr "Joueur IA: "
+
+#: quoridor/guiengine.py:565 quoridor/guiengine.py:569
+#, python-brace-format
+msgid "AI {num}"
+msgstr "IA {num}"
+
+#: quoridor/guiengine.py:744
+#, python-format
+msgid ": walls remaining = %(walls)d"
+msgstr ": murs restant = %(walls)d"
+
+#: quoridor/guiengine.py:747
+#, python-brace-format
+msgid "{is_ai}Player {id} {emoji} {walls}"
+msgstr "{is_ai}Joueur {id} {emoji} {walls}"
+
+#: quoridor/guiengine.py:946
+#, python-brace-format
+msgid "Timer: {time}"
+msgstr "Temps restant: {time}"
+
+#: quoridor/guiengine.py:1058
+#, python-format
+msgid "<span size=\"14000\" weight=\"bold\">%(emoji)s won!</span>"
+msgstr "<span size=\"14000\" weight=\"bold\">%(emoji)s a gagné !</span>"
+
+#: quoridor/guiengine.py:1103
+#, python-format
+msgid "Current player: %(emoji)s"
+msgstr "Joueur actuel: %(emoji)s"
+
+#: quoridor/guiengine.py:1124
+#, python-brace-format
+msgid "Turn {turn_index}: "
+msgstr "Tour {turn_index}: "
+
+#: quoridor/guiengine.py:1217
+#, python-brace-format
+msgid "Error ({error_type}) : {e}"
+msgstr "Erreur ({error_type}) : {e}"
+
+#: quoridor/guiengine.py:1243
+msgid "Warning"
+msgstr "Attention"
+
+#: quoridor/guiengine.py:1253
+msgid "Save and quit"
+msgstr "Sauvegarder et quitter"
+
+#: quoridor/guiengine.py:1261
+msgid "Do you want to save your game before quitting ?"
+msgstr "Voulez-vous sauvegrader avant de quitter ?"
+
+#: quoridor/guiengine.py:1265
+msgid "✅ Yes"
+msgstr "✅ Oui"
+
+#: quoridor/guiengine.py:1266
+msgid "❌ No"
+msgstr "❌ Non"
+
+#~ msgid "Error"
+#~ msgstr "Erreur"

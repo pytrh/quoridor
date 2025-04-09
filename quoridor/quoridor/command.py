@@ -33,6 +33,7 @@ from quoridor.exceptions import (
     NoRedoableCommand,
     QuitApp,
 )
+from quoridor.translations import T_
 
 if TYPE_CHECKING:
     from quoridor.gamestate import GameState
@@ -502,7 +503,11 @@ class TimeCommand(Command):
 
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
-        print(f"\r[⏳ Remaining: {self.state.current_player.timer.remaining}s] ")
+        print(
+            "\r" + T_("[⏳ Remaining: %(seconds)s] ") % {
+                "seconds": f"{self.state.current_player.timer.remaining}s"
+            }
+        )
         return False
 
     def __str__(self) -> str:
