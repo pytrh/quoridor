@@ -87,7 +87,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         # Crée une boîte de dialogue pour ouvrir un fichier
         self.open_dialog = Gtk.FileChooserNative.new(
-            title="Select a file", parent=self, action=Gtk.FileChooserAction.OPEN
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.OPEN
         )
         self.open_dialog.set_modal(True)
 
@@ -116,9 +116,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         title.set_css_classes(["title"])
         box.append(title)
 
-        self.create_button_for_menu(box, self.on_new_game_clicked, "New Game")
-        self.create_button_for_menu(box, self.on_load_game_clicked, "Load Game")
-        self.create_button_for_menu(box, self.on_about_clicked, "About")
+        self.create_button_for_menu(box, self.on_new_game_clicked, T_("New Game"))
+        self.create_button_for_menu(box, self.on_load_game_clicked, T_("Load Game"))
+        self.create_button_for_menu(box, self.on_about_clicked, T_("About"))
 
         return box
 
@@ -163,17 +163,17 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         game_button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         game_button_box.set_halign(Gtk.Align.CENTER)
         game_button_box.set_valign(Gtk.Align.CENTER)
-        restart_button = Gtk.Button(label="🔄 Restart")
+        restart_button = Gtk.Button(label=T_("🔄 Restart"))
         restart_button.connect("clicked", self.on_restart_clicked)
 
-        download_button = Gtk.Button(label="📥 Save")
+        download_button = Gtk.Button(label=T_("📥 Save"))
 
-        power_button = Gtk.Button(label="🚪 Quit")
+        power_button = Gtk.Button(label=T_("🚪 Quit"))
         power_button.set_size_request(20, 10)
         power_button.set_halign(Gtk.Align.START)
         power_button.connect("clicked", self.on_back_home)
 
-        btn_abandon = Gtk.Button(label="🏳️ Abandon")
+        btn_abandon = Gtk.Button(label=T_("🏳️ Abandon"))
         btn_abandon.set_size_request(20, 10)
         btn_abandon.set_halign(Gtk.Align.START)
         btn_abandon.connect("clicked", self.on_abandon_game)
@@ -217,9 +217,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         walls_box.append(Gtk.Label(label="Vertical"))
         walls_box.append(self.vertical_wall)
 
-        self.current_player_label = Gtk.Label(label="Current player")
+        self.current_player_label = Gtk.Label(label=T_("Current player"))
         game_box.append(self.current_player_label)
-        game_box.append(Gtk.Label(label="Drag n Drop to play"))
+        game_box.append(Gtk.Label(label=T_("Drag n Drop to play")))
         game_box.append(self.game_grid)
         game_box.append(walls_box)
 
@@ -242,20 +242,20 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         arrow_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         right_box.append(arrow_box)
 
-        left_arrow = Gtk.Button(label="⬅ Undo")
+        left_arrow = Gtk.Button(label=T_("⬅ Undo"))
         left_arrow.connect("clicked", self.on_undo_clicked)
-        right_arrow = Gtk.Button(label="Redo ➡")
+        right_arrow = Gtk.Button(label=T_("Redo ➡"))
         right_arrow.connect("clicked", self.on_redo_clicked)
         arrow_box.append(left_arrow)
         arrow_box.append(right_arrow)
 
-        hint_button = Gtk.Button(label="💡 Hint")
+        hint_button = Gtk.Button(label=T_("💡 Hint"))
         hint_button.set_size_request(20, 10)
         hint_button.set_halign(Gtk.Align.CENTER)
         hint_button.connect("clicked", self.on_hint_clicked)
         right_box.append(hint_button)
 
-        self.btn_pass_turn = Gtk.Button(label="⏭ Pass turn")
+        self.btn_pass_turn = Gtk.Button(label=T_("⏭ Pass turn"))
         self.btn_pass_turn.set_size_request(20, 10)
         self.btn_pass_turn.set_halign(Gtk.Align.CENTER)
         self.btn_pass_turn.connect("clicked", self.on_pass_turn)
@@ -351,7 +351,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         button_box = Gtk.Box(spacing=10)
         button_box.set_halign(Gtk.Align.CENTER)
 
-        restart_button = Gtk.Button(label="Play Again")
+        restart_button = Gtk.Button(label=T_("Play Again"))
         restart_button.connect("clicked", self.on_restart_clicked)
         button_box.append(restart_button)
 
@@ -370,19 +370,19 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(btn)
 
     def create_return_button(self, box):
-        btn_back = Gtk.Button(label="Back")
+        btn_back = Gtk.Button(label=T_("Back"))
         btn_back.set_size_request(20, 10)
         btn_back.set_halign(Gtk.Align.START)
         btn_back.connect("clicked", self.on_back_home)
         box.append(btn_back)
 
     def create_nb_players(self, box):
-        self.create_option_label(box, "Number of players:")
+        self.create_option_label(box, T_("Number of players:"))
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
         self.btn_nb_players_2 = Gtk.CheckButton(label="2")
-        self.btn_nb_players_3 = Gtk.CheckButton(label="3 (not recommended)")
+        self.btn_nb_players_3 = Gtk.CheckButton(label=T_("3 (not recommended)"))
         self.btn_nb_players_4 = Gtk.CheckButton(label="4")
 
         self.btn_nb_players_2.set_active(True)  # Two players by default
@@ -401,7 +401,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(hbox)
 
     def create_board_size_slider(self, box):
-        self.create_option_label(box, "Board length :")
+        self.create_option_label(box, T_("Board size:"))
         self.board_slider = Gtk.Scale()
         self.board_slider.set_digits(0)
         self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
@@ -419,7 +419,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._board_size = int(slider.get_value())
 
     def create_wall_number_slider(self, box):
-        self.create_option_label(box, "Number of walls per player :")
+        self.create_option_label(box, T_("Number of walls per player:"))
         self.wall_slider = Gtk.Scale()
         self.wall_slider.set_digits(0)
         self.wall_slider.set_range(0, MAX_GRID_SIZE * 2)
@@ -432,7 +432,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._num_walls = int(slider.get_value())
 
     def create_game_mode(self, box):
-        self.create_option_label(box, "Game Mode:")
+        self.create_option_label(box, T_("Game Mode:"))
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
         self.btn_normal = Gtk.CheckButton(label="Normal")
@@ -472,7 +472,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(hbox)
 
     def create_ai_switch(self, box):
-        self.create_option_label(box, "AI Mode:")
+        self.create_option_label(box, T_("AI Mode:"))
         switch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
         self.switch_ai = Gtk.Switch()
@@ -486,7 +486,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.create_ai_hidden_radio_buttons(box)
 
     def create_start_button(self, box):
-        btn_start = Gtk.Button(label="Start")
+        btn_start = Gtk.Button(label=T_("Start"))
         btn_start.set_size_request(20, 10)
         btn_start.set_halign(Gtk.Align.START)
         btn_start.connect("clicked", self.on_start_game_clicked)
@@ -499,11 +499,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(label)
 
     def create_ai_hidden_radio_buttons(self, box):
-        self.btn_ai_easy = Gtk.CheckButton(label="Easy (default)")
+        self.btn_ai_easy = Gtk.CheckButton(label=T_("Easy (default)"))
         self.btn_ai_easy.connect("toggled", self.on_button_ai_difficulty, "easy")
-        self.btn_ai_medium = Gtk.CheckButton(label="Medium")
+        self.btn_ai_medium = Gtk.CheckButton(label=T_("Medium"))
         self.btn_ai_medium.connect("toggled", self.on_button_ai_difficulty, "normal")
-        self.btn_ai_hard = Gtk.CheckButton(label="Hard")
+        self.btn_ai_hard = Gtk.CheckButton(label=T_("Hard"))
         self.btn_ai_hard.connect("toggled", self.on_button_ai_difficulty, "hard")
 
         self.btn_ai_easy.set_active(True)
@@ -548,18 +548,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def create_on_off_ai_players_buttons(self, box):
         self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        label = Gtk.Label(label="AI player : ")
+        label = Gtk.Label(label=T_("AI player: "))
         label.get_style_context().add_class("big-red")
         self.player_box.append(label)
 
         self.ai_player_buttons = []
 
         for i in range(4):
-            button = Gtk.ToggleButton(label=f"AI {i+1}")
+            button = Gtk.ToggleButton(label=T_("AI {num}").format(num=i + 1))
             button.get_style_context().add_class("on-off-button")
 
             def on_toggle(btn, i=i + 1):
-                btn.set_label(f"AI {i}" if btn.get_active() else f"AI {i}")
+                btn.set_label(T_(f"AI {i}") if btn.get_active() else T_(f"AI {i}"))
                 if btn.get_active():
                     self._ai_ids.add(i - 1)
                 else:
@@ -705,8 +705,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 is_ai = "AI "
             walls = ""
             if not player.is_dead:
-                walls = f" : walls remaining = {player.walls_remaining}"
-            label = Gtk.Label(label=f"{is_ai}Player {player.id} {emoji} {walls}")
+                walls = T_(f" : walls remaining = {player.walls_remaining}")
+            label = Gtk.Label(label=T_(f"{is_ai}Player {player.id} {emoji} {walls}"))
             label.get_style_context().add_class("player")
             if player.is_dead:
                 label.get_style_context().add_class("player-is-dead")
@@ -899,7 +899,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             player.timer.set_gui_observer(self)
 
     def update_timer(self, time: int, player_id: int):
-        self.timer_label.set_text(f"Timer : {time}")
+        self.timer_label.set_text(T_(f"Timer: {time}"))
         logging.debug(f"Timer : {time} {player_id}")
 
     def handle_timer_end_for_player(self, player_id: int):
@@ -1011,7 +1011,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.winner_label.set_markup(
-            f'<span size="14000" weight="bold">{emoji} won!</span>'
+            T_(f'<span size="14000" weight="bold">{emoji} won!</span>')
         )
         self.stack.set_visible_child_name("end")
 
@@ -1056,7 +1056,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             emoji = "🟢"
         elif id_player == 3:
             emoji = "🟡"
-        self.current_player_label.set_label(f"Current player : {emoji}")
+        self.current_player_label.set_label(T_(f"Current player: {emoji}"))
         logging.debug(f"Player {emoji} {id_player} must play")
 
     def update_players_box(self):
@@ -1077,7 +1077,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         )
         for turn_index, turn in enumerate(history, start=1):
             line = ""
-            line += f"Turn {turn_index}: "
+            line += T_(f"Turn {turn_index}: ")
             for move in turn:
                 line += move + " "
             text_list.append(line)
@@ -1172,7 +1172,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 return False
             error_type = type(e).__name__
             logging.error(f"Error of type {error_type} while executing command: {e}")
-            popup = AutoClosePopup(f"Error ({error_type}) : {e}")
+            popup = AutoClosePopup(T_(f"Error ({error_type}) : {e}"))
             popup.show()
 
         self.handle_pass_player()
@@ -1197,7 +1197,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
 class AutoClosePopup(Gtk.Window):
     def __init__(self, message):
-        super().__init__(title="Popup")
+        super().__init__(title=T_("Error"))
         self.set_default_size(200, 100)
         self.set_transient_for(None)
         self.set_modal(True)
@@ -1227,7 +1227,7 @@ class MyApplication(Gtk.Application):
         self.state = state
 
     def on_activate(self, app):
-        self.window = MainWindow(application=app, title="Quoridor.py")
+        self.window = MainWindow(application=app, title="Quoridor")
         self.window.connect("close-request", self.on_close_request)
         self.window.present()
         if self.state is not None:
