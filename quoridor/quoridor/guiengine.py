@@ -678,7 +678,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.initial_state = self.state.copy_state()
         self.stack.set_visible_child_name("running_game")
         self.initialize_begining_game()
-        
+
     ### --- Loading Game
 
     def manage_ai_parameters(self):
@@ -781,6 +781,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
             self.state.current_player.timer.display_lock.set()
+        self.update_current_player_label()
         self.create_box_players(self.game_players_box)
         self.create_board()
         self.render_board()
@@ -1204,7 +1205,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.handle_switch_player()
         except Exception as e:
             if self.state.current_player.id in self.state.ai_controllers:
-                popup = AutoClosePopup(f"This AI try an \"Invalid Move\". To continue please play for him", self.popup_activated)
+                popup = AutoClosePopup(
+                    f'This AI try an "Invalid Move". To continue please play for him',
+                    self.popup_activated,
+                )
                 popup.show()
                 return False
             error_type = type(e).__name__
@@ -1243,8 +1247,9 @@ class AutoClosePopup(Gtk.Window):
             self.set_child(label)
             GLib.timeout_add(2500, self.destroy)
 
+
 class SavePopup(Gtk.Window):
-    def __init__(self, state: 'GameState'):
+    def __init__(self, state: "GameState"):
         super().__init__(title="Save and quit")
         self.set_default_size(200, 100)
         self.set_transient_for(None)
@@ -1252,7 +1257,14 @@ class SavePopup(Gtk.Window):
 
         self.state = state
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=10, margin_bottom=10, margin_start=10, margin_end=10)
+        vbox = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            margin_top=10,
+            margin_bottom=10,
+            margin_start=10,
+            margin_end=10,
+        )
         label = Gtk.Label(label="Do you want to save your game before quitting ?")
         vbox.append(label)
 
@@ -1294,6 +1306,7 @@ class SavePopup(Gtk.Window):
             except QuitApp:
                 pass
         self.close()
+
 
 class MyApplication(Gtk.Application):
     def __init__(self, state: GameState, **kwargs):
