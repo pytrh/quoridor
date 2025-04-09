@@ -290,7 +290,7 @@ class CLIEngine:
         elif input == "abandon":
             return AbandonCommand(self.state, self.state.current_player.id)
         elif input == "save":
-            return SaveCommand(self.state, "outputHisotry.txt")
+            return SaveCommand(self.state, "outputHistory.txt")
         elif input == "pass":
             return PassCommand(self.state)
         elif input == "time":
