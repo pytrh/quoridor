@@ -129,12 +129,12 @@ def parse_string_to_state(state_string: str) -> GameState:
             size = int(line.split("=")[1].strip())
         elif line.startswith("num_walls"):
             num_walls = int(line.split("=")[1].strip())
-        elif line.startswith("blitz"):
+        elif line.startswith("game_mode"):
             t_blitz = line.split("=")[1].strip()
-            if t_blitz == "True" or t_blitz == "T":
-                blitz = GameMode.BLITZ
+            if t_blitz == "blitz" or "GameMode.BLITZ":
+                game_mode = GameMode.BLITZ
             else:
-                blitz = GameMode.NORMAL
+                game_mode = GameMode.NORMAL
         elif line.startswith("players"):
             players = []
             i += 1
@@ -157,6 +157,16 @@ def parse_string_to_state(state_string: str) -> GameState:
                     player_data["position"] = tuple(map(int, value.split(",")))
                 elif key == "player_walls":
                     player_data["walls"] = int(value)
+                elif key == "player_timer":
+                    from quoridor.timer import Timer
+
+                    if not blitz:
+                        blitz = 15 * 60
+                    if not game_mode:
+                        game_mode = GameMode.NORMAL
+                    timer = Timer(blitz, game_mode, player_id)
+                    timer.set_time_remaining(value)
+                    # Finish timer, make sure that blitz mode is enabled; Check if player_id is added
 
                 i += 1
             continue
@@ -189,7 +199,7 @@ def parse_string_to_state(state_string: str) -> GameState:
         "board": board,
         "num_walls": num_walls,
         "history": history,
-        "game_mode": blitz,
+        "game_mode": game_mode,
         # blitz_time ?
         # ai_ids ?
     }
@@ -206,6 +216,7 @@ def parse_state_to_string(state: GameState) -> str:
     state_string += f"current_player_id = {state.current_player.id}\n"
     state_string += f"board_size = {state.size}\n"
     state_string += f"initial_num_walls = {state.initial_num_walls}\n"
+    state_string += f"game_mode = {state.game_mode}\n"
     state_string += f"blitz = {state.blitz_time}\n\n"
 
     state_string += f"players =\n\n"
@@ -213,6 +224,7 @@ def parse_state_to_string(state: GameState) -> str:
     for i in range(state.num_players):
         state_string += f"player_position = {state.players[i].position[0]}, {state.players[i].position[1]}\n"
         state_string += f"player_walls = {state.players[i].walls_remaining}\n"
+        state_string += f"player_timer = {state.players[i].timer.current_time}\n"
         state_string += f"player_id = {state.players[i].id}\n\n"
 
     # Add the board representation
