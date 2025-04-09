@@ -530,6 +530,8 @@ class HelpCommand(Command):
         print(" abandon    : Abandon the game")
         print(" time       : Show elapsed time")
         print(" help or h  : Show this help menu")
+        print(" save       : save history")
+        print(" history    : display history")
         print()
         print("To move     : type a direction followed by a number (e.g. 'e4')")
         print()
