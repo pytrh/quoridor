@@ -10,6 +10,7 @@ from quoridor.command import (
     PlaceWallCommand,
     MovePawnCommand,
     SaveAndQuitCommand,
+    SaveCommand,
     UndoCommand,
     RedoCommand,
     RestartCommand,
@@ -170,6 +171,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         restart_button.connect("clicked", self.on_restart_clicked)
 
         download_button = Gtk.Button(label="📥 Save")
+        download_button.set_size_request(20, 10)
+        download_button.set_halign(Gtk.Align.START)
+        download_button.connect("clicked", self.on_save_history)
 
         power_button = Gtk.Button(label="🚪 Quit")
         power_button.set_size_request(20, 10)
@@ -604,6 +608,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         popup = SavePopup(self.state)
         popup.connect("close-request", self.on_popup_closed)
         popup.show()
+
+    def on_save_history(self, button):
+        SaveCommand(self.state, "outputHistory.txt").execute()
+        pass
 
     def on_popup_closed(self, window):
         self.on_back_home(None)
