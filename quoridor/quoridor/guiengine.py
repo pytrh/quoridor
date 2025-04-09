@@ -170,7 +170,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         restart_button = Gtk.Button(label=T_("🔄 Restart"))
         restart_button.connect("clicked", self.on_restart_clicked)
 
-        download_button = Gtk.Button(label=T_("📥 Save"))
+        download_button = Gtk.Button(label=T_(T_("📥 Save")))
         download_button.set_size_request(20, 10)
         download_button.set_halign(Gtk.Align.START)
         download_button.connect("clicked", self.on_save_history)
