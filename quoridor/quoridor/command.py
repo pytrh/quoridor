@@ -331,11 +331,13 @@ class MovePawnCommand(Command):
 
     def undo(self) -> None:
         """Move the pawn back to its previous position."""
+        self.player = self.state.players[self.player.id]
         self.player.position = self.from_position
         self.state.backward_player()
 
     def redo(self) -> None:
         """Move the pawn to its new position again."""
+        self.player = self.state.players[self.player.id]
         self.player.position = self.to_position
         self.state.switch_player()
 
