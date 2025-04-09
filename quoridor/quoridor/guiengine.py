@@ -31,6 +31,7 @@ from quoridor.config import (
 )
 from quoridor.ai import GreedyAI
 
+from quoridor.parser import parse_string_to_state
 from quoridor.translations import T_
 
 
@@ -45,6 +46,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.state = None
         self.initial_state = None
+        self.game_is_over = False
 
         self._number_of_players = None
         self._board_size = None
@@ -61,6 +63,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.hint_cases = []
         self.hint_activate = False
         self.hint_symbole = "⏺️"
+        self.popup_activated = True
 
         GLib.set_application_name("quoridor")
 
@@ -85,7 +88,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.set_child(self.stack)
 
-        # Crée une boîte de dialogue pour ouvrir un fichier
         self.open_dialog = Gtk.FileChooserNative.new(
             title="Select a file", parent=self, action=Gtk.FileChooserAction.OPEN
         )
@@ -612,9 +614,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.game_is_over = False
         self.stack.set_visible_child_name("running_game")
 
-    def on_load_game_clicked(self, button):
-        self.open_dialog.show()
-
     def on_player_button_toggled(self, button, players):
         if button.get_active():
             self._number_of_players = int(players)
@@ -639,11 +638,31 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self.radio_box.set_visible(False)
             self.player_box.set_visible(False)
 
+    ### Loading game
+    def on_load_game_clicked(self, button):
+        self.open_dialog.show()
+
     def open_response(self, dialog, response):
         if response == Gtk.ResponseType.ACCEPT:
             file = dialog.get_file()
             filename = file.get_path()
-            logging.debug(filename)
+            logging.debug(f"Loading gamestate from {filename}")
+            file_state = None
+            with open(filename, "r", encoding="utf-8") as file:
+                file_state = parse_string_to_state(file)
+            self.load_game_from_file(file_state)
+
+    def load_game_from_file(self, state: GameState):
+        if state is None:
+            return False
+        self.set_parameters(state)
+        print(f"Loading Game from File . . .")
+        self.state = state
+        self.initial_state = self.state.copy_state()
+        self.stack.set_visible_child_name("running_game")
+        self.initialize_begining_game()
+        
+    ### --- Loading Game
 
     def manage_ai_parameters(self):
         """manage AI parameters, override -p option in case of conflict with -a"""
@@ -738,6 +757,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             ai_depth=self._ai_depth,
             # todo heuristic
         )
+        self.initialize_begining_game()
+
+    def initialize_begining_game(self):
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
             self.state.current_player.timer.start_turn()
@@ -765,7 +787,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         else:
             self.hint_activate = True
 
-        ai_temp = GreedyAI(0)
+        ai_temp = GreedyAI(0, AiHeuristic.RUNNER)
         for case in ai_temp.possible_moves(self.state):
             self.hint_cases.append(case)
             self.draw_hint_on_case(case)
@@ -1101,6 +1123,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self._ai_mode = state.ai_mode
         self._ai_heuristic = state.ai_heuristic
 
+        self.btn_nb_players_2.set_active(False)
+        self.btn_nb_players_3.set_active(False)
+        self.btn_nb_players_4.set_active(False)
         if self._number_of_players == 2:
             self.btn_nb_players_2.set_active(True)
         elif self._number_of_players == 3:
@@ -1133,21 +1158,14 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         else:
             self.switch_ai.set_active(False)
 
-        # test for -r
+    def load_game_from_history(self, state: GameState):
         self._history = state.history
         if self._history:
             logging.debug(f"Loading Game from History . . .")
             self.state = state
             self.initial_state = self.state.copy_state()
             self.stack.set_visible_child_name("running_game")
-            if self.state.game_mode == GameMode.BLITZ:
-                self.initialise_timer()
-                self.state.current_player.timer.start_turn()
-                self.state.current_player.timer.display_lock.set()
-            self.create_box_players(self.game_players_box)
-            self.create_board()
-            self.render_board()
-            self.handle_ai_player()
+            self.initialize_begining_game()
 
     def execute_command(self, command: Command) -> bool:
         """
@@ -1169,10 +1187,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                     self.handle_switch_player()
         except Exception as e:
             if self.state.current_player.id in self.state.ai_controllers:
+                popup = AutoClosePopup(f"This AI try an \"Invalid Move\". To continue please play for him", self.popup_activated)
+                popup.show()
                 return False
             error_type = type(e).__name__
             logging.error(f"Error of type {error_type} while executing command: {e}")
-            popup = AutoClosePopup(f"Error ({error_type}) : {e}")
+            popup = AutoClosePopup(f"Error ({error_type}) : {e}", self.popup_activated)
             popup.show()
 
         self.handle_pass_player()
@@ -1196,19 +1216,22 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
 
 class AutoClosePopup(Gtk.Window):
-    def __init__(self, message):
-        super().__init__(title="Popup")
-        self.set_default_size(200, 100)
-        self.set_transient_for(None)
-        self.set_modal(True)
-        label = Gtk.Label(label=message)
-        self.set_child(label)
-        GLib.timeout_add(3000, self.destroy)
+    def __init__(self, message, show):
+        if show:
+            super().__init__(title="Warning")
+            self.set_default_size(200, 100)
+            self.set_transient_for(None)
+            self.set_modal(True)
+            label = Gtk.Label(label=message)
+            self.set_child(label)
+            GLib.timeout_add(2500, self.destroy)
 
 
 class MyApplication(Gtk.Application):
     def __init__(self, state: GameState, **kwargs):
         super().__init__(**kwargs)
+        self.load_from_file = False
+        self.load_from_history = False
         self.connect("activate", self.on_activate)
 
         from pathlib import Path
@@ -1231,8 +1254,20 @@ class MyApplication(Gtk.Application):
         self.window.connect("close-request", self.on_close_request)
         self.window.present()
         if self.state is not None:
-            self.window.on_new_game_clicked(None)
-            self.window.set_parameters(self.state)
+            if self.load_from_file:
+                self.window.load_game_from_file(self.state)
+            else:
+                self.window.set_parameters(self.state)
+                if self.load_from_history:
+                    self.window.load_game_from_history(self.state)
+                else:
+                    self.window.on_new_game_clicked(None)
+
+    def load_game_from_file(self):
+        self.load_from_file = True
+
+    def load_game_from_history(self):
+        self.load_from_history = True
 
     def on_close_request(self, window):
         logging.debug("Window closing")
@@ -1251,6 +1286,12 @@ class GUIEngine:
     def run(self):
         """"""
         self.app.run(None)
+
+    def load_game_from_file(self):
+        self.app.load_game_from_file()
+
+    def load_game_from_history(self):
+        self.app.load_game_from_history()
 
     def render_board(self):
         """update board"""

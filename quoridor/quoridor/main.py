@@ -325,6 +325,7 @@ def main():
         "ai_depth",
         "ai_heuristic",
         "replay",
+        "file"
     ]
 
     setup_logging(verbose=args.verbose, debug=args.debug)
@@ -493,11 +494,15 @@ def main():
         ReadWriteHistory.parse_list_of_str_to_history(initial_state, lines)
 
     try:
-        if args.gui and not any(getattr(args, arg) for arg in game_related_args):
-            engine = GUIEngine(None)
-            engine.run()
-        elif args.gui:
-            engine = GUIEngine(initial_state)
+        if args.gui:
+            if args.gui and not any(getattr(args, arg) for arg in game_related_args):
+                engine = GUIEngine(None)
+            else:
+                engine = GUIEngine(initial_state)
+            if args.replay:
+                engine.load_game_from_history()
+            elif args.file:
+                engine.load_game_from_file()
             engine.run()
         else:
             cli_engine = CLIEngine(initial_state)
