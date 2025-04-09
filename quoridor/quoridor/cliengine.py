@@ -91,7 +91,11 @@ class CLIEngine:
 
     def execute_command(self, command: Command) -> bool:
         """
-        Execute a command and add it to the command history.
+        Execute a command and add it to the command history (if necessary).
+        :param command: The command to execute.
+        :type command: Command
+        :return: wether or not the command is added to history (check command.py)
+        :rytpe: bool
         """
         result = command.execute()
         if result:
@@ -165,6 +169,8 @@ class CLIEngine:
     def get_string_from_board(self) -> str:
         """
         Return the board in string format
+        :return: a string that represent the board
+        :rytpe: str
         """
         horizontal_wall = "---"
         vertical_wall = "|"
@@ -220,7 +226,13 @@ class CLIEngine:
             + str(self.state.players[self.state.current_player.id].walls_remaining)
         )
 
-    def wait_for_input_with_timeout(self):
+    def wait_for_input_with_timeout(self) -> str:
+        """
+        Wait for an user input, but can give a timeout if the current
+        player blitz timer run out.
+        :return: a string corresponding to an user input (abandon if time run out)
+        :rytpe: str
+        """
         print(
             T_("Player ") + str(self.state.current_player.id + 1) + T_(" will play? "),
             end="",
@@ -247,18 +259,31 @@ class CLIEngine:
     def get_input_from_human_player(self) -> str:
         """
         Get an input from the human player.
+        :return: a string given by the player
+        :rytpe: str
         """
         return self.wait_for_input_with_timeout()
 
     def well_formed_pawn_move(self, input: str) -> bool:
         """
         Check if the input is a well-formed pawn move.
+        :param input: String that 'should' be formatted as a pawn move
+            [letter][int] both in the range of the size of the board
+        :type case: str
+        :return: a bool correspond to the validy of the string
+        :rytpe: bool
         """
         return len(input) == 2 and input[0] in self.rows and input[1] in self.columns
 
     def well_formed_wall_placement(self, input: str) -> bool:
         """
         Check if the input is a well-formed wall placement.
+        :param input: String that 'should' be formatted as a wall placement
+            [letter][int] both in the range of the size of the board
+            Folowed by [direction] (either 'v'ertical or 'h'orizontal)
+        :type case: str
+        :return: a bool correspond to the validy of the string
+        :rytpe: bool
         """
         return (
             len(input) == 3
@@ -280,6 +305,8 @@ class CLIEngine:
     def get_command_from_human_player(self) -> Command:
         """
         Get a command from the human player.
+        :return: an executable Command
+        :rytpe: Command
         """
         input = self.get_input_from_human_player()
         if input == "undo":
@@ -319,7 +346,7 @@ class CLIEngine:
 
     def end_blitz_turn(self):
         """
-        end timer
+        Pause the timer for the current player
         """
         if self.state.game_mode == GameMode.BLITZ:
             self.state.current_player.timer.end_turn()
@@ -327,7 +354,7 @@ class CLIEngine:
 
     def start_blitz_turn(self):
         """
-        get and start timer
+        Start the timer of the current player
         """
         if self.state.game_mode == GameMode.BLITZ:
             self.state.current_player.timer.start_turn()
