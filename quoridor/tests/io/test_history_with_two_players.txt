@@ -1,0 +1,4 @@
+# Comments
+# Then turns players
+1. 1 e1-e2 2 a10-a9
+2. 1 a6v 2 a9-a8

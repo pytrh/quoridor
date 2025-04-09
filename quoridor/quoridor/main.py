@@ -47,15 +47,30 @@ def setup_logging(verbose, debug):
     log_format = "%(asctime)s - %(levelname)s - %(message)s"  # Default format
     date_format = "%Y-%m-%d %H:%M:%S"  # Default date format
 
+    handler = logging.StreamHandler(sys.stdout)
+
     if debug:
-        logging.basicConfig(level=logging.DEBUG, format=log_format, datefmt=date_format)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format=log_format,
+            datefmt=date_format,
+            handlers=[handler],
+        )
         logging.debug("Debug mode activated: Detailed logs (dev)")
     elif verbose:
-        logging.basicConfig(level=logging.INFO, format=log_format, datefmt=date_format)
+        logging.basicConfig(
+            level=logging.INFO,
+            format=log_format,
+            datefmt=date_format,
+            handlers=[handler],
+        )
         logging.info("Verbose mode activated: Additional information")
     else:
         logging.basicConfig(
-            level=logging.WARNING, format=log_format, datefmt=date_format
+            level=logging.WARNING,
+            format=log_format,
+            datefmt=date_format,
+            handlers=[handler],
         )
 
 
@@ -325,7 +340,7 @@ def main():
         "ai_depth",
         "ai_heuristic",
         "replay",
-        "file"
+        "file",
     ]
 
     setup_logging(verbose=args.verbose, debug=args.debug)
