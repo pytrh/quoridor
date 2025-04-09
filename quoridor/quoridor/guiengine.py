@@ -841,6 +841,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 drop_target.connect("drop", self.on_drop)
                 cell.add_controller(drop_target)
 
+                click_target = Gtk.GestureClick.new()
+                click_target.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+                click_target.connect("released", self.on_click)
+                cell.add_controller(click_target)
+
                 self.cells[(row, col)] = cell
 
         for i in range(self.state.num_players):
@@ -902,6 +907,16 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         drag_source.connect("prepare", self.on_drag_prepare, wall_type)
         button.add_controller(drag_source)
 
+        click_gesture = Gtk.GestureClick.new()
+        click_gesture.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        click_gesture.connect("released", self.nothing)  # No-op
+        button.add_controller(click_gesture)
+
+    def nothing(self, click_target, value, z, a):
+        popup = AutoClosePopup(f"Drag the piece of wall to the board")
+        popup.show()
+        return True
+
     def on_drag_prepare(self, drag_source, x, y, emoji, pos=None):
         """Prepares the piece for dragging by storing its last position."""
         data = Gdk.ContentProvider.new_for_value(emoji)
@@ -933,6 +948,22 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         elif value in [Direction.H, Direction.V]:
             self.handle_place_wall(row, col, value)
+
+        return True
+
+    def on_click(self, click_target, value, x, y):
+        cell = click_target.get_widget()
+
+        row, col = None, None
+        for (r, c), button in self.cells.items():
+            if button == cell:
+                row, col = r, c
+                break
+
+        if row is None or col is None:
+            logging.debug("Error : no cell found in the grid")
+
+        self.handle_pawn_move_click(row, col, value)
 
         return True
 
@@ -1019,6 +1050,22 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             return
 
         last_pos = getattr(self, last_pos_attr, None)
+        if not last_pos:
+            logging.debug("Error: last position not found")
+            return
+
+        logging.debug(f"Moving pawn to : ({row}, {col})")
+
+        last_row, last_col = last_pos
+        try:
+            move_pawn = MovePawnCommand(self.state, (last_row, last_col), (row, col))
+            self.execute_command(move_pawn)
+        except InvalidMoveError as e:
+            logging.debug(f"Error : {InvalidMoveError.__name__} {e}")
+
+    def handle_pawn_move_click(self, row: int, col: int, player_id):
+        """Manages pawn movement"""
+        last_pos = self.state.current_player.position
         if not last_pos:
             logging.debug("Error: last position not found")
             return
