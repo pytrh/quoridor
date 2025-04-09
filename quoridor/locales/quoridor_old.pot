@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-09 01:12+0200\n"
+"POT-Creation-Date: 2025-04-09 02:09+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,38 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: quoridor/cliengine.py:218
-msgid "Remaining walls: "
-msgstr ""
-
-#: quoridor/cliengine.py:224 quoridor/cliengine.py:270
-msgid "Player "
-msgstr ""
-
-#: quoridor/cliengine.py:224
-msgid " will play? "
-msgstr ""
-
-#: quoridor/cliengine.py:270
-msgid " has won the game!"
-msgstr ""
-
-#: quoridor/cliengine.py:356
-msgid "Invalid move: "
-msgstr ""
-
-#: quoridor/cliengine.py:359
-msgid "Cannot place wall: it would block a player's path to goal"
-msgstr ""
-
-#: quoridor/cliengine.py:361
-msgid "No move to undo"
-msgstr ""
-
-#: quoridor/cliengine.py:363
-msgid "No command to redo"
-msgstr ""
-
-#: quoridor/cliengine.py:366
-msgid "Invalid command: "
+#: quoridor/guiengine.py:356
+msgid "Go Home"
 msgstr ""

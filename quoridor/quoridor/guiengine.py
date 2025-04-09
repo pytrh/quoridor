@@ -31,6 +31,8 @@ from quoridor.config import (
 )
 from quoridor.ai import GreedyAI, heuristic
 
+from quoridor.translations import T_
+
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, GObject
@@ -351,7 +353,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         restart_button.connect("clicked", self.on_restart_clicked)
         button_box.append(restart_button)
 
-        home_button = Gtk.Button(label="Go Home")
+        home_button = Gtk.Button(label=T_("Go Home"))
         home_button.connect("clicked", self.on_back_home)
         button_box.append(home_button)
 
