@@ -3,6 +3,7 @@ import logging
 from quoridor.gamestate import GameState
 from quoridor.graph import Graph
 from quoridor.player import Player
+from quoridor.gamemode import GameMode
 
 
 def parse_string_to_graph(board_string: str) -> Graph:
@@ -130,10 +131,10 @@ def parse_string_to_state(state_string: str) -> GameState:
             num_walls = int(line.split("=")[1].strip())
         elif line.startswith("blitz"):
             t_blitz = line.split("=")[1].strip()
-            if t_blitz == "False" or t_blitz == "F":
-                blitz = False
+            if t_blitz == "True" or t_blitz == "T":
+                blitz = GameMode.BLITZ
             else:
-                blitz = bool(line.split("=")[1].strip())
+                blitz = GameMode.NORMAL
         elif line.startswith("players"):
             players = []
             i += 1
