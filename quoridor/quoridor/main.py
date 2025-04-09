@@ -74,9 +74,11 @@ def setup_logging(verbose, debug):
         )
 
 
-def load_default_config():
+def load_default_config(
+    config_file_str: str = DEFAULT_CONFIG_FILE,
+):
     config = configparser.ConfigParser()
-    config.read(DEFAULT_CONFIG_FILE)
+    config.read(config_file_str)
 
     size = config.getint("Default", "size", fallback=9)
     players = config.getint("Default", "players", fallback=2)
@@ -93,6 +95,8 @@ def load_default_config():
         mode = GameMode.NORMAL
     elif mode_name == GameMode.BLITZ.display_name:
         mode = GameMode.BLITZ
+    else:
+        mode = DEFAULT_GAME_MODE
 
     if not ai_color_str == "None":
         ai_color = set(map(int, ai_color_str.split(","))) if ai_color_str else set()
@@ -135,9 +139,10 @@ def update_default_config(
     ai_mode: str,
     ai_depth: int,
     ai_heuristic: str,
+    config_file_str: str = DEFAULT_CONFIG_FILE,
 ) -> None:
     config = configparser.ConfigParser()
-    config.read(DEFAULT_CONFIG_FILE)
+    config.read(config_file_str)
 
     config["Default"]["size"] = str(size)
     config["Default"]["players"] = str(num_players)
@@ -160,7 +165,7 @@ def update_default_config(
         for key, value in config.items(section):
             logging.debug(f"{key} = {value}")
 
-    with open(DEFAULT_CONFIG_FILE, "w") as default_config:
+    with open(config_file_str, "w") as default_config:
         config.write(default_config)
 
 
@@ -174,8 +179,9 @@ def update_config_file(
     ai_mode: AiMode,
     ai_depth: int,
     ai_heuristic: AiHeuristic,
+    config_file_str: str = CONFIG_FILE,
 ) -> None:
-    with open(CONFIG_FILE, "r+") as config_file:
+    with open(config_file_str, "r+") as config_file:
         lines = config_file.readlines()
         config_file.seek(0)
         config_file.truncate()
