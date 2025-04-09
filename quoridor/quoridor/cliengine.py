@@ -35,10 +35,7 @@ from quoridor.exceptions import (
     NoRedoableCommand,
     GameOver,
 )
-<<<<<<< quoridor/quoridor/cliengine.py
 from quoridor.translations import T_
-=======
->>>>>>> quoridor/quoridor/cliengine.py
 
 
 class CLIEngine:
