@@ -913,7 +913,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         button.add_controller(click_gesture)
 
     def nothing(self, click_target, value, z, a):
-        popup = AutoClosePopup(f"Drag the piece of wall to the board")
+        popup = AutoClosePopup(f"Drag the piece of wall to the board", True)
         popup.show()
         return True
 
