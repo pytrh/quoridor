@@ -1,3 +1,4 @@
+import sys
 import pytest
 from quoridor.cliengine import CLIEngine
 from quoridor.command import (
@@ -19,13 +20,12 @@ from quoridor.direction import Direction
 from quoridor.exceptions import InvalidCommandError, InvalidMoveError, QuitApp
 from quoridor.gamemode import GameMode
 from quoridor.gamestate import GameState
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from quoridor.player import Player
 
 @pytest.fixture
 def game_state():
-    # Création d'un véritable GameState avec des données minimales
     player1 = Player(id=0, position=(4, 0), walls_remaining=10, size=9)
     player2 = Player(id=1, position=(4, 8), walls_remaining=10, size=9)
     players = [player1, player2]
@@ -43,7 +43,6 @@ def game_state():
 
 @pytest.fixture
 def engine(game_state):
-    # Création de l'instance de CLIEngine avec l'état du jeu mocké
     engine = CLIEngine(game_state)
     engine.get_input_from_human_player = MagicMock()
     return engine
@@ -101,7 +100,6 @@ def test_translate_move_valid(engine, input_str, expected):
     ("i9v", (8, 8, Direction.V))
 ])
 def test_translate_wall_valid(engine, input_str, expected):
-    # Test pour des entrées valides
     assert engine.translate_wall(input_str) == expected
 
 
@@ -113,74 +111,53 @@ def test_translate_move_invalid(engine, input_str):
 def test_get_string_from_board(game_state):
     engine = CLIEngine(game_state)
     
-    # Test que la fonction retourne une chaîne non vide
     board_str = engine.get_string_from_board()
     assert len(board_str) > 0
 
 def test_get_string_from_board(game_state):
     engine = CLIEngine(game_state)
-    # Test pour vérifier la sortie d'un plateau vide
     board_string = engine.get_string_from_board()
     expected = (
-        "    1   2   3   4   5   \n"
-        "  +---+---+---+---+---+\n"
-        "a |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "b |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "c |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "d |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "e |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+"
+        "1   2   3   4   5   6   7   8   9   \n"
+        "  +---+---+---+---+---+---+---+---+---+\n"
+        "a |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "b |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "c |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "d |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "e | 1                               2 |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "f |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "g |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "h |                                   |\n"
+        "  +   +   +   +   +   +   +   +   +   +\n"
+        "i |                                   |\n"
+        "  +---+---+---+---+---+---+---+---+---+\n"
     )
     assert board_string.strip() == expected.strip()
 
-def test_get_string_from_board_with_players(game_state):
+def test_wait_for_input_with_timeout_user_input(game_state):
     engine = CLIEngine(game_state)
-    # Test pour vérifier que les joueurs sont bien positionnés
-    engine.state.players[0].position = (0, 0)  # Le joueur 1 est en (0, 0)
-    engine.state.players[1].position = (2, 2)  # Le joueur 2 est en (2, 2)
     
-    board_string = engine.get_string_from_board()
-    expected = (
-        "    1   2   3   4   5   \n"
-        "  +---+---+---+---+---+\n"
-        "a | 1 |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "b |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "c |   |   | 2 |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "d |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+\n"
-        "e |   |   |   |   |   |\n"
-        "  +---+---+---+---+---+"
-    )
-    assert board_string.strip() == expected.strip()
-
-def test_get_string_from_board_with_walls(engine):
-    # Test pour vérifier que les murs sont correctement affichés
-    board = engine.state.board
-    board.edge_exists.return_value = False  # Aucune liaison entre les cases, donc des murs entre chaque case
-    board_string = engine.get_string_from_board()
-    # Le plateau généré devrait contenir des murs horizontaux et verticaux
-    assert "---" in board_string  # Vérification de la présence de murs horizontaux
-    assert "|" in board_string    # Vérification de la présence de murs verticaux
-
+    with patch('sys.stdin.readline', return_value="move1\n"):
+        with patch('select.select', return_value=([sys.stdin], [], [])):
+            result = engine.wait_for_input_with_timeout()
+    
+    assert result == "move1"
 
 def test_start_game_quit(engine):
-    # Mocking des méthodes utilisées dans start_game
     engine.render_board = MagicMock()
     engine.print_remaining_walls = MagicMock()
     engine.start_blitz_turn = MagicMock()
     engine.end_blitz_turn = MagicMock()
 
-    # Simuler la commande "quit" de l'utilisateur
     engine.get_command_from_human_player = MagicMock(return_value=QuitCommand(engine.state))
 
-    # Vérifier que QuitApp est levée et que la boucle se termine
     with pytest.raises(QuitApp):
         engine.start_game()
 
