@@ -149,9 +149,9 @@ class CLIEngine:
         """
         Check if either of the two string that compose a move are invalid.
         :param start: String in format 'letter''number'
-        :type case: str
+        :type start: str
         :param end: String in format 'letter''number'
-        :type case: str
+        :type end: str
         :return: true if the move is invalid, false if the move is valid
         :rtype: bool
         """
@@ -176,11 +176,21 @@ class CLIEngine:
         vertical_wall = "|"
         interstice = "+"
         horizontal_space = "   "  # Must be of the same size than horizontal_wall
+        small_horizontal_space = "  "  # Same as horizontal_space but take into account the size of int after 9
         big_space = "  "
         small_space = " "  # Must be of the size of big_space -1
+        begin_small_space = (
+            9  # Remember that there is +1 on this, as the count start at 0
+        )
         "  +" + "---+" * self.state.size
 
-        result = "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
+        result = "    "
+        for i in range(self.size):
+            if i < begin_small_space:
+                result += str(i + 1) + horizontal_space
+            else:
+                result += str(i + 1) + small_horizontal_space
+
         result += "\n"
         result += big_space + interstice + (horizontal_wall + interstice) * self.size
         for row in range(self.size):
@@ -269,7 +279,7 @@ class CLIEngine:
         Check if the input is a well-formed pawn move.
         :param input: String that 'should' be formatted as a pawn move
             [letter][int] both in the range of the size of the board
-        :type case: str
+        :type input: str
         :return: a bool correspond to the validy of the string
         :rtype: bool
         """
@@ -281,7 +291,7 @@ class CLIEngine:
         :param input: String that 'should' be formatted as a wall placement
             [letter][int] both in the range of the size of the board
             Folowed by [direction] (either 'v'ertical or 'h'orizontal)
-        :type case: str
+        :type input: str
         :return: a bool correspond to the validy of the string
         :rtype: bool
         """

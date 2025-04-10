@@ -7,9 +7,6 @@ from quoridor.timer import Timer
 
 class Player:
     """
-    TODO: Find a less ugly way to access size of the board. Maybe import from config.py something
-    IMPORTANT: Blitz time is interpreted as the traditional sense ie total time for the game.
-    Different from E Fleury's requirements. Will justify in the report.
     Player class to represent a player in the game.
     """
 
@@ -33,8 +30,10 @@ class Player:
         :type size: int
         :param walls: The number of walls the player has, default is 10.
         :type walls: int
-        :param time_remaining_blitz: The time remaining in seconds for the player in blitz mode, default is None.
-        :type time_remaining_blitz: int
+        :param time_remaining_blitz: A timer that counts down the remaining seconds for the player in blitz mode, default is None.
+        :type time_remaining_blitz: Timer
+        :param goal_line: The list of all winning position (the line opposed to the player starting line)
+        :type goal_line: list[tuple[int, int]]
         """
         self.id = id
         self.position = position
@@ -60,5 +59,7 @@ class Player:
     def is_winning(self) -> bool:
         """
         Check if the player has won the game.
+        :return: Wether or not the player is on one of their winning position
+        :rtype:
         """
         return self.position in self.goal_line

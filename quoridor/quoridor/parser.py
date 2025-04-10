@@ -1,3 +1,7 @@
+"""
+Parser module
+"""
+
 import logging
 
 from quoridor.gamestate import GameState
@@ -7,6 +11,14 @@ from quoridor.gamemode import GameMode
 
 
 def parse_string_to_graph(board_string: str) -> Graph:
+    """
+    Parse a string representation into a Graph object
+
+    :param board_string: The text that can be translated into a graph
+    :type board_string: str
+    :return: A graph that represent an ongoing game
+    :rtype: Graph
+    """
     graph = Graph()
 
     lines = board_string.splitlines()
@@ -96,6 +108,14 @@ def _print_graph(graph: Graph):
 
 
 def parse_string_to_state(state_string: str) -> GameState:
+    """
+    Parse a string representation into a GameState object
+
+    :param state_string: The text that can be translated into the state of a game
+    :type state_string: str
+    :return: A state that represent an ongoing game
+    :rtype: GameState
+    """
     from quoridor.io import ReadWriteHistory
 
     size = None
@@ -140,6 +160,8 @@ def parse_string_to_state(state_string: str) -> GameState:
         elif line.startswith("players"):
             players = []
             i += 1
+
+            # Loop for each player in the savefile
             while i < len(state_lines) and state_lines[i].startswith("player_"):
                 key, value = state_lines[i].split("=")
                 key, value = key.strip(), value.strip()
@@ -199,9 +221,6 @@ def parse_string_to_state(state_string: str) -> GameState:
             break
         i += 1
 
-    # TODO check error after parsing
-    # example num_players should match players[] length
-
     kwargs = {
         "size": size,
         "current_player_id": current_player_id,
@@ -222,6 +241,14 @@ def parse_string_to_state(state_string: str) -> GameState:
 
 
 def parse_state_to_string(state: GameState) -> str:
+    """
+    Parse a GameObject into a string representation
+
+    :param state: A state that represent an ongoing game
+    :type state: GameState
+    :return: A text that represent the state of a game
+    :rtype: str
+    """
     state_string = f"num_players = {state.num_players}\n"
     state_string += f"current_player_id = {state.current_player.id}\n"
     state_string += f"board_size = {state.size}\n"
@@ -248,7 +275,16 @@ def parse_state_to_string(state: GameState) -> str:
 
 
 def parse_history_to_str(turns: list[list[str]], num_players: int) -> str:
-    """Writes a history text with the game information in the 'turns' parameter."""
+    """
+    Writes the history of game moves to text format.
+
+    :param turns: A list of tuple (int, command) which we use as a list of list of string
+    :type turns: list[list[str]
+    :param num_players: The number of players of the game
+    :type num_players: int
+    :return: A text that represent the history of a game
+    :rtype: str
+    """
     history_string = ""
     turn_nb = 0
     turn_str = ""
@@ -269,6 +305,10 @@ def parse_history_to_str(turns: list[list[str]], num_players: int) -> str:
 def get_string_from_board(state: GameState) -> str:
     """
     Return the board in string format
+    :param state: The state of an ongoing game
+    :type state: GameState
+    :return: A string that represent the board of a game
+    :rtype: str
     """
     rows = [
         "a",
