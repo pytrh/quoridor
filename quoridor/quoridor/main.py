@@ -342,7 +342,6 @@ def configure_game(args):
         ai_depth,
         ai_heuristic,
     ) = load_default_config()
-    changed = False
 
     if args.size:
         error = False
@@ -355,7 +354,6 @@ def configure_game(args):
         if error:
             sys.exit(1)
         size = args.size
-        changed = True
     if args.players:
         error = False
         if args.players not in range(MIN_NUM_PLAYERS, MAX_NUM_PLAYERS + 1):
@@ -364,21 +362,17 @@ def configure_game(args):
         if args.players == NOT_RECOMMENDED_NUM_PLAYERS:
             logging.warning("it is not recommended to play by 3. Unfair advantage.")
         num_players = args.players
-        changed = True
     if args.walls:
         num_walls = args.walls
         if args.walls < 0:
             num_walls = 999
-        changed = True
     if args.blitz:
         game_mode = GameMode.BLITZ
-        changed = True
     if args.time:
         if game_mode != GameMode.BLITZ:
             logging.warning("blitz mode is not activated. You cannot set a time.")
         else:
             blitz_time = args.time
-            changed = True
     if args.ai:
         current_ai_color = DEFAULT_AI_COLOR_ID
         for ai in args.ai:
@@ -408,7 +402,6 @@ def configure_game(args):
                 )
         elif args.ai is not None:
             num_players = max(DEFAULT_AI_COLOR_ID, max(len(ai_ids), max(ai_ids) + 1))
-            changed = True
 
     if args.ai_mode:
         if args.ai_mode == AiMode.ALPHABETA.display_name:
@@ -417,11 +410,9 @@ def configure_game(args):
             ai_mode = AiMode.MINIMAX
         elif args.ai_mode == AiMode.GREEDY.display_name:
             ai_mode = AiMode.GREEDY
-        changed = True
 
     if args.ai_depth:
         ai_depth = args.ai_depth
-        changed = True
 
     if args.ai_heuristic:
         print(args.ai_heuristic)
@@ -433,7 +424,6 @@ def configure_game(args):
             ai_heuristic = AiHeuristic.AGGRESSIVE
         elif args.ai_heuristic == AiHeuristic.CENTRAL.display_name:
             ai_heuristic = AiHeuristic.CENTRAL
-        changed = True
 
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
@@ -450,7 +440,6 @@ def configure_game(args):
         ai_mode,
         ai_depth,
         ai_heuristic,
-        changed,
     )
 
 
@@ -544,13 +533,11 @@ def main():
         ai_mode,
         ai_depth,
         ai_heuristic,
-        changed,
     ) = configure_game(args)
 
     initial_state = None
 
     if args.file:
-        changed = True
         logging.debug("File found in arguments")
         initial_state = open_file(args.file)
     else:
@@ -566,18 +553,17 @@ def main():
             ai_heuristic=ai_heuristic,
         )
 
-    if changed:
-        update_config(
-            size,
-            num_players,
-            num_walls,
-            game_mode,
-            blitz_time,
-            ai_ids,
-            ai_mode,
-            ai_depth,
-            ai_heuristic,
-        )
+    update_config(
+        size,
+        num_players,
+        num_walls,
+        game_mode,
+        blitz_time,
+        ai_ids,
+        ai_mode,
+        ai_depth,
+        ai_heuristic,
+    )
 
     if args.replay:
         lines = ReadWriteHistory.read_history(args.replay)
