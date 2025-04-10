@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import pytest
-import re
 from unittest import mock
 from unittest.mock import patch
 from quoridor.main import (
