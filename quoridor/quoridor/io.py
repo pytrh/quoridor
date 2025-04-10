@@ -35,7 +35,6 @@ def write_to_file(file: str, content: str):
     with open(file, "w") as file_to_write:
         file_to_write.write(content)
 
-
 class ReadWriteHistory:
     """
     Reading and writing Quoridor game history.

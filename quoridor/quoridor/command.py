@@ -1,7 +1,3 @@
-# TODO: Joe started savecommand, but didn't finish it. Anyone is welcome to finish it.
-# TODO: command.py is getting bloated with game logic and utility code,
-#       separate them into another module called gamelogic for example(funny old name ha!)
-#       Create another ABC only for PlaceWallCommand, MovePawnCommand to conform to LSP
 """
 Command module handling both game operations and undo/redo/restart/quit etc.
 List of commands:
@@ -17,6 +13,7 @@ Commands of which execute() return False:
 - SaveCommand in progress
 - QuitCommand
 """
+
 from abc import ABC, abstractmethod
 from copy import deepcopy
 import logging
@@ -73,7 +70,6 @@ class Command(ABC):
         """Return a string representation of the command."""
         pass
 
-    # TODO: Very ugly code, these 2 functions below don't belong here
     def switch_player(self):
         """
         Change the current player to the next one
@@ -132,7 +128,6 @@ class Command(ABC):
                 result += interstice
         return result
 
-    # TODO: Very ugly, fix please
     rows = [
         "a",
         "b",
@@ -172,7 +167,6 @@ class PlaceWallCommand(Command):
         return True
 
     # Directly from legacy gamestatemanager.py
-    # TODO: Move to PlaceWallCommand.execute()?
     def place_wall(self, x: int, y: int, direction: Direction):
         """
         Try to place a wall in the given position and direction
@@ -399,13 +393,16 @@ class RestartCommand(Command):
 
     def __init__(self, state: "GameState", initial_state: "GameState"):
         super().__init__(state)
-        self.restart_state = initial_state
+        self.restart_state = initial_state.copy_state()
 
     def execute(self) -> bool:
         """Restart the game to its initial state."""
         self.state.set_state(self.restart_state)
         self.state.redo_stack.clear()
         self.state.history.clear()
+        for player in self.state.players:
+            if player.timer:
+                player.timer.end_turn()
         return False
 
     def __str__(self) -> str:
@@ -467,8 +464,6 @@ class QuitCommand(Command):
 
     def execute(self) -> bool:
         """Quit the application."""
-        # demander à l'utilisateur s'il veut sauvegarder la partie ou non dans un fichier
-        # elif input == "save": # TODO save state F34 (bastien)
         raise QuitApp
 
     def __str__(self) -> str:
