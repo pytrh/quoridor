@@ -385,9 +385,17 @@ class CLIEngine:
                 if self.state.current_player.id not in self.state.ai_controllers:
                     command = self.get_command_from_human_player()
                 else:
+                    print(
+                        T_("AI ")
+                        + str(self.state.current_player.id + 1)
+                        + T_(" will play? "),
+                        end="",
+                        flush=True,
+                    )
                     command = self.state.ai_controllers[
                         self.state.current_player.id
                     ].suggest_move(self.state)
+                    print(command)
                 logging.debug(f"Command: {command}")
 
                 self.end_blitz_turn()

@@ -411,7 +411,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(hbox)
 
     def create_board_size_slider(self, box):
-        self.create_option_label(box, T_("Board size:")) 
+        self.create_option_label(box, T_("Board size:"))
         self.board_slider = Gtk.Scale()
         self.board_slider.set_digits(0)
         self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
@@ -569,7 +569,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             button.get_style_context().add_class("on-off-button")
 
             def on_toggle(btn, i=i + 1):
-                btn.set_label(T_("AI {num}").format(num=i) if btn.get_active() else T_("AI {num}").format(num=i))
+                btn.set_label(
+                    T_("AI {num}").format(num=i)
+                    if btn.get_active()
+                    else T_("AI {num}").format(num=i)
+                )
                 if btn.get_active():
                     self._ai_ids.add(i - 1)
                 else:
@@ -623,6 +627,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return False
 
     def on_restart_clicked(self, button):
+        self.clear_all_timer()
         self.state = GameState()
         self.execute_command(RestartCommand(self.state, self.initial_state))
         self.clear_board_gui()
@@ -746,7 +751,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 is_ai = "AI "
             walls = ""
             if not player.is_dead:
-                walls = T_(": walls remaining = %(walls)d") % {"walls": player.walls_remaining}
+                walls = T_(": walls remaining = %(walls)d") % {
+                    "walls": player.walls_remaining
+                }
 
             label = Gtk.Label(
                 label=T_("{is_ai}Player {id} {emoji} {walls}").format(
@@ -1108,7 +1115,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.winner_label.set_markup(
-            T_('<span size="14000" weight="bold">%(emoji)s won!</span>') % {"emoji": emoji}
+            T_('<span size="14000" weight="bold">%(emoji)s won!</span>')
+            % {"emoji": emoji}
         )
         self.stack.set_visible_child_name("end")
 
@@ -1153,7 +1161,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             emoji = "🟢"
         elif id_player == 3:
             emoji = "🟡"
-        self.current_player_label.set_label(T_("Current player: %(emoji)s") % {"emoji": emoji})
+        self.current_player_label.set_label(
+            T_("Current player: %(emoji)s") % {"emoji": emoji}
+        )
         logging.debug(f"Player {emoji} {id_player} must play")
 
     def update_players_box(self):
@@ -1270,7 +1280,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 return False
             error_type = type(e).__name__
             logging.error(f"Error of type {error_type} while executing command: {e}")
-            popup = AutoClosePopup(T_(f"Error ({error_type}) : {e}"), self.popup_activated)
+            popup = AutoClosePopup(
+                T_(f"Error ({error_type}) : {e}"), self.popup_activated
+            )
             popup.show()
 
         self.handle_pass_player()
@@ -1288,9 +1300,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if self.state is not None:
             if self.state.game_mode == GameMode.BLITZ:
                 for player in self.state.players:
-                    if player.timer.turn_start_time is not None:
-                        player.timer.end_turn()
-                        player.timer.display_lock.clear()
+                    if player.timer is not None:
+                        if player.timer.turn_start_time is not None:
+                            player.timer.end_turn()
+                            player.timer.display_lock.clear()
 
 
 class AutoClosePopup(Gtk.Window):
@@ -1306,7 +1319,7 @@ class AutoClosePopup(Gtk.Window):
 
 
 class SavePopup(Gtk.Window):
-    def __init__(self, state: 'GameState'):
+    def __init__(self, state: "GameState"):
         super().__init__(title=T_("Save and quit"))
         self.set_default_size(200, 100)
         self.set_transient_for(None)
@@ -1314,7 +1327,14 @@ class SavePopup(Gtk.Window):
 
         self.state = state
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=10, margin_bottom=10, margin_start=10, margin_end=10)
+        vbox = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            margin_top=10,
+            margin_bottom=10,
+            margin_start=10,
+            margin_end=10,
+        )
         label = Gtk.Label(label=T_("Do you want to save your game before quitting ?"))
         vbox.append(label)
 
