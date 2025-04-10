@@ -70,13 +70,6 @@ class Command(ABC):
         """Return a string representation of the command."""
         pass
 
-    def switch_player(self):
-        """
-        Change the current player to the next one
-        If current player is the last one, the next one will the first
-        """
-        self.state.switch_player()
-
     def update_wall(self):
         """
         Decrement the walls remaining of the current player
@@ -85,7 +78,7 @@ class Command(ABC):
             self.state.players[self.state.current_player.id].walls_remaining - 1
         )
 
-    def get_string_from_board(self) -> str:
+    def get_string_from_board(self) -> str: # NOTE: never used implemented elsewhere
         """
         Return the board in string format
         """
@@ -514,9 +507,9 @@ class TimeCommand(Command):
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
         print(
-            "\r"
-            + T_("[⏳ Remaining: %(seconds)s] ")
-            % {"seconds": f"{self.state.current_player.timer.remaining}s"}
+            "\r" + T_("[⏳ Remaining: {seconds}]").format(
+                seconds=f"{self.state.current_player.timer.remaining}s"
+            )
         )
         return False
 

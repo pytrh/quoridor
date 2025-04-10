@@ -5,6 +5,7 @@ import os
 
 from quoridor.gamemode import GameMode
 from quoridor.observer import Observer
+from quoridor.translations import T_
 
 
 class Timer:
@@ -98,7 +99,7 @@ class Timer:
                 self.gui.update_timer(self.remaining, self.player_id)
 
             if not self.display_lock.is_set():
-                print(f"\r[⏳ Remaining: {self.remaining}s]\n", end="", flush=True)
+                print("\r" + T_("[⏳ Remaining: {seconds}]").format(seconds=f"{self.remaining}s\n"), end="", flush=True)
 
             if self.remaining <= 0:
                 print(f"\n⏰ Time out! Player {self.player_id + 1} has lost the game!")

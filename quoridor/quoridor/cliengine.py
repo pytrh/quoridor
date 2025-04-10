@@ -231,10 +231,8 @@ class CLIEngine:
         """
         Print the remaining walls for each player.
         """
-        print(
-            T_("Remaining walls: ")
-            + str(self.state.players[self.state.current_player.id].walls_remaining)
-        )
+        walls_remaining = self.state.players[self.state.current_player.id].walls_remaining
+        print(T_("Remaining walls: {count}").format(count=walls_remaining))
 
     def wait_for_input_with_timeout(self) -> str:
         """
