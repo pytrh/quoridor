@@ -42,7 +42,9 @@ from gi.repository import Gtk, Gdk, Gio, GLib, GObject
 
 
 class MainWindow(Gtk.ApplicationWindow, Observer):
+    """Main application window for the Quoridor game, handling UI setup and game state transitions."""
     def __init__(self, *args, **kwargs):
+        """Initialize the main window and set up initial UI components and game state."""
         super().__init__(*args, **kwargs)
         self.set_default_size(600, 400)
 
@@ -67,6 +69,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.open_dialog = self.create_file_chooser()
 
     def create_stack(self):
+        """Create a Gtk.Stack to manage different pages (views) of the app."""
         stack = Gtk.Stack()
         stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
         stack.set_transition_duration(300)
@@ -76,7 +79,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             "new_game": self.create_new_game_page(),
             "running_game": self.create_running_game_page(),
             "about": self.create_about_page(),
-            "end": self.create_end_page()
+            "end": self.create_end_page(),
         }
 
         for name, page in pages.items():
@@ -85,6 +88,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return stack
 
     def create_file_chooser(self):
+        """Create and return a file chooser dialog for loading saved game files."""
         dialog = Gtk.FileChooserDialog(
             title=T_("Select a file"),
             transient_for=self,
@@ -102,24 +106,38 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return dialog
 
     def create_home_page(self):
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=20, margin_bottom=20,
-                      margin_start=20, margin_end=20, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+        """Create and return the home page with navigation buttons for New Game, Load Game, and About."""
+        box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            margin_top=20,
+            margin_bottom=20,
+            margin_start=20,
+            margin_end=20,
+            halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.CENTER,
+        )
 
         title = Gtk.Label()
-        title.set_markup('<span size="18000" weight="bold" foreground="#8B0000">QUORIDOR</span>')
+        title.set_markup(
+            '<span size="18000" weight="bold" foreground="#8B0000">QUORIDOR</span>'
+        )
         title.set_justify(Gtk.Justification.CENTER)
         title.set_halign(Gtk.Align.CENTER)
         title.set_css_classes(["title"])
 
         box.append(title)
-        for label, callback in [(T_("New Game"), self.on_new_game_clicked),
-                                (T_("Load Game"), self.on_load_game_clicked),
-                                (T_("About"), self.on_about_clicked)]:
+        for label, callback in [
+            (T_("New Game"), self.on_new_game_clicked),
+            (T_("Load Game"), self.on_load_game_clicked),
+            (T_("About"), self.on_about_clicked),
+        ]:
             self.create_button_for_menu(box, callback, label)
 
         return box
 
     def create_new_game_page(self):
+        """Create and return the New Game configuration page with game setup options."""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         box.set_margin_top(20)
         box.set_margin_bottom(20)
@@ -139,6 +157,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return box
 
     def create_running_game_page(self):
+        """Create and return the running game page with the board, player info, and controls."""
         main_box = self.create_main_box()
 
         # Left column (buttons and game players)
@@ -192,8 +211,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         main_box.append(right_box)
 
         return main_box
-    
+
     def create_main_box(self):
+        """Create the main horizontal layout box that will contain the game view."""
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         box.set_margin_top(20)
         box.set_margin_bottom(20)
@@ -204,6 +224,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return box
 
     def create_left_column(self):
+        """Create and return the left sidebar with action buttons and player information."""
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         left_box.set_margin_top(20)
         left_box.set_margin_bottom(20)
@@ -215,7 +236,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         game_button_box = self.create_game_button_box()
         left_box.append(game_button_box)
 
-        self.game_players_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.game_players_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=10
+        )
         self.game_players_box.set_halign(Gtk.Align.CENTER)
         self.game_players_box.set_valign(Gtk.Align.CENTER)
         left_box.append(self.game_players_box)
@@ -223,6 +246,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return left_box
 
     def create_game_button_box(self):
+        """Create and return a vertical box containing game control buttons (restart, save, quit, abandon)."""
         game_button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         game_button_box.set_halign(Gtk.Align.CENTER)
         game_button_box.set_valign(Gtk.Align.CENTER)
@@ -231,7 +255,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             (T_("🔄 Restart"), self.on_restart_clicked),
             (T_("📥 Save"), self.on_save_history),
             (T_("🚪 Quit"), self.on_quit_game_and_save),
-            (T_("🏳️ Abandon"), self.on_abandon_game)
+            (T_("🏳️ Abandon"), self.on_abandon_game),
         ]
 
         for label, callback in buttons:
@@ -242,8 +266,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             game_button_box.append(button)
 
         return game_button_box
-    
+
     def create_right_column(self):
+        """Create and return the right sidebar containing the timer, hint, and navigation buttons."""
         right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.timer_label = Gtk.Label(label="00:00")
         right_box.append(self.timer_label)
@@ -267,6 +292,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return right_box
 
     def create_arrow_box(self):
+        """Create and return a horizontal box with Undo and Redo arrow buttons."""
         arrow_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
         left_arrow = Gtk.Button(label=T_("⬅ Undo"))
@@ -280,7 +306,14 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         return arrow_box
 
+
     def create_about_page(self):
+        """
+        Create and return the 'About' page with application info.
+
+        This page includes version number, developer credits, expected release date,
+        and a game description to give users context about the app.
+        """
         box = self.create_page_box()
 
         self.create_return_button(box)
@@ -290,24 +323,49 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(title)
 
         # Information sections
-        box.append(self.create_about_section(f"Version:", importlib.metadata.version("quoridor")))
-        box.append(self.create_about_section(T_("Developers:"), "Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song"))
-        box.append(self.create_about_section(T_("Expected release date:"), T_("April 2025")))
+        box.append(
+            self.create_about_section(
+                f"Version:", importlib.metadata.version("quoridor")
+            )
+        )
+        box.append(
+            self.create_about_section(
+                T_("Developers:"),
+                "Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song",
+            )
+        )
+        box.append(
+            self.create_about_section(T_("Expected release date:"), T_("April 2025"))
+        )
         box.append(self.create_about_section("Description:", ""))
-        box.append(self.create_about_section("", T_("QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.")))
-        box.append(self.create_about_section("", T_("The aim of the game is to reach the opposite side of the grid before the other players, while simultaneously navigating through walls placed by players.")))
+        box.append(
+            self.create_about_section(
+                "",
+                T_(
+                    "QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game."
+                ),
+            )
+        )
+        box.append(
+            self.create_about_section(
+                "",
+                T_(
+                    "The aim of the game is to reach the opposite side of the grid before the other players, while simultaneously navigating through walls placed by players."
+                ),
+            )
+        )
 
         return box
 
     def create_end_page(self):
+        """Create and return the 'Game Over' page."""
         box = self.create_page_box()
 
         title = self.create_title_label("GAME OVER", "#008000", 18000)
         box.append(title)
 
         self.winner_label = self.create_label(
-            T_('<span size="14000" weight="bold">You won!</span>'),
-            Gtk.Align.CENTER
+            T_('<span size="14000" weight="bold">You won!</span>'), Gtk.Align.CENTER
         )
         box.append(self.winner_label)
 
@@ -324,8 +382,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(button_box)
         return box
 
-    # Helper functions
     def create_page_box(self):
+        """Create and return a vertically aligned container with margins for page layout."""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         box.set_margin_top(20)
         box.set_margin_bottom(20)
@@ -337,11 +395,14 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def create_title_label(self, text, color, size):
         title = Gtk.Label()
-        title.set_markup(f'<span size="{size}" weight="bold" foreground="{color}">{text}</span>')
+        title.set_markup(
+            f'<span size="{size}" weight="bold" foreground="{color}">{text}</span>'
+        )
         title.set_halign(Gtk.Align.CENTER)
         return title
 
     def create_label(self, text, halign=Gtk.Align.CENTER):
+        """Create a stylized title label for display on a page."""
         label = Gtk.Label()
         label.set_markup(text)
         label.set_justify(Gtk.Justification.CENTER)
@@ -350,17 +411,23 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return label
 
     def create_about_section(self, title, content):
-        return self.create_label_for_about(f"""<span size="12000" weight="bold">{title}</span> <span size="12000">{content}</span>""")
+        """ Create a formatted label for a section on the About page."""
+        return self.create_label_for_about(
+            f"""<span size="12000" weight="bold">{title}</span> <span size="12000">{content}</span>"""
+        )
 
     def create_label_for_about(self, text):
+        """Wrapper to create a label used specifically for the About page."""
         return self.create_label(text)
 
     def create_button(self, label, callback):
+        """Create a Gtk.Button with a label and click callback."""
         button = Gtk.Button(label=label)
         button.connect("clicked", callback)
         return button
 
     def create_button_for_menu(self, box, function, text):
+        """Create and append a menu-style button to a container."""
         btn = Gtk.Button(label=text)
         btn.set_size_request(150, 50)
         btn.set_halign(Gtk.Align.CENTER)
@@ -368,6 +435,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(btn)
 
     def create_return_button(self, box):
+        """Create and append a 'Back' button to a given container."""
         btn_back = Gtk.Button(label=T_("Back"))
         btn_back.set_size_request(20, 10)
         btn_back.set_halign(Gtk.Align.START)
@@ -375,6 +443,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(btn_back)
 
     def create_nb_players(self, box):
+        """Create and append check buttons for selecting the number of players."""
         self.create_option_label(box, T_("Number of players:"))
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -399,7 +468,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(hbox)
 
     def create_board_size_slider(self, box):
-        self.create_option_label(box, T_("Board size:")) 
+        self.create_option_label(box, T_("Board size:"))
         self.board_slider = Gtk.Scale()
         self.board_slider.set_digits(0)
         self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
@@ -470,7 +539,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         box.append(hbox)
 
-#######
+    #######
 
     def create_ai_switch(self, box):
         self.create_option_label(box, T_("AI Mode:"))
@@ -508,8 +577,12 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         """
         Creates the AI difficulty buttons (Easy, Medium, Hard) and sets their connections.
         """
-        self.btn_ai_easy = self.create_ai_difficulty_button(T_("Easy (default)"), "easy", True)
-        self.btn_ai_medium = self.create_ai_difficulty_button(T_("Medium"), "normal", False)
+        self.btn_ai_easy = self.create_ai_difficulty_button(
+            T_("Easy (default)"), "easy", True
+        )
+        self.btn_ai_medium = self.create_ai_difficulty_button(
+            T_("Medium"), "normal", False
+        )
         self.btn_ai_hard = self.create_ai_difficulty_button(T_("Hard"), "hard", False)
 
         self.btn_ai_medium.set_group(self.btn_ai_easy)
@@ -552,10 +625,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def slider_changed_depth(self, slider):
         self._ai_depth = int(slider.get_value())
 
-
-
-
-
     def create_on_off_ai_players_buttons(self, box):
         self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         label = Gtk.Label(label=T_("AI player: "))
@@ -569,7 +638,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             button.get_style_context().add_class("on-off-button")
 
             def on_toggle(btn, i=i + 1):
-                btn.set_label(T_("AI {num}").format(num=i) if btn.get_active() else T_("AI {num}").format(num=i))
+                btn.set_label(
+                    T_("AI {num}").format(num=i)
+                    if btn.get_active()
+                    else T_("AI {num}").format(num=i)
+                )
                 if btn.get_active():
                     self._ai_ids.add(i - 1)
                 else:
@@ -583,7 +656,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.player_box.set_visible(False)  # Hide by default
         box.append(self.player_box)
-
 
     def open_response(self, dialog, response):
         if response == Gtk.ResponseType.ACCEPT:
@@ -667,7 +739,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 is_ai = "AI "
             walls = ""
             if not player.is_dead:
-                walls = T_(": walls remaining = %(walls)d") % {"walls": player.walls_remaining}
+                walls = T_(": walls remaining = %(walls)d") % {
+                    "walls": player.walls_remaining
+                }
 
             label = Gtk.Label(
                 label=T_("{is_ai}Player {id} {emoji} {walls}").format(
@@ -929,7 +1003,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.winner_label.set_markup(
-            T_('<span size="14000" weight="bold">%(emoji)s won!</span>') % {"emoji": emoji}
+            T_('<span size="14000" weight="bold">%(emoji)s won!</span>')
+            % {"emoji": emoji}
         )
         self.stack.set_visible_child_name("end")
 
@@ -974,7 +1049,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             emoji = "🟢"
         elif id_player == 3:
             emoji = "🟡"
-        self.current_player_label.set_label(T_("Current player: %(emoji)s") % {"emoji": emoji})
+        self.current_player_label.set_label(
+            T_("Current player: %(emoji)s") % {"emoji": emoji}
+        )
         logging.debug(f"Player {emoji} {id_player} must play")
 
     def update_players_box(self):
@@ -995,7 +1072,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         )
         for turn_index, turn in enumerate(history, start=1):
             line = ""
-            line += T_(f"Turn {turn_index}: ")
+            line += T_("Turn {index}: ").format(index=turn_index)
             for move in turn:
                 line += move + " "
             text_list.append(line)
@@ -1091,7 +1168,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 return False
             error_type = type(e).__name__
             logging.error(f"Error of type {error_type} while executing command: {e}")
-            popup = AutoClosePopup(T_(f"Error ({error_type}) : {e}"), self.popup_activated)
+            popup = AutoClosePopup(
+                T_(f"Error ({error_type}) : {e}"), self.popup_activated
+            )
             popup.show()
 
         self.handle_pass_player()
@@ -1099,8 +1178,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.update_current_player_label()
         self.render_board()
 
-
-#### ON ACTIONS ####
+    #### ON ACTIONS ####
 
     def on_new_game_clicked(self, button):
         self.stack.set_visible_child_name("new_game")
@@ -1324,7 +1402,7 @@ class AutoClosePopup(Gtk.Window):
 
 
 class SavePopup(Gtk.Window):
-    def __init__(self, state: 'GameState'):
+    def __init__(self, state: "GameState"):
         super().__init__(title=T_("Save and quit"))
         self.set_default_size(200, 100)
         self.set_transient_for(None)
@@ -1332,7 +1410,14 @@ class SavePopup(Gtk.Window):
 
         self.state = state
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=10, margin_bottom=10, margin_start=10, margin_end=10)
+        vbox = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            margin_top=10,
+            margin_bottom=10,
+            margin_start=10,
+            margin_end=10,
+        )
         label = Gtk.Label(label=T_("Do you want to save your game before quitting ?"))
         vbox.append(label)
 
