@@ -90,13 +90,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.set_child(self.stack)
 
-        self.open_dialog = Gtk.FileChooserDialog(
-            title=T_("Select a file"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            modal=True,
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.OPEN
         )
-        self.open_dialog.set_default_size(600, 400)
+
+        self.open_dialog.set_modal(True)
 
         f = Gtk.FileFilter()
         f.set_name("Quoridor game file")
@@ -789,7 +787,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             history=self._history,
             ai_mode=self._ai_mode,
             ai_depth=self._ai_depth,
-            # todo heuristic
+            ai_heuristic=self._ai_heuristic,
         )
         self.initialize_begining_game()
 
@@ -1350,14 +1348,11 @@ class SavePopup(Gtk.Window):
         vbox.append(button_box)
         self.set_child(vbox)
 
-        # Création de la boîte de dialogue de sélection de fichier
-        self.open_dialog = Gtk.FileChooserDialog(
-            title=T_("Select a file"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            modal=True,
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.SAVE
         )
-        self.open_dialog.set_default_size(600, 400)
+
+        self.open_dialog.set_modal(True)
 
         file_filter = Gtk.FileFilter()
         file_filter.set_name("Quoridor game file")

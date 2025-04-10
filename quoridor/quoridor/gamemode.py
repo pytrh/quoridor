@@ -3,6 +3,13 @@ from typing import Callable
 
 
 class GameMode(Enum):
+    """
+    Represent the two possible game mode
+    NORMAL (no time limit)
+    BLITZ (each player start with a limited time
+        for the entire game)
+    """
+
     NORMAL = "normal"
     BLITZ = "blitz"
 
@@ -11,6 +18,10 @@ class GameMode(Enum):
 
 
 class AiMode(Enum):
+    """
+    Represent the possible playmode for the ai player
+    """
+
     GREEDY = "greedy"
     MINIMAX = "minimax"
     ALPHABETA = "ab"
@@ -20,6 +31,10 @@ class AiMode(Enum):
 
 
 class AiHeuristic(Enum):
+    """
+    Represent the heuristic usable by the ai
+    """
+
     DEFAULT = ("default", "total")
     RUNNER = ("runner", "runner")
     AGGRESSIVE = ("aggressive", "aggressive")

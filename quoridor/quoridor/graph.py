@@ -170,11 +170,13 @@ class Graph:
         raise PathNotFoundError(f"No path found between {start} and {goal}")
 
     def a_star_modified(
-        self, start: tuple[int, int], distance_to_goal: Callable[[tuple[int, int]], int] 
+        self, start: tuple[int, int], distance_to_goal: Callable[[tuple[int, int]], int]
     ) -> list[tuple[int, int]]:
         """
-        A* Search to find the shortest path from a node to any nodes that satisfies the distance_to_goal function.
-        For example, if the distance_to_goal function is the manhattan distance to W, the function will find the shortest path to any node in W.
+        A* Search to find the shortest path from a node to any nodes 
+        that satisfies the distance_to_goal function.
+        For example, if the distance_to_goal function is the manhattan distance to W, 
+        the function will find the shortest path to any node in W.
 
         :param start: The starting node.
         :type start: tuple[int, int]

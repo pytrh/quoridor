@@ -209,7 +209,6 @@ def update_config_file(
             elif line.strip().startswith("AI_HEURISTIC"):
                 line = f"AI_HEURISTIC = {ai_heuristic}\n"
             config_file.write(line)
-            # TODO: bug when putting more than one param on command line
 
 
 def restore_default_config_file() -> None:

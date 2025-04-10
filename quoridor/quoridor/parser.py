@@ -8,6 +8,7 @@ from quoridor.gamestate import GameState
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.gamemode import GameMode
+from quoridor.io import ReadWriteHistory
 
 
 def parse_string_to_graph(board_string: str) -> Graph:
