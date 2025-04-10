@@ -8,7 +8,9 @@ from quoridor.command import (MovePawnCommand
                             ,RestartCommand
                             ,AbandonCommand
                             ,QuitCommand
-                            ,SaveAndQuitCommand)
+                            ,SaveAndQuitCommand
+                            ,TimeCommand
+                            ,HelpCommand)
 from quoridor.direction import Direction
 from quoridor.exceptions import (InvalidMoveError
                                 ,NoUndoableCommand
@@ -323,3 +325,39 @@ def test_save_and_quit_command_saves_and_raises_quit(mock_parse_state_to_string,
     # Check if the functions were called correctly
     mock_parse_state_to_string.assert_called_once_with(game)
     mock_write_to_file.assert_called_once_with(file_name, 'Dummy state content')
+
+################### Test for HelpCommand ###############
+
+def test_help_command_displays_help_menu():
+    # Create a dummy game state
+    game = GameState(size=7, num_players=2, num_walls=10)
+    
+    cmd = HelpCommand(game)
+
+    # Patch the print function to capture printed output
+    with patch('builtins.print') as mock_print:
+        cmd.execute()
+
+        # List of expected help sections printed by `print`
+        expected_output = [
+            "\n--- Available Commands ---",
+            " undo       : Undo the last move",
+            " redo       : Redo the last undone move",
+            " quit       : Quit the game",
+            " restart    : Restart the game from the beginning",
+            " abandon    : Abandon the game",
+            " time       : Show elapsed time",
+            " help or h  : Show this help menu",
+            " save       : save history",
+            " history    : display history",
+            "",
+            "To move     : type a direction followed by a number (e.g. 'e4')",
+            "",
+            "To place a wall:",
+            "   - Horizontal wall → e.g. 'e4h'",
+            "   - Vertical wall   → e.g. 'e4v'",
+            "--------------------------\n"
+        ]
+        
+        # Check that print was called the expected number of times
+        assert mock_print.call_count == len(expected_output)
