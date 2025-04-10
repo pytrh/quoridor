@@ -130,8 +130,8 @@ def parse_string_to_state(state_string: str) -> GameState:
         elif line.startswith("num_walls"):
             num_walls = int(line.split("=")[1].strip())
         elif line.startswith("game_mode"):
-            t_blitz = line.split("=")[1].strip()
-            if t_blitz == "blitz" or "GameMode.BLITZ":
+            g_mode = line.split("=")[1].strip()
+            if g_mode == "GameMode.BLITZ":
                 game_mode = GameMode.BLITZ
             else:
                 game_mode = GameMode.NORMAL
@@ -216,7 +216,6 @@ def parse_string_to_state(state_string: str) -> GameState:
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
     state = GameState(**filtered_kwargs)
-    print(state.current_player.timer.get_time_remaining())
     for pid, cmd in state.history:
         cmd.state = state
     return state
@@ -235,7 +234,8 @@ def parse_state_to_string(state: GameState) -> str:
     for i in range(state.num_players):
         state_string += f"player_position = {state.players[i].position[0]}, {state.players[i].position[1]}\n"
         state_string += f"player_walls = {state.players[i].walls_remaining}\n"
-        state_string += f"player_timer = {state.players[i].timer.current_time}\n"
+        if state.game_mode == GameMode.BLITZ:
+            state_string += f"player_timer = {state.players[i].timer.current_time}\n"
         state_string += f"player_id = {state.players[i].id}\n\n"
 
     # Add the board representation
