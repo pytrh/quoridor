@@ -553,6 +553,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             self._ai_mode = AiMode.MINIMAX
             self._ai_depth = 1
             self._ai_heuristic = AiHeuristic.DEFAULT
+        else:
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.RUNNER
 
     def create_on_off_ai_players_buttons(self, box):
         self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
