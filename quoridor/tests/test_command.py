@@ -1,9 +1,9 @@
 import pytest
 from quoridor.gamestate import GameState, AiMode
 from quoridor.ai import GreedyAI, MinimaxAI, AlphaBetaAI
-from quoridor.command import MovePawnCommand, PlaceWallCommand, Command
+from quoridor.command import MovePawnCommand, PlaceWallCommand, UndoCommand
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, PathNotFoundError, InvalidMoveError
+from quoridor.exceptions import InvalidMoveError, NoUndoableCommand
 
 
 
@@ -66,23 +66,91 @@ def test_redo_wall():
 ################ Test for MovePawnCommand ################
 
 
-def test_place_wall_success():
-    basic_game_state = GameState(size=7, num_players=2, num_walls=10)
-    cmd = PlaceWallCommand(basic_game_state, position=(1, 1), orientation=Direction.H)
+def test_valid_move_pawn():
+    game = GameState(size=7, num_players=2)
+    player = game.current_player
+    start = player.position
+    end = (start[0] - 1, start[1])  # move up
+
+    cmd = MovePawnCommand(game, start, end)
     success = cmd.execute()
+
     assert success
-    assert basic_game_state.players[0].walls_remaining == 9  # car un mur a été utilisé
+    assert player.position == end
 
-def test_place_wall_out_of_bounds():
-    basic_game_state = GameState(size=7, num_players=2, num_walls=10)
-    cmd = PlaceWallCommand(basic_game_state, position=(6, 6), orientation=Direction.H)
+
+def test_invalid_move_wrong_start_position():
+    game = GameState(size=7, num_players=2)
+    wrong_start = (0, 0)
+    correct_end = (1, 0)
+
+    cmd = MovePawnCommand(game, wrong_start, correct_end)
     with pytest.raises(InvalidMoveError):
         cmd.execute()
 
-def test_place_wall_no_walls_left():
-    basic_game_state = GameState(size=7, num_players=2, num_walls=10)
-    player = basic_game_state.players[0]
-    player.walls_remaining = 0
-    cmd = PlaceWallCommand(basic_game_state, position=(1, 1), orientation=Direction.H)
+
+def test_invalid_move_illegal_edge():
+    game = GameState(size=7, num_players=2)
+    start = game.current_player.position
+    invalid_end = (start[0], start[1] + 2)
+
+    cmd = MovePawnCommand(game, start, invalid_end)
     with pytest.raises(InvalidMoveError):
         cmd.execute()
+
+
+def test_undo_move_pawn():
+    game = GameState(size=7, num_players=2)
+    player = game.current_player
+    start = player.position
+    end = (start[0] - 1, start[1])  # move up
+
+    cmd = MovePawnCommand(game, start, end)
+    cmd.execute()
+    cmd.undo()
+
+    assert player.position == start
+    assert game.current_player.id == 1
+
+
+def test_redo_move_pawn():
+    game = GameState(size=7, num_players=2)
+    player = game.current_player
+    start = player.position
+    end = (start[0] - 1, start[1])
+
+    cmd = MovePawnCommand(game, start, end)
+    cmd.execute()
+    cmd.undo()
+    cmd.redo()
+
+    assert player.position == end
+    assert game.current_player.id == 0
+
+################ Test for UndoCommand ################
+
+def test_undo_move_pawn():
+    basic_game_state = GameState(size=7, num_players=2, num_walls=10)
+    state = basic_game_state
+    initial_pos = state.players[0].position
+    next_pos = (initial_pos[0] + 1, initial_pos[1])
+
+    if not state.board.edge_exists(initial_pos, next_pos):
+        pytest.skip("Pas de bord valide pour ce mouvement")
+
+    move_cmd = MovePawnCommand(state, initial_pos, next_pos)
+    assert move_cmd.execute()
+    state.history.append((state.current_player.id, move_cmd))
+
+    assert state.players[0].position == next_pos
+
+    undo_cmd = UndoCommand(state)
+    undo_cmd.execute()
+    assert state.players[0].position == initial_pos
+    assert state.redo_stack[-1][1] == move_cmd
+
+def test_undo_when_history_empty():
+    basic_game_state = GameState(size=7, num_players=2, num_walls=10)
+    undo_cmd = UndoCommand(basic_game_state)
+    with pytest.raises(NoUndoableCommand):
+        undo_cmd.execute()
