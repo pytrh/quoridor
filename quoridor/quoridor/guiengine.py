@@ -473,6 +473,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.timer_text_box.set_hexpand(True)
         self.timer_box.append(self.btn_blitz)
         self.timer_box.append(self.timer_text_box)
+        self.timer_text_box.set_visible(False)
 
         hbox.append(self.btn_normal)
         hbox.append(self.timer_box)

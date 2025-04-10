@@ -99,7 +99,14 @@ class Timer:
                 self.gui.update_timer(self.remaining, self.player_id)
 
             if not self.display_lock.is_set():
-                print("\r" + T_("[⏳ Remaining: {seconds}]").format(seconds=f"{self.remaining}s\n"), end="", flush=True)
+                print(
+                    "\r"
+                    + T_("[⏳ Remaining: {seconds}]\n").format(
+                        seconds=f"{self.remaining}s"
+                    ),
+                    end="",
+                    flush=True,
+                )
 
             if self.remaining <= 0:
                 print(f"\n⏰ Time out! Player {self.player_id + 1} has lost the game!")
