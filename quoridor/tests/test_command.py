@@ -1,8 +1,16 @@
 import pytest
 from quoridor.gamestate import GameState
-from quoridor.command import MovePawnCommand, PlaceWallCommand, UndoCommand, RedoCommand, RestartCommand
+from quoridor.command import (MovePawnCommand
+                            ,PlaceWallCommand
+                            ,UndoCommand
+                            ,RedoCommand
+                            ,RestartCommand
+                            ,AbandonCommand)
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, NoUndoableCommand, NoRedoableCommand
+from quoridor.exceptions import (InvalidMoveError
+                                ,NoUndoableCommand
+                                ,NoRedoableCommand
+                                , GameOver)
 
 
 
@@ -238,3 +246,43 @@ def test_restart_command_str():
     game = GameState(size=7, num_players=2, num_walls=10)
     restart_cmd = RestartCommand(game, game)
     assert str(restart_cmd) == "Restart game"
+
+
+
+################### Test for AbandonCommand ####################
+
+def test_abandon_command_marks_player_dead_and_decreases_player_count():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    player_id = 0
+
+    cmd = AbandonCommand(game, player_id)
+    result = cmd.execute()
+
+    assert result is True
+    assert game.players[player_id].is_dead
+    assert game.num_players_remaining == 1
+
+
+def test_abandon_command_undo_restores_player():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    player_id = 0
+
+    cmd = AbandonCommand(game, player_id)
+    cmd.execute()
+    cmd.undo()
+
+    assert not game.players[player_id].is_dead
+    assert game.num_players_remaining == 2
+
+
+def test_abandon_command_redo_marks_player_dead_again():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    player_id = 0
+
+    cmd = AbandonCommand(game, player_id)
+    cmd.execute()
+    cmd.undo()
+    cmd.redo()
+
+    assert game.players[player_id].is_dead
+    assert game.num_players_remaining == 1
