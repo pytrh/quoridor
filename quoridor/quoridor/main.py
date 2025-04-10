@@ -543,26 +543,12 @@ def get_ai_move_from_file(
     Returns:
         tuple[int, Command]: Current player ID and the suggested move
     """
-    # print("Getting AI move from file")
-    # Load game state from file
     initial_state = open_file(filename)
-    # print("Game state loaded")
-    # Create appropriate AI based on configuration
-    # if ai_mode == AiMode.GREEDY:
-    #     ai = GreedyAI(ai_depth, ai_heuristic)
-    # elif ai_mode == AiMode.MINIMAX:
-    #     ai = MinimaxAI(ai_depth, ai_heuristic)
-    # elif ai_mode == AiMode.ALPHABETA:
-    #     ai = AlphaBetaAI(ai_depth, ai_heuristic)
-    # else:
-    #     raise ValueError(f"Unknown AI mode: {ai_mode}")
     ai = GreedyAI(ai_depth, ai_heuristic)
 
     # Get the move
     move = ai.suggest_move(initial_state)
-    # next_player_id = (initial_state.current_player.id + 1) % initial_state.num_players
 
-    # return next_player_id, move
     return initial_state.current_player.id, move
 
 
