@@ -95,7 +95,7 @@ class CLIEngine:
         :param command: The command to execute.
         :type command: Command
         :return: wether or not the command is added to history (check command.py)
-        :rytpe: bool
+        :rtype: bool
         """
         result = command.execute()
         if result:
@@ -117,7 +117,7 @@ class CLIEngine:
         :param case: String in format 'letter''number'
         :type case: str
         :return: a position
-        :rytpe: tuple[int,int]
+        :rtype: tuple[int,int]
         """
         x = self.rows.index(case[0])
         y = self.columns.index(case[1])
@@ -132,7 +132,7 @@ class CLIEngine:
         :param case: String in format 'letter''number''direction'
         :type case: str
         :return: a position + a direction
-        :rytpe: tuple[int,int, Direction]
+        :rtype: tuple[int,int, Direction]
         """
         x = self.rows.index(case[0])
         y = self.columns.index(case[1])
@@ -153,7 +153,7 @@ class CLIEngine:
         :param end: String in format 'letter''number'
         :type case: str
         :return: true if the move is invalid, false if the move is valid
-        :rytpe: bool
+        :rtype: bool
         """
         if len(start) == 2 and len(end) == 2:
             if (
@@ -170,7 +170,7 @@ class CLIEngine:
         """
         Return the board in string format
         :return: a string that represent the board
-        :rytpe: str
+        :rtype: str
         """
         horizontal_wall = "---"
         vertical_wall = "|"
@@ -231,7 +231,7 @@ class CLIEngine:
         Wait for an user input, but can give a timeout if the current
         player blitz timer run out.
         :return: a string corresponding to an user input (abandon if time run out)
-        :rytpe: str
+        :rtype: str
         """
         print(
             T_("Player ") + str(self.state.current_player.id + 1) + T_(" will play? "),
@@ -260,7 +260,7 @@ class CLIEngine:
         """
         Get an input from the human player.
         :return: a string given by the player
-        :rytpe: str
+        :rtype: str
         """
         return self.wait_for_input_with_timeout()
 
@@ -271,7 +271,7 @@ class CLIEngine:
             [letter][int] both in the range of the size of the board
         :type case: str
         :return: a bool correspond to the validy of the string
-        :rytpe: bool
+        :rtype: bool
         """
         return len(input) == 2 and input[0] in self.rows and input[1] in self.columns
 
@@ -283,7 +283,7 @@ class CLIEngine:
             Folowed by [direction] (either 'v'ertical or 'h'orizontal)
         :type case: str
         :return: a bool correspond to the validy of the string
-        :rytpe: bool
+        :rtype: bool
         """
         return (
             len(input) == 3
@@ -306,7 +306,7 @@ class CLIEngine:
         """
         Get a command from the human player.
         :return: an executable Command
-        :rytpe: Command
+        :rtype: Command
         """
         input = self.get_input_from_human_player()
         if input == "undo":
