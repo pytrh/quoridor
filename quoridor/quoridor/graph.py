@@ -73,7 +73,7 @@ class Graph:
         """
         return node in self._graph
 
-    def remove_node(self, node: tuple[int, int]) -> None: # NOTE: only used in tests
+    def remove_node(self, node: tuple[int, int]) -> None:
         """
         Remove a node from the graph.
 

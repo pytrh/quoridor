@@ -500,13 +500,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(label)
 
     def create_ai_hidden_radio_buttons(self, box):
-        # Create AI difficulty radio buttons
         self.create_ai_difficulty_buttons()
-
-        # Create depth slider
         self.create_ai_depth_slider()
-
-        # Create radio box container and append widgets
         self.create_radio_box(box)
 
     def create_ai_difficulty_buttons(self):
@@ -517,7 +512,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.btn_ai_medium = self.create_ai_difficulty_button(T_("Medium"), "normal", False)
         self.btn_ai_hard = self.create_ai_difficulty_button(T_("Hard"), "hard", False)
 
-        # Group buttons together
         self.btn_ai_medium.set_group(self.btn_ai_easy)
         self.btn_ai_hard.set_group(self.btn_ai_medium)
 
@@ -558,19 +552,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def slider_changed_depth(self, slider):
         self._ai_depth = int(slider.get_value())
 
-    def on_button_ai_difficulty(self, button, mode):
-        if mode == "easy":
-            self._ai_mode = AiMode.MINIMAX
-            self._ai_depth = 1
-            self._ai_heuristic = AiHeuristic.RUNNER
-        elif mode == "normal":
-            self._ai_mode = AiMode.MINIMAX
-            self._ai_depth = 1
-            self._ai_heuristic = AiHeuristic.AGGRESSIVE
-        elif mode == "hard":
-            self._ai_mode = AiMode.MINIMAX
-            self._ai_depth = 1
-            self._ai_heuristic = AiHeuristic.DEFAULT
+
+
+
 
     def create_on_off_ai_players_buttons(self, box):
         self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -600,85 +584,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.player_box.set_visible(False)  # Hide by default
         box.append(self.player_box)
 
-    def on_new_game_clicked(self, button):
-        self.stack.set_visible_child_name("new_game")
-
-    def on_about_clicked(self, button):
-        self.stack.set_visible_child_name("about")
-
-    def clear_board_gui(self):
-        if self.state is not None:
-            for row in range(self.state.size):
-                for col in range(self.state.size):
-                    if (row, col) in self.cells:
-                        self.game_grid.remove(self.cells[(row, col)])
-        self.cells = {}
-        self.clear_all_timer()
-
-    def on_back_home(self, button):
-        self.clear_board_gui()
-        if self.state is not None:
-            self.state.history.clear()
-            self.state.redo_stack.clear()
-            self.state.current_player.is_dead = True
-        self.scrolled_window_history.set_child(None)
-        self.game_is_over = True
-        self.stack.set_visible_child_name("home")
-
-    def on_quit_game_and_save(self, button):
-        popup = SavePopup(self.state)
-        popup.connect("close-request", self.on_popup_closed)
-        popup.show()
-
-    def on_save_history(self, button):
-        SaveCommand(self.state, "outputHistory.txt").execute()
-        pass
-
-    def on_popup_closed(self, window):
-        self.on_back_home(None)
-        return False
-
-    def on_restart_clicked(self, button):
-        self.state = GameState()
-        self.execute_command(RestartCommand(self.state, self.initial_state))
-        self.clear_board_gui()
-        if self.state.game_mode == GameMode.BLITZ:
-            self.initialise_timer()
-            self.state.current_player.timer.start_turn()
-            self.state.current_player.timer.display_lock.set()
-        self.create_board()
-        self.render_board()
-        self.handle_ai_player()
-        self.game_is_over = False
-        self.stack.set_visible_child_name("running_game")
-
-    def on_player_button_toggled(self, button, players):
-        if button.get_active():
-            self._number_of_players = int(players)
-            logging.debug(f"Number of players selected: {self._number_of_players}")
-
-    def on_game_mode_button_toggled(self, button, mode: GameMode):
-        if button.get_active():
-            self._game_mode = mode
-            logging.debug(f"Playing in {mode.display_name} Mode")
-            if mode == GameMode.BLITZ:
-                self.timer_text_box.set_visible(True)
-            else:
-                self.timer_text_box.set_visible(False)
-
-    def on_ai_switch_switched(self, switch, state):
-        logging.debug(f"The switch has been switched {'on' if state else 'off'}")
-        if state:
-            self.radio_box.set_visible(True)
-            self.player_box.set_visible(True)
-        else:
-            self.btn_ai_easy.set_active(True)
-            self.radio_box.set_visible(False)
-            self.player_box.set_visible(False)
-
-    ### Loading game
-    def on_load_game_clicked(self, button):
-        self.open_dialog.show()
 
     def open_response(self, dialog, response):
         if response == Gtk.ResponseType.ACCEPT:
@@ -774,34 +679,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 label.get_style_context().add_class("player-is-dead")
             box.append(label)
 
-    def on_start_game_clicked(self, button):
-        self.stack.set_visible_child_name("running_game")
-        self.game_is_over = False
-        if self._game_mode == GameMode.BLITZ:
-            self._blitz_time = self.timer_text_box.get_value_as_int()
-            logging.debug("Temps sélectionné :", self._blitz_time)
-
-        if not self.switch_ai.get_active():
-            self._ai_ids = set()
-        else:
-            if len(self._ai_ids) <= 0:
-                self._ai_ids.add(True)
-            self.manage_ai_parameters()
-
-        self.initialize_state(
-            num_players=self._number_of_players,
-            size=self._board_size,
-            num_walls=self._num_walls,
-            game_mode=self._game_mode,
-            blitz_time=self._blitz_time,
-            ai_ids=self._ai_ids,
-            history=self._history,
-            ai_mode=self._ai_mode,
-            ai_depth=self._ai_depth,
-            # todo heuristic
-        )
-        self.initialize_begining_game()
-
     def initialize_begining_game(self):
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
@@ -818,24 +695,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.state = GameState(**filtered_kwargs)
         self.initial_state = self.state.copy_state()
 
-    def on_abandon_game(self, button):
-        self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
-        if not self.state.game_over():
-            self.update_players_box()
-            self.update_current_player_label()
-
-    def on_hint_clicked(self, button):
-        self.hint_cases.clear()
-        if self.hint_activate:
-            self.hint_activate = False
-        else:
-            self.hint_activate = True
-
-        ai_temp = GreedyAI(0, AiHeuristic.RUNNER)
-        for case in ai_temp.possible_moves(self.state):
-            self.hint_cases.append(case)
-            self.draw_hint_on_case(case)
-
     def draw_hint_on_case(self, case):
         self.cells[case].set_label(self.hint_symbole)
 
@@ -844,10 +703,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def remove_pass_button(self):
         self.btn_pass_turn.set_visible(False)
-
-    def on_pass_turn(self, button):
-        self.remove_pass_button()
-        self.execute_command(PassCommand(self.state))
 
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
@@ -939,56 +794,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def nothing(self, click_target, value, z, a):
         popup = AutoClosePopup(f"Drag the piece of wall to the board", True)
         popup.show()
-        return True
-
-    def on_drag_prepare(self, drag_source, x, y, emoji, pos=None):
-        """Prepares the piece for dragging by storing its last position."""
-        data = Gdk.ContentProvider.new_for_value(emoji)
-        if emoji == "🔵":
-            self.blue_last_pos = pos
-        elif emoji == "🔴":
-            self.red_last_pos = pos
-        elif emoji == "🟢":
-            self.green_last_pos = pos
-        elif emoji == "🟡":
-            self.yellow_last_pos = pos
-        return data
-
-    def on_drop(self, drop_target, value, x, y):
-        """Handles dropping the piece and updates the board."""
-        cell = drop_target.get_widget()
-
-        row, col = None, None
-        for (r, c), button in self.cells.items():
-            if button == cell:
-                row, col = r, c
-                break
-
-        if row is None or col is None:
-            logging.debug("Error : no cell found in the grid")
-
-        if value in ["🔵", "🔴", "🟢", "🟡"]:
-            self.handle_pawn_move(row, col, value)
-
-        elif value in [Direction.H, Direction.V]:
-            self.handle_place_wall(row, col, value)
-
-        return True
-
-    def on_click(self, click_target, value, x, y):
-        cell = click_target.get_widget()
-
-        row, col = None, None
-        for (r, c), button in self.cells.items():
-            if button == cell:
-                row, col = r, c
-                break
-
-        if row is None or col is None:
-            logging.debug("Error : no cell found in the grid")
-
-        self.handle_pawn_move_click(row, col, value)
-
         return True
 
     def initialise_timer(self):
@@ -1293,6 +1098,203 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.update_players_box()
         self.update_current_player_label()
         self.render_board()
+
+
+#### ON ACTIONS ####
+
+    def on_new_game_clicked(self, button):
+        self.stack.set_visible_child_name("new_game")
+
+    def on_about_clicked(self, button):
+        self.stack.set_visible_child_name("about")
+
+    def clear_board_gui(self):
+        if self.state is not None:
+            for row in range(self.state.size):
+                for col in range(self.state.size):
+                    if (row, col) in self.cells:
+                        self.game_grid.remove(self.cells[(row, col)])
+        self.cells = {}
+        self.clear_all_timer()
+
+    def on_back_home(self, button):
+        self.clear_board_gui()
+        if self.state is not None:
+            self.state.history.clear()
+            self.state.redo_stack.clear()
+            self.state.current_player.is_dead = True
+        self.scrolled_window_history.set_child(None)
+        self.game_is_over = True
+        self.stack.set_visible_child_name("home")
+
+    def on_quit_game_and_save(self, button):
+        popup = SavePopup(self.state)
+        popup.connect("close-request", self.on_popup_closed)
+        popup.show()
+
+    def on_save_history(self, button):
+        SaveCommand(self.state, "outputHistory.txt").execute()
+        pass
+
+    def on_popup_closed(self, window):
+        self.on_back_home(None)
+        return False
+
+    def on_restart_clicked(self, button):
+        self.state = GameState()
+        self.execute_command(RestartCommand(self.state, self.initial_state))
+        self.clear_board_gui()
+        if self.state.game_mode == GameMode.BLITZ:
+            self.initialise_timer()
+            self.state.current_player.timer.start_turn()
+            self.state.current_player.timer.display_lock.set()
+        self.create_board()
+        self.render_board()
+        self.handle_ai_player()
+        self.game_is_over = False
+        self.stack.set_visible_child_name("running_game")
+
+    def on_player_button_toggled(self, button, players):
+        if button.get_active():
+            self._number_of_players = int(players)
+            logging.debug(f"Number of players selected: {self._number_of_players}")
+
+    def on_game_mode_button_toggled(self, button, mode: GameMode):
+        if button.get_active():
+            self._game_mode = mode
+            logging.debug(f"Playing in {mode.display_name} Mode")
+            if mode == GameMode.BLITZ:
+                self.timer_text_box.set_visible(True)
+            else:
+                self.timer_text_box.set_visible(False)
+
+    def on_ai_switch_switched(self, switch, state):
+        logging.debug(f"The switch has been switched {'on' if state else 'off'}")
+        if state:
+            self.radio_box.set_visible(True)
+            self.player_box.set_visible(True)
+        else:
+            self.btn_ai_easy.set_active(True)
+            self.radio_box.set_visible(False)
+            self.player_box.set_visible(False)
+
+    ### Loading game
+    def on_load_game_clicked(self, button):
+        self.open_dialog.show()
+
+    def on_button_ai_difficulty(self, button, mode):
+        if mode == "easy":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.RUNNER
+        elif mode == "normal":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.AGGRESSIVE
+        elif mode == "hard":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.DEFAULT
+
+    def on_start_game_clicked(self, button):
+        self.stack.set_visible_child_name("running_game")
+        self.game_is_over = False
+        if self._game_mode == GameMode.BLITZ:
+            self._blitz_time = self.timer_text_box.get_value_as_int()
+            logging.debug("Temps sélectionné :", self._blitz_time)
+
+        if not self.switch_ai.get_active():
+            self._ai_ids = set()
+        else:
+            if len(self._ai_ids) <= 0:
+                self._ai_ids.add(True)
+            self.manage_ai_parameters()
+
+        self.initialize_state(
+            num_players=self._number_of_players,
+            size=self._board_size,
+            num_walls=self._num_walls,
+            game_mode=self._game_mode,
+            blitz_time=self._blitz_time,
+            ai_ids=self._ai_ids,
+            history=self._history,
+            ai_mode=self._ai_mode,
+            ai_depth=self._ai_depth,
+            # todo heuristic
+        )
+        self.initialize_begining_game()
+
+    def on_abandon_game(self, button):
+        self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
+        if not self.state.game_over():
+            self.update_players_box()
+            self.update_current_player_label()
+
+    def on_pass_turn(self, button):
+        self.remove_pass_button()
+        self.execute_command(PassCommand(self.state))
+
+    def on_drag_prepare(self, drag_source, x, y, emoji, pos=None):
+        """Prepares the piece for dragging by storing its last position."""
+        data = Gdk.ContentProvider.new_for_value(emoji)
+        if emoji == "🔵":
+            self.blue_last_pos = pos
+        elif emoji == "🔴":
+            self.red_last_pos = pos
+        elif emoji == "🟢":
+            self.green_last_pos = pos
+        elif emoji == "🟡":
+            self.yellow_last_pos = pos
+        return data
+
+    def on_drop(self, drop_target, value, x, y):
+        """Handles dropping the piece and updates the board."""
+        cell = drop_target.get_widget()
+
+        row, col = None, None
+        for (r, c), button in self.cells.items():
+            if button == cell:
+                row, col = r, c
+                break
+
+        if row is None or col is None:
+            logging.debug("Error : no cell found in the grid")
+
+        if value in ["🔵", "🔴", "🟢", "🟡"]:
+            self.handle_pawn_move(row, col, value)
+
+        elif value in [Direction.H, Direction.V]:
+            self.handle_place_wall(row, col, value)
+
+        return True
+
+    def on_click(self, click_target, value, x, y):
+        cell = click_target.get_widget()
+
+        row, col = None, None
+        for (r, c), button in self.cells.items():
+            if button == cell:
+                row, col = r, c
+                break
+
+        if row is None or col is None:
+            logging.debug("Error : no cell found in the grid")
+
+        self.handle_pawn_move_click(row, col, value)
+
+        return True
+
+    def on_hint_clicked(self, button):
+        self.hint_cases.clear()
+        if self.hint_activate:
+            self.hint_activate = False
+        else:
+            self.hint_activate = True
+
+        ai_temp = GreedyAI(0, AiHeuristic.RUNNER)
+        for case in ai_temp.possible_moves(self.state):
+            self.hint_cases.append(case)
+            self.draw_hint_on_case(case)
 
     def on_undo_clicked(self, button):
         self.execute_command(UndoCommand(self.state))

@@ -59,7 +59,7 @@ def parse_string_to_graph(board_string: str) -> Graph:
     return graph
 
 
-def _print_graph(graph: Graph): # NOTE: never used
+def _print_graph(graph: Graph):
     if not graph._graph:
         print("Graph is empty.")
         return

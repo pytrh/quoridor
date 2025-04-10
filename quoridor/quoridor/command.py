@@ -73,14 +73,6 @@ class Command(ABC):
         """Return a string representation of the command."""
         pass
 
-    # TODO: Very ugly code, these 2 functions below don't belong here
-    def switch_player(self): # NOTE: never used
-        """
-        Change the current player to the next one
-        If current player is the last one, the next one will the first
-        """
-        self.state.switch_player()
-
     def update_wall(self):
         """
         Decrement the walls remaining of the current player

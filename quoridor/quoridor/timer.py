@@ -61,15 +61,6 @@ class Timer:
                 self._watchdog_thread.join()
             self._watchdog_thread = None
 
-    def get_time_remaining(self) -> int: # NOTE: never used
-        """
-        Return the current remaining time for the player.
-
-        Returns:
-            int: Time left in seconds.
-        """
-        return self.current_time
-
     def set_gui_observer(self, gui: Observer):
         self.gui = gui
 
