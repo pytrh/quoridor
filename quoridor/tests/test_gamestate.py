@@ -3,10 +3,11 @@ Unit tests for the gamelogic module
 """
 
 import pytest
+from quoridor.ai import AlphaBetaAI, GreedyAI, MinimaxAI
+from quoridor.command import Command
+from quoridor.gamemode import AiHeuristic, AiMode, GameMode
 from quoridor.gamestate import GameState
 from quoridor.player import Player
-from quoridor.gamemode import GameMode
-from quoridor.command import Command
 
 
 def __check_create_board(game: GameState) -> None:
@@ -87,3 +88,71 @@ def test_game_four_players():
     assert game.players[1].walls_remaining == 10
     assert game.players[0].id == 0
     assert game.players[1].id == 1
+
+
+def test_game_over():
+    game = GameState(size=9, num_players=4, game_mode=GameMode.NORMAL, num_walls=10)
+    __check_create_board(game)
+    __check_game_parameters(game, 9, 4, GameMode.NORMAL, [])
+    assert game.current_player.id == 0
+    assert game.players[0].position == (4, 0)
+
+    assert not game.game_over()
+
+    game.players[0].position = (0, 8)
+    assert game.game_over()
+    game.players[0].position = (4, 0)
+
+    game.players[1].position = (0, 0)
+    game.current_player.id = 1
+    assert game.game_over()
+    game.players[1].position = (4, 8)
+
+    game.players[2].position = (8, 8)
+    game.current_player.id = 2
+    assert game.game_over()
+    game.players[2].position = (0, 4)
+
+    game.players[3].position = (0, 8)
+    game.current_player.id = 3
+    assert game.game_over()
+    game.players[3].position = (8, 4)
+
+
+def test_backward_player():
+    game = GameState(size=9, num_players=4, game_mode=GameMode.NORMAL, num_walls=10)
+    __check_create_board(game)
+    __check_game_parameters(game, 9, 4, GameMode.NORMAL, [])
+    assert game.current_player.id == 0
+    assert game.players[0].position == (4, 0)
+
+    game.switch_player()
+    assert game.current_player.id == 1
+
+    game.backward_player()
+    assert game.current_player.id == 0
+
+    game.backward_player()
+    assert game.current_player.id == 3
+
+    game.players[0].is_dead = True
+    game.num_players_remaining = game.num_players_remaining - 1
+    assert game.num_players_remaining == 3
+    game.switch_player()
+    assert game.current_player.id == 1
+
+
+def test_create_ai():
+    game = GameState(
+        size=9, num_players=4, game_mode=GameMode.NORMAL, num_walls=10, ai_ids={2}
+    )
+    __check_create_board(game)
+    __check_game_parameters(game, 9, 4, GameMode.NORMAL, [])
+
+    assert len(game.ai_controllers) == 1
+
+    depth = 1
+    heuristic = AiHeuristic.RUNNER
+    assert isinstance(game.create_ai(AiMode.MINIMAX, depth, heuristic), MinimaxAI)
+    assert isinstance(game.create_ai(AiMode.ALPHABETA, depth, heuristic), AlphaBetaAI)
+    assert isinstance(game.create_ai(AiMode.GREEDY, depth, heuristic), GreedyAI)
