@@ -30,6 +30,7 @@ version = {attr = "quoridor.__version__"}
 
 [tool.pytest.ini_options]
 addopts = [ # Add options for pytest
+  "-p no:warnings",
   "-ra",
   "-m not limit",
   "--cov=quoridor",
