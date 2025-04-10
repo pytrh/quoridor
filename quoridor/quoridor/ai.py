@@ -90,76 +90,34 @@ class MinimaxAI(AI):
             return self.heuristic(state), None
 
         best_move = None
-        if maximizing:
-            max_eval = -float("inf")
-            for pos in self.possible_moves(state):
-                command = MovePawnCommand(state, state.current_player.position, pos)
-                try:
-                    # execute_command(command)
-                    command.execute()
-                    state.switch_player()
 
-                    eval, _ = self._minimax(state, depth - 1, False)
-                    command.undo()
-                    if eval > max_eval:
-                        max_eval = eval
-                        best_move = command
-                except Exception:
-                    command.undo()
-                    continue
+        best_eval = float("-inf") if maximizing else float("inf")
 
-            for x, y, d in self.possible_walls(state):
-                command = PlaceWallCommand(state, (x, y), d)
-                try:
-                    # execute_command(command)
-                    command.execute()
-                    state.switch_player()
+        commands = [
+                MovePawnCommand(state, state.current_player.position, pos) for pos in self.possible_moves(state)
+            ] + [
+                PlaceWallCommand(state, (x, y), d) for x, y, d in self.possible_walls(state)
+                ]
 
-                    eval, _ = self._minimax(state, depth - 1, False)
-                    command.undo()
-                    if eval > max_eval:
-                        max_eval = eval
-                        best_move = command
-                except Exception:
-                    command.undo()
-                    continue
+        for command in commands:
+            try:
+                # execute_command(command)
+                command.execute()
+                state.switch_player()
 
-            return max_eval, best_move
+                eval, _ = self._minimax(state, depth - 1, False)
+                
+                command.undo()
 
-        else:  # Minimizing player
-            min_eval = float("inf")
-            for new_x, new_y in self.possible_moves(state):
-                command = MovePawnCommand(
-                    state, state.current_player.position, (new_x, new_y)
-                )
-                try:
-                    command.execute()
-                    state.switch_player()
-                    eval, _ = self._minimax(state, depth - 1, True)
-                    command.undo()
+                if (maximizing and eval > best_eval) or (not maximizing and eval < best_eval):
+                    best_eval = eval
+                    best_move = command
+                
+            except Exception:
+                command.undo()
+                continue
 
-                    if eval < min_eval:
-                        min_eval = eval
-                        best_move = command
-                except Exception:
-                    command.undo()
-                    continue
-
-            for x, y, d in self.possible_walls(state):
-                command = PlaceWallCommand(state, (x, y), d)
-                try:
-                    command.execute()
-                    state.switch_player()
-
-                    eval, _ = self._minimax(state, depth - 1, True)
-                    command.undo()
-                    if eval < min_eval:
-                        min_eval = eval
-                        best_move = command
-                except Exception:
-                    command.undo()
-                    continue
-            return min_eval, best_move
+        return best_eval, best_move
 
 
 class AlphaBetaAI(AI):
@@ -194,100 +152,32 @@ class AlphaBetaAI(AI):
 
         best_move = None
 
-        if maximizing:
-            max_eval = float("-inf")
+        best_eval = float("-inf") if maximizing else float("inf")
 
-            # Try all possible pawn moves
-            for pos in self.possible_moves(state):
-                command = MovePawnCommand(state, state.current_player.position, pos)
-                try:
-                    command.execute()
-                    state.switch_player()
+        commands = [
+                MovePawnCommand(state, state.current_player.position, pos) for pos in self.possible_moves(state)
+            ] + [
+                PlaceWallCommand(state, (x, y), d) for x, y, d in self.possible_walls(state)
+                ]
 
-                    eval, _ = self._minimax(state, depth - 1, False, alpha, beta)
+        for command in commands:
+            try:
+                command.execute()
+                state.switch_player()
 
-                    command.undo()
+                eval, _ = self._minimax(state, depth - 1, False, alpha, beta)
 
-                    if eval > max_eval:
-                        max_eval = eval
-                        best_move = command
+                command.undo()
 
-                    alpha = max(alpha, eval)
-                    if beta <= alpha:
-                        break  # Beta cut-off
-                except Exception:
-                    command.undo()
-                    continue
+                if (maximizing and eval > best_eval) or (not maximizing and eval < best_eval):
+                    best_eval = eval
+                    best_move = command
 
-            # Try all possible wall placements
-            for x, y, d in self.possible_walls(state):
-                command = PlaceWallCommand(state, (x, y), d)
-                try:
-                    command.execute()
-                    state.switch_player()
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break  # Beta cut-off
+            except Exception:
+                command.undo()
+                continue
 
-                    eval, _ = self._minimax(state, depth - 1, False, alpha, beta)
-
-                    command.undo()
-
-                    if eval > max_eval:
-                        max_eval = eval
-                        best_move = command
-
-                    alpha = max(alpha, eval)
-                    if beta <= alpha:
-                        break  # Beta cut-off
-                except Exception:
-                    command.undo()
-                    continue
-
-            return max_eval, best_move
-
-        else:  # Minimizing player
-            min_eval = float("inf")
-
-            # Try all possible pawn moves
-            for pos in self.possible_moves(state):
-                command = MovePawnCommand(state, state.current_player.position, pos)
-                try:
-                    command.execute()
-                    state.switch_player()
-
-                    eval, _ = self._minimax(state, depth - 1, True, alpha, beta)
-
-                    command.undo()
-
-                    if eval < min_eval:
-                        min_eval = eval
-                        best_move = command
-
-                    beta = min(beta, eval)
-                    if beta <= alpha:
-                        break  # Alpha cut-off
-                except Exception:
-                    command.undo()
-                    continue
-
-            # Try all possible wall placements
-            for x, y, d in self.possible_walls(state):
-                command = PlaceWallCommand(state, (x, y), d)
-                try:
-                    command.execute()
-                    state.switch_player()
-
-                    eval, _ = self._minimax(state, depth - 1, True, alpha, beta)
-
-                    command.undo()
-
-                    if eval < min_eval:
-                        min_eval = eval
-                        best_move = command
-
-                    beta = min(beta, eval)
-                    if beta <= alpha:
-                        break  # Alpha cut-off
-                except Exception:
-                    command.undo()
-                    continue
-
-            return min_eval, best_move
+        return best_eval, best_move
