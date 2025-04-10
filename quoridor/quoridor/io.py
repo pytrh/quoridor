@@ -27,12 +27,15 @@ if TYPE_CHECKING:
 def write_to_file(file: str, content: str):
     """
     Write out the content of a string to a file
+    :param file: The file on which we're will write
+    :type file: str
+    :param content: The content that we want to write on the file
+    :type content: str
     """
     with open(file, "w") as file_to_write:
         file_to_write.write(content)
 
 
-# TODO: Change legacy code to adopt a modular approach
 class ReadWriteHistory:
     """
     Reading and writing Quoridor game history.
@@ -66,6 +69,10 @@ class ReadWriteHistory:
         """
         Reads the history from a text input file and returns an array containing
         the game information, a list of game moves per player per turn.
+        :param input_file_path: The file from which we read an history
+        :type input_file_path: str
+        :return: A list of turn, which is itself a list of move
+        :rtype: list[list[tuple[int, str]]]
         """
         try:
             # open file
@@ -142,7 +149,13 @@ class ReadWriteHistory:
 
     @staticmethod
     def write_history(output_file_path: str, turns: list[list[str]]):
-        """Writes a history text file with the game information in the 'turns' parameter."""
+        """
+        Writes a history text file with the game information in the 'turns' parameter.
+        :param output_file_path: The file on which we write an history
+        :type output_file_path: str
+        :param turns: A list of turn, which is itself a list of move
+        :param turns: list[list[tuple[int, str]]]
+        """
         try:
             with open(output_file_path, "w", encoding="utf-8") as history_file:
                 history_file.write(
@@ -162,6 +175,15 @@ class ReadWriteHistory:
     def parse_history_to_list_of_str(
         history: list[tuple[int, "Command"]], state: "GameState"
     ) -> list[list[str]]:
+        """
+        Parse a history to a string that represent it
+        :param history: A list of move (player id, Command object)
+        :type history: list[tuple[int, "Command"]]
+        :param state: The gamestate from which the history come from
+        :type state: GameState
+        :return: A list of turn, which is itself a list of move
+        :rtype: list[list[tuple[int, str]]]
+        """
         from quoridor.command import AbandonCommand
 
         game_info: list[list[str]] = []
@@ -193,6 +215,17 @@ class ReadWriteHistory:
     def parse_list_of_str_to_history(
         state: "GameState", turns: list[list[tuple[int, str]]]
     ) -> list[tuple[int, "Command"]]:
+        """
+        Parse a string to an history of move
+        Should be used on valid savefile
+        :param history: A list of move (player id, Command object)
+        :type history: list[tuple[int, "Command"]]
+        :param state: The gamestate from which the history come from
+        :type state: GameState
+        :return: A list of turn, which is itself a list of move
+        :rtype: list[list[tuple[int, str]]]
+        """
+
         from quoridor.cliengine import CLIEngine
         from quoridor.command import (
             AbandonCommand,
@@ -239,6 +272,16 @@ class ReadWriteHistory:
 
     @staticmethod
     def num_players_from_file(turns: list[list[tuple[int, str]]]) -> int:
+        """
+        Find the number of player from an history of move
+
+        !Not always true, since on the first turn, the player with the
+            greater id may not always be the last player of the saved game
+        :param turns: A list of turn, which is itself a list of move
+        :param turns: list[list[tuple[int, str]]]
+        :return: The (probably) number of player
+        :rtype: int
+        """
         num_players = 0
         for turn in turns:
             for i in turn:
