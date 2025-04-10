@@ -505,9 +505,9 @@ class TimeCommand(Command):
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
         print(
-            "\r"
-            + T_("[⏳ Remaining: %(seconds)s] ")
-            % {"seconds": f"{self.state.current_player.timer.remaining}s"}
+            "\r" + T_("[⏳ Remaining: {seconds}]").format(
+                seconds=f"{self.state.current_player.timer.remaining}s"
+            )
         )
         return False
 
