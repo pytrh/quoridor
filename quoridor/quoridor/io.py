@@ -84,7 +84,10 @@ class ReadWriteHistory:
             if history_array == []:
                 print("Input file path is empty.")
                 return []
-            return ReadWriteHistory._get_game_info_from_file(history_array)
+            
+            res =ReadWriteHistory._get_game_info_from_file(history_array)
+            print(res)
+            return res
 
         except FileNotFoundError:
             print(f"Error: The file '{input_file_path}' was not found.")

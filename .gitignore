@@ -10,4 +10,4 @@ build
 quoridor.egg-info/build/
 build/
 quoridor.egg-info/
-src/quoridor.egg-info/
+quoridor/*.txt
