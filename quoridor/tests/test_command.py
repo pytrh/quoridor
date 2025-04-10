@@ -1,9 +1,8 @@
 import pytest
-from quoridor.gamestate import GameState, AiMode
-from quoridor.ai import GreedyAI, MinimaxAI, AlphaBetaAI
-from quoridor.command import MovePawnCommand, PlaceWallCommand, UndoCommand
+from quoridor.gamestate import GameState
+from quoridor.command import MovePawnCommand, PlaceWallCommand, UndoCommand, RedoCommand
 from quoridor.direction import Direction
-from quoridor.exceptions import InvalidMoveError, NoUndoableCommand
+from quoridor.exceptions import InvalidMoveError, NoUndoableCommand, NoRedoableCommand
 
 
 
@@ -154,3 +153,44 @@ def test_undo_when_history_empty():
     undo_cmd = UndoCommand(basic_game_state)
     with pytest.raises(NoUndoableCommand):
         undo_cmd.execute()
+
+
+################ Test for redoCommand ################
+def test_redo_wall_placement_success():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    
+    cmd = PlaceWallCommand(game, (2, 2), Direction.H)
+    cmd.execute()
+
+    cmd.undo()
+    game.redo_stack.append((game.current_player.id, cmd))
+
+    redo_cmd = RedoCommand(game)
+    redo_cmd.execute()
+
+    assert game.players[0].walls_remaining == 9
+    assert (game.players[0].position == (3, 0))
+    assert len(game.history) == 1
+
+
+def test_redo_stack_empty_raises_exception():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    redo_cmd = RedoCommand(game)
+
+    with pytest.raises(NoRedoableCommand):
+        redo_cmd.execute()
+
+
+def test_redo_adds_to_history():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    
+    cmd = PlaceWallCommand(game, (1, 1), Direction.V)
+    cmd.execute()
+    cmd.undo()
+
+    game.redo_stack.append((game.current_player.id, cmd))
+
+    redo_cmd = RedoCommand(game)
+    redo_cmd.execute()
+
+    assert game.history[-1][1] == cmd
