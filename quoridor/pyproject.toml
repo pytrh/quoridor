@@ -30,10 +30,15 @@ version = {attr = "quoridor.__version__"}
 
 [tool.pytest.ini_options]
 addopts = [ # Add options for pytest
+  "-ra",
+  "-m not limit",
   "--cov=quoridor",
   "--cov-report=html",
   "--cov-report=term",
   "--cov-branch",
+]
+markers = [
+    "limit: mark tests that evaluate the performance limits of the program"
 ]
 
 [tool.setuptools]
