@@ -393,13 +393,16 @@ class RestartCommand(Command):
 
     def __init__(self, state: "GameState", initial_state: "GameState"):
         super().__init__(state)
-        self.restart_state = initial_state
+        self.restart_state = initial_state.copy_state()
 
     def execute(self) -> bool:
         """Restart the game to its initial state."""
         self.state.set_state(self.restart_state)
         self.state.redo_stack.clear()
         self.state.history.clear()
+        for player in self.state.players:
+            if player.timer:
+                player.timer.end_turn()
         return False
 
     def __str__(self) -> str:

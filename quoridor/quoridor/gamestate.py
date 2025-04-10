@@ -108,7 +108,8 @@ class GameState:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(blitz_time, game_mode, i)
+                if not self.players[i].timer:
+                    self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
             self.ai_controllers = {
@@ -378,7 +379,7 @@ class GameState:
             num_players=self.num_players,
             board=self.create_board(self.size),
             num_walls=self.initial_num_walls,
-            history=deepcopy(self.history),
+            history=self.history,
             game_mode=self.game_mode,
             blitz_time=self.blitz_time,
             ai_ids=deepcopy(self.ai_ids),
@@ -393,15 +394,26 @@ class GameState:
         state.board = self.temp_board()
         return state
 
-    def set_state(self, state: "GameState"):  # type: ignore
-        new_list_players = None
+    def set_state(self, state: "GameState"):
+        new_list_players = []
         try:
-            new_list_players = [
+            for player in state.players:
+                timer = None
+                if state.game_mode == GameMode.BLITZ:
+                    timer = Timer(
+                        state.blitz_time,
+                        state.game_mode,
+                        player.id,
+                    )
                 Player(
-                    player.id, player.position, state.size, player.walls_remaining, None
+                    player.id,
+                    player.position,
+                    state.size,
+                    player.walls_remaining,
+                    timer,
                 )
-                for player in state.players
-            ]
+                new_list_players.append(player)
+
         except ValueError:
             new_list_players = self.create_player()
 
@@ -413,7 +425,7 @@ class GameState:
         self.num_players_remaining = state.num_players_remaining
         self.board = deepcopy(state.board)
         self.num_walls = state.initial_num_walls
-        self.history = deepcopy(state.history)
+        self.history = state.history
         self.game_mode = state.game_mode
         self.blitz_time = state.blitz_time
         self.ai_ids = deepcopy(state.ai_ids)

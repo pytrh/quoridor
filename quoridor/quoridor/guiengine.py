@@ -625,6 +625,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return False
 
     def on_restart_clicked(self, button):
+        self.clear_all_timer()
         self.state = GameState()
         self.execute_command(RestartCommand(self.state, self.initial_state))
         self.clear_board_gui()
@@ -1297,9 +1298,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if self.state is not None:
             if self.state.game_mode == GameMode.BLITZ:
                 for player in self.state.players:
-                    if player.timer.turn_start_time is not None:
-                        player.timer.end_turn()
-                        player.timer.display_lock.clear()
+                    if player.timer is not None:
+                        if player.timer.turn_start_time is not None:
+                            player.timer.end_turn()
+                            player.timer.display_lock.clear()
 
 
 class AutoClosePopup(Gtk.Window):
