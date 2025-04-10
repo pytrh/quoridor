@@ -285,6 +285,8 @@ class GameState:
 
     def check_pass_player(self, player_id) -> bool:
         total_pawn_moves = self.possible_moves(player_id)
+        if len(total_pawn_moves)>0:
+            return False
         logging.debug(f"Possible moves for player {player_id} : {total_pawn_moves}")
         total_wall_placements = self.possible_walls(player_id)
         logging.debug(
