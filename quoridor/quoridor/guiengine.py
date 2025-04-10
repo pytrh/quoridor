@@ -1349,7 +1349,7 @@ class SavePopup(Gtk.Window):
         self.set_child(vbox)
 
         self.open_dialog = Gtk.FileChooserNative.new(
-            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.OPEN
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.SAVE
         )
 
         self.open_dialog.set_modal(True)
