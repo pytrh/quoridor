@@ -353,11 +353,25 @@ class UndoCommand(Command):
         if not self.state.history:
             raise NoUndoableCommand
 
-        player_id, last_command = self.state.history.pop()
-        self.state.redo_stack.append((player_id, last_command))
-        logging.debug(f"Last command: {last_command}")
-        logging.debug(f"Size of redo stack: {len(self.state.redo_stack)}")
-        last_command.undo()
+        # Normal undo
+        if len(self.state.history) > 0:
+            player_id, last_command = self.state.history.pop()
+            self.state.redo_stack.append((player_id, last_command))
+            logging.debug(f"Last command: {last_command}")
+            logging.debug(f"Size of redo stack: {len(self.state.redo_stack)}")
+            last_command.undo()
+
+        # While the current player is an ai
+        # We keep undo-ing a move until we found an human player
+        while (
+            self.state.current_player.id in self.state.ai_ids
+            and len(self.state.history) > 0
+        ):
+            player_id, last_command = self.state.history.pop()
+            self.state.redo_stack.append((player_id, last_command))
+            logging.debug(f"Last command: {last_command}")
+            logging.debug(f"Size of redo stack: {len(self.state.redo_stack)}")
+            last_command.undo()
         return False
 
     def __str__(self) -> str:
