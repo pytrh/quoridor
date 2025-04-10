@@ -1,0 +1,63 @@
+num_players = 3
+current_player_id = 2
+board_size = 9
+initial_num_walls = 10
+game_mode = GameMode.BLITZ
+blitz = 15
+
+players =
+
+player_position = 2, 4
+player_walls = 9
+player_timer = 779
+player_id = 0
+
+player_position = 2, 5
+player_walls = 10
+player_timer = 824
+player_id = 1
+
+player_position = 1, 4
+player_walls = 0
+player_timer = 782
+player_id = 2
+
+board =
+    1   2   3   4   5   6   7   8   9
+  +---+---+---+---+---+---+---+---+---+
+a |   |   |   |   |   |   |   |   |   |
+  +   +   +   +   +   +   +   +   +   +
+b |   |   |   |   | 3 |   |   |   |   |
+  +---+---+---+---+   +---+---+   +   +
+c |                 1   2             |
+  +   +   +   +   +   +   +   +   +   +
+d |                                   |
+  +   +   +   +   +   +   +   +   +   +
+e |                                   |
+  +   +   +   +   +   +   +   +   +   +
+f |                                   |
+  +   +   +   +   +   +   +   +   +   +
+g |                                   |
+  +   +   +   +   +   +   +   +   +   +
+h |                                   |
+  +   +   +   +   +   +   +   +   +   +
+i |                                   |
+  +---+---+---+---+---+---+---+---+---+
+history =
+
+1. 1 e1-e2 2 e9-e8 3 a1v  
+2. 1 e2-e3 2 e8-e7 3 a2v  
+3. 1 e3-e4 2 e7-e6 3 a3v  
+4. 1 e4-e5 2 e6-e4 3 a4v  
+5. 1 e5-e6 2 e4-e5 3 a5v  
+6. 1 e6-e4 2 e5-e3 3 a6v  
+7. 1 e4-e5 2 e3-e4 3 a7v  
+8. 1 e5-e6 2 e4-e5 3 a8v  
+9. 1 e6-e4 2 e5-e6 3 b1h  
+10. 1 e4-e5 2 e6-e4 3 b3h  
+11. 1 e5-e6 2 e4-e5 3 a5-b5  
+12. 1 e6-d6 2 e5-d5 3 b5-a5  
+13. 1 d6-c6 2 d5-c5 3 a5-b5  
+14. 1 c6-c4 2 c5-c6 3 b5-a5  
+15. 1 c4-c5 2 c6-c4 3 a5-b5  
+16. 1 b6h 2 c4-c6  

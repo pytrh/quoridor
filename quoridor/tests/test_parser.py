@@ -14,17 +14,18 @@ from quoridor.player import Player
 
 
 def test_parse_string_to_graph_basic():
-    board_string = """
-    +---+---+---+
-    |   |   |   |
-    +---+---+---+
-    |   |   |   |
-    +---+---+---+
-    |   |   |   |
-    +---+---+---+
-    """
+    board_string = [
+        "    1   2   3 ",
+        "  +---+---+---+",
+        "a |           |",
+        "  +   +   +   +",
+        "b |           |",
+        "  +   +   +   +",
+        "c |           |",
+        "  +---+---+---+",
+    ]
 
-    graph = parse_string_to_graph(board_string)
+    graph = parse_string_to_graph("\n".join(board_string))
 
     expected_nodes = [(i, j) for i in range(3) for j in range(3)]
     for node in expected_nodes:
@@ -35,19 +36,21 @@ def test_parse_string_to_graph_basic():
 
 
 def test_parse_string_to_graph_with_wall():
-    board_string = """
-    +---+---+---+
-    |   |   |   |
-    +---+---+---+
-    |   | | |   |
-    +---+---+---+
-    |   |   |   |
-    +---+---+---+
-    """
+    board_string = [
+        "    1   2   3 ",
+        "  +---+---+---+",
+        "a |           |",
+        "  +---+---+   +",
+        "b |           |",
+        "  +   +   +   +",
+        "c |   |       |",
+        "  +---+---+---+",
+    ]
 
-    graph = parse_string_to_graph(board_string)
+    graph = parse_string_to_graph("\n".join(board_string))
 
-    assert (1, 1) not in graph._graph[(0, 0)] or (0, 0) not in graph._graph[(1, 0)]
+    assert (1, 0) not in graph._graph[(0, 0)] or (0, 0) not in graph._graph[(1, 0)]
+    assert (2, 0) not in graph._graph[(2, 1)] or (2, 1) not in graph._graph[(2, 0)]
 
 
 def test_parse_string_to_state_minimal():
@@ -56,7 +59,8 @@ def test_parse_string_to_state_minimal():
         "current_player_id=0",
         "board_size=5",
         "num_walls=10",
-        "blitz=False",
+        "game_mode = GameMode.NORMAL",
+        "blitz=15",
         "players=",
         "player_position=2,0",
         "player_walls=5",
@@ -98,7 +102,8 @@ def test_parse_string_to_state_with_blitz():
         "current_player_id=1",
         "board_size=5",
         "num_walls=10",
-        "blitz=True",
+        "game_mode = GameMode.BLITZ",
+        "blitz=60",
         "players=",
         "player_position=2,0",
         "player_walls=5",
@@ -185,6 +190,7 @@ def test_parse_state_to_string_basic():
         "current_player_id = 0\n"
         "board_size = 9\n"
         "initial_num_walls = 10\n"
+        "game_mode = GameMode.NORMAL\n"
         "blitz = 60\n\n"
         "players =\n\n"
         "player_position = 4, 0\n"

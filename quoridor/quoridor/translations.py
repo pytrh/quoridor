@@ -1,6 +1,6 @@
 import gettext
 import os
-import locale
+
 
 def setup_translation():
     locale_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'locales'))
@@ -18,6 +18,7 @@ def setup_translation():
     gettext.bindtextdomain('quoridor', locale_dir)
     gettext.textdomain('quoridor')
     translation.install()
+
 
 setup_translation()
 

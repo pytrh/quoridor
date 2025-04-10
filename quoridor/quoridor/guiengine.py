@@ -42,18 +42,24 @@ from gi.repository import Gtk, Gdk, Gio, GLib, GObject
 
 
 class MainWindow(Gtk.ApplicationWindow, Observer):
-    """Main application window for the Quoridor game, handling UI setup and game state transitions."""
     def __init__(self, *args, **kwargs):
-        """Initialize the main window and set up initial UI components and game state."""
         super().__init__(*args, **kwargs)
         self.set_default_size(600, 400)
 
-        self.state = self.initial_state = None
+        self.state = None
+        self.initial_state = None
         self.game_is_over = False
-        self._number_of_players = self._board_size = self._num_walls = None
-        self._game_mode = self._blitz_time = None
+
+        self._number_of_players = None
+        self._board_size = None
+        self._num_walls = None
+
+        self._game_mode = None
+        self._blitz_time = None
         self._ai_ids = set()
-        self._ai_mode = self._ai_depth = self._ai_heuristic = None
+        self._ai_mode = None
+        self._ai_depth = None
+        self._ai_heuristic = None
         self._history = None
 
         self.hint_cases = []
@@ -63,60 +69,48 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         GLib.set_application_name("quoridor")
 
-        self.stack = self.create_stack()
+        self.stack = Gtk.Stack()
+        self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        self.stack.set_transition_duration(300)
+
+        self.home_page = self.create_home_page()
+        self.stack.add_named(self.home_page, "home")
+
+        self.new_game_page = self.create_new_game_page()
+        self.stack.add_named(self.new_game_page, "new_game")
+
+        self.running_game_page = self.create_running_game_page()
+        self.stack.add_named(self.running_game_page, "running_game")
+
+        self.about_page = self.create_about_page()
+        self.stack.add_named(self.about_page, "about")
+
+        self.end_page = self.create_end_page()
+        self.stack.add_named(self.end_page, "end")
+
         self.set_child(self.stack)
 
-        self.open_dialog = self.create_file_chooser()
-
-    def create_stack(self):
-        """Create a Gtk.Stack to manage different pages (views) of the app."""
-        stack = Gtk.Stack()
-        stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
-        stack.set_transition_duration(300)
-
-        pages = {
-            "home": self.create_home_page(),
-            "new_game": self.create_new_game_page(),
-            "running_game": self.create_running_game_page(),
-            "about": self.create_about_page(),
-            "end": self.create_end_page(),
-        }
-
-        for name, page in pages.items():
-            stack.add_named(page, name)
-
-        return stack
-
-    def create_file_chooser(self):
-        """Create and return a file chooser dialog for loading saved game files."""
-        dialog = Gtk.FileChooserDialog(
-            title=T_("Select a file"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            modal=True,
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.OPEN
         )
-        dialog.set_default_size(600, 400)
 
-        file_filter = Gtk.FileFilter()
-        file_filter.set_name("Quoridor game file")
-        file_filter.add_mime_type("text/plain")
-        dialog.set_filter(file_filter)
-        dialog.connect("response", self.open_response)
+        self.open_dialog.set_modal(True)
 
-        return dialog
+        f = Gtk.FileFilter()
+        f.set_name("Quoridor game file")
+        f.add_mime_type("text/plain")
+
+        self.open_dialog.set_filter(f)
+        self.open_dialog.connect("response", self.open_response)
 
     def create_home_page(self):
-        """Create and return the home page with navigation buttons for New Game, Load Game, and About."""
-        box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            spacing=10,
-            margin_top=20,
-            margin_bottom=20,
-            margin_start=20,
-            margin_end=20,
-            halign=Gtk.Align.CENTER,
-            valign=Gtk.Align.CENTER,
-        )
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+        box.set_margin_start(20)
+        box.set_margin_end(20)
+        box.set_halign(Gtk.Align.CENTER)
+        box.set_valign(Gtk.Align.CENTER)
 
         title = Gtk.Label()
         title.set_markup(
@@ -125,19 +119,15 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         title.set_justify(Gtk.Justification.CENTER)
         title.set_halign(Gtk.Align.CENTER)
         title.set_css_classes(["title"])
-
         box.append(title)
-        for label, callback in [
-            (T_("New Game"), self.on_new_game_clicked),
-            (T_("Load Game"), self.on_load_game_clicked),
-            (T_("About"), self.on_about_clicked),
-        ]:
-            self.create_button_for_menu(box, callback, label)
+
+        self.create_button_for_menu(box, self.on_new_game_clicked, T_("New Game"))
+        self.create_button_for_menu(box, self.on_load_game_clicked, T_("Load Game"))
+        self.create_button_for_menu(box, self.on_about_clicked, T_("About"))
 
         return box
 
     def create_new_game_page(self):
-        """Create and return the New Game configuration page with game setup options."""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         box.set_margin_top(20)
         box.set_margin_bottom(20)
@@ -157,12 +147,57 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         return box
 
     def create_running_game_page(self):
-        """Create and return the running game page with the board, player info, and controls."""
-        main_box = self.create_main_box()
+        main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        main_box.set_margin_top(20)
+        main_box.set_margin_bottom(20)
+        main_box.set_margin_start(20)
+        main_box.set_margin_end(20)
+        main_box.set_halign(Gtk.Align.CENTER)
+        main_box.set_valign(Gtk.Align.CENTER)
 
-        # Left column (buttons and game players)
-        left_box = self.create_left_column()
+        # Left column (buttons)
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        left_box.set_margin_top(20)
+        left_box.set_margin_bottom(20)
+        left_box.set_margin_start(20)
+        left_box.set_margin_end(20)
+        left_box.set_halign(Gtk.Align.CENTER)
+        left_box.set_valign(Gtk.Align.CENTER)
         main_box.append(left_box)
+
+        game_button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        game_button_box.set_halign(Gtk.Align.CENTER)
+        game_button_box.set_valign(Gtk.Align.CENTER)
+        restart_button = Gtk.Button(label=T_("🔄 Restart"))
+        restart_button.connect("clicked", self.on_restart_clicked)
+
+        download_button = Gtk.Button(label=T_("📥 Save"))
+        download_button.set_size_request(20, 10)
+        download_button.set_halign(Gtk.Align.START)
+        download_button.connect("clicked", self.on_save_history)
+
+        power_button = Gtk.Button(label=T_("🚪 Quit"))
+        power_button.set_size_request(20, 10)
+        power_button.set_halign(Gtk.Align.START)
+        power_button.connect("clicked", self.on_quit_game_and_save)
+
+        btn_abandon = Gtk.Button(label=T_("🏳️ Abandon"))
+        btn_abandon.set_size_request(20, 10)
+        btn_abandon.set_halign(Gtk.Align.START)
+        btn_abandon.connect("clicked", self.on_abandon_game)
+
+        game_button_box.append(restart_button)
+        game_button_box.append(download_button)
+        game_button_box.append(power_button)
+        game_button_box.append(btn_abandon)
+        left_box.append(game_button_box)
+
+        self.game_players_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=10
+        )
+        self.game_players_box.set_halign(Gtk.Align.CENTER)
+        self.game_players_box.set_valign(Gtk.Align.CENTER)
+        left_box.append(self.game_players_box)
 
         # Game box
         game_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -207,74 +242,20 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         main_box.append(game_box)
 
         # Right column (Chrono and arrows undo / redo)
-        right_box = self.create_right_column()
-        main_box.append(right_box)
-
-        return main_box
-
-    def create_main_box(self):
-        """Create the main horizontal layout box that will contain the game view."""
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        box.set_margin_top(20)
-        box.set_margin_bottom(20)
-        box.set_margin_start(20)
-        box.set_margin_end(20)
-        box.set_halign(Gtk.Align.CENTER)
-        box.set_valign(Gtk.Align.CENTER)
-        return box
-
-    def create_left_column(self):
-        """Create and return the left sidebar with action buttons and player information."""
-        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        left_box.set_margin_top(20)
-        left_box.set_margin_bottom(20)
-        left_box.set_margin_start(20)
-        left_box.set_margin_end(20)
-        left_box.set_halign(Gtk.Align.CENTER)
-        left_box.set_valign(Gtk.Align.CENTER)
-
-        game_button_box = self.create_game_button_box()
-        left_box.append(game_button_box)
-
-        self.game_players_box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL, spacing=10
-        )
-        self.game_players_box.set_halign(Gtk.Align.CENTER)
-        self.game_players_box.set_valign(Gtk.Align.CENTER)
-        left_box.append(self.game_players_box)
-
-        return left_box
-
-    def create_game_button_box(self):
-        """Create and return a vertical box containing game control buttons (restart, save, quit, abandon)."""
-        game_button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        game_button_box.set_halign(Gtk.Align.CENTER)
-        game_button_box.set_valign(Gtk.Align.CENTER)
-
-        buttons = [
-            (T_("🔄 Restart"), self.on_restart_clicked),
-            (T_("📥 Save"), self.on_save_history),
-            (T_("🚪 Quit"), self.on_quit_game_and_save),
-            (T_("🏳️ Abandon"), self.on_abandon_game),
-        ]
-
-        for label, callback in buttons:
-            button = Gtk.Button(label=label)
-            button.connect("clicked", callback)
-            button.set_size_request(20, 10)
-            button.set_halign(Gtk.Align.START)
-            game_button_box.append(button)
-
-        return game_button_box
-
-    def create_right_column(self):
-        """Create and return the right sidebar containing the timer, hint, and navigation buttons."""
         right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+
         self.timer_label = Gtk.Label(label="00:00")
         right_box.append(self.timer_label)
 
-        arrow_box = self.create_arrow_box()
+        arrow_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         right_box.append(arrow_box)
+
+        left_arrow = Gtk.Button(label=T_("⬅ Undo"))
+        left_arrow.connect("clicked", self.on_undo_clicked)
+        right_arrow = Gtk.Button(label=T_("Redo ➡"))
+        right_arrow.connect("clicked", self.on_redo_clicked)
+        arrow_box.append(left_arrow)
+        arrow_box.append(right_arrow)
 
         hint_button = Gtk.Button(label=T_("💡 Hint"))
         hint_button.set_size_request(20, 10)
@@ -288,102 +269,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.btn_pass_turn.connect("clicked", self.on_pass_turn)
         self.btn_pass_turn.set_visible(False)
         right_box.append(self.btn_pass_turn)
+        main_box.append(right_box)
 
-        return right_box
-
-    def create_arrow_box(self):
-        """Create and return a horizontal box with Undo and Redo arrow buttons."""
-        arrow_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-
-        left_arrow = Gtk.Button(label=T_("⬅ Undo"))
-        left_arrow.connect("clicked", self.on_undo_clicked)
-
-        right_arrow = Gtk.Button(label=T_("Redo ➡"))
-        right_arrow.connect("clicked", self.on_redo_clicked)
-
-        arrow_box.append(left_arrow)
-        arrow_box.append(right_arrow)
-
-        return arrow_box
-
+        return main_box
 
     def create_about_page(self):
-        """
-        Create and return the 'About' page with application info.
-
-        This page includes version number, developer credits, expected release date,
-        and a game description to give users context about the app.
-        """
-        box = self.create_page_box()
-
-        self.create_return_button(box)
-
-        # Title for the About Page
-        title = self.create_title_label("QUORIDOR", "#8B0000", 18000)
-        box.append(title)
-
-        # Information sections
-        box.append(
-            self.create_about_section(
-                f"Version:", importlib.metadata.version("quoridor")
-            )
-        )
-        box.append(
-            self.create_about_section(
-                T_("Developers:"),
-                "Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song",
-            )
-        )
-        box.append(
-            self.create_about_section(T_("Expected release date:"), T_("April 2025"))
-        )
-        box.append(self.create_about_section("Description:", ""))
-        box.append(
-            self.create_about_section(
-                "",
-                T_(
-                    "QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game."
-                ),
-            )
-        )
-        box.append(
-            self.create_about_section(
-                "",
-                T_(
-                    "The aim of the game is to reach the opposite side of the grid before the other players, while simultaneously navigating through walls placed by players."
-                ),
-            )
-        )
-
-        return box
-
-    def create_end_page(self):
-        """Create and return the 'Game Over' page."""
-        box = self.create_page_box()
-
-        title = self.create_title_label("GAME OVER", "#008000", 18000)
-        box.append(title)
-
-        self.winner_label = self.create_label(
-            T_('<span size="14000" weight="bold">You won!</span>'), Gtk.Align.CENTER
-        )
-        box.append(self.winner_label)
-
-        # Buttons for game over actions
-        button_box = Gtk.Box(spacing=10)
-        button_box.set_halign(Gtk.Align.CENTER)
-
-        restart_button = self.create_button(T_("Play Again"), self.on_restart_clicked)
-        button_box.append(restart_button)
-
-        home_button = self.create_button(T_("Go Home"), self.on_back_home)
-        button_box.append(home_button)
-
-        box.append(button_box)
-        return box
-
-    def create_page_box(self):
-        """Create and return a vertically aligned container with margins for page layout."""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         box.set_margin_top(20)
         box.set_margin_bottom(20)
@@ -391,43 +281,96 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.set_margin_end(40)
         box.set_halign(Gtk.Align.CENTER)
         box.set_valign(Gtk.Align.CENTER)
-        return box
 
-    def create_title_label(self, text, color, size):
+        self.create_return_button(box)
+
         title = Gtk.Label()
         title.set_markup(
-            f'<span size="{size}" weight="bold" foreground="{color}">{text}</span>'
+            '<span size="18000" weight="bold" foreground="#8B0000">QUORIDOR</span>'
         )
         title.set_halign(Gtk.Align.CENTER)
-        return title
+        box.append(title)
 
-    def create_label(self, text, halign=Gtk.Align.CENTER):
-        """Create a stylized title label for display on a page."""
+        version = importlib.metadata.version("quoridor")
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Version:</span> <span size="12000">{version}</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Developers:</span> <span size="12000">Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Expected release date:</span> <span size="12000">April 2025</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="12000" weight="bold">Description:</span> """
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="10000">QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.</span>"""
+            )
+        )
+        box.append(
+            self.create_label_for_about(
+                f"""<span size="10000">The aim of the game is to reach the opposite side of the grid before the other players. While simultaniously navigating through walls placed by players.</span>"""
+            )
+        )
+
+        return box
+
+    def create_label_for_about(self, text):
         label = Gtk.Label()
         label.set_markup(text)
         label.set_justify(Gtk.Justification.CENTER)
-        label.set_halign(halign)
+        label.set_halign(Gtk.Align.CENTER)
         label.set_wrap(True)
         return label
 
-    def create_about_section(self, title, content):
-        """ Create a formatted label for a section on the About page."""
-        return self.create_label_for_about(
-            f"""<span size="12000" weight="bold">{title}</span> <span size="12000">{content}</span>"""
+    def create_end_page(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+        box.set_margin_start(40)
+        box.set_margin_end(40)
+        box.set_halign(Gtk.Align.CENTER)
+        box.set_valign(Gtk.Align.CENTER)
+
+        title = Gtk.Label()
+        title.set_markup(
+            '<span size="18000" weight="bold" foreground="#008000">GAME OVER</span>'
         )
+        title.set_halign(Gtk.Align.CENTER)
+        box.append(title)
 
-    def create_label_for_about(self, text):
-        """Wrapper to create a label used specifically for the About page."""
-        return self.create_label(text)
+        self.winner_label = Gtk.Label()
+        self.winner_label.set_markup(
+            f'<span size="14000" weight="bold">You won!</span>'
+        )
+        self.winner_label.set_halign(Gtk.Align.CENTER)
+        box.append(self.winner_label)
 
-    def create_button(self, label, callback):
-        """Create a Gtk.Button with a label and click callback."""
-        button = Gtk.Button(label=label)
-        button.connect("clicked", callback)
-        return button
+        button_box = Gtk.Box(spacing=10)
+        button_box.set_halign(Gtk.Align.CENTER)
+
+        restart_button = Gtk.Button(label=T_("Play Again"))
+        restart_button.connect("clicked", self.on_restart_clicked)
+        button_box.append(restart_button)
+
+        home_button = Gtk.Button(label=T_("Go Home"))
+        home_button.connect("clicked", self.on_back_home)
+        button_box.append(home_button)
+
+        box.append(button_box)
+        return box
 
     def create_button_for_menu(self, box, function, text):
-        """Create and append a menu-style button to a container."""
         btn = Gtk.Button(label=text)
         btn.set_size_request(150, 50)
         btn.set_halign(Gtk.Align.CENTER)
@@ -435,7 +378,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(btn)
 
     def create_return_button(self, box):
-        """Create and append a 'Back' button to a given container."""
         btn_back = Gtk.Button(label=T_("Back"))
         btn_back.set_size_request(20, 10)
         btn_back.set_halign(Gtk.Align.START)
@@ -443,7 +385,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(btn_back)
 
     def create_nb_players(self, box):
-        """Create and append check buttons for selecting the number of players."""
         self.create_option_label(box, T_("Number of players:"))
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -532,14 +473,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.timer_text_box.set_hexpand(True)
         self.timer_box.append(self.btn_blitz)
         self.timer_box.append(self.timer_text_box)
-        self.timer_text_box.set_visible(False)
 
         hbox.append(self.btn_normal)
         hbox.append(self.timer_box)
 
         box.append(hbox)
-
-    #######
 
     def create_ai_switch(self, box):
         self.create_option_label(box, T_("AI Mode:"))
@@ -569,38 +507,18 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(label)
 
     def create_ai_hidden_radio_buttons(self, box):
-        self.create_ai_difficulty_buttons()
-        self.create_ai_depth_slider()
-        self.create_radio_box(box)
+        self.btn_ai_easy = Gtk.CheckButton(label=T_("Easy (default)"))
+        self.btn_ai_easy.connect("toggled", self.on_button_ai_difficulty, "easy")
+        self.btn_ai_medium = Gtk.CheckButton(label=T_("Medium"))
+        self.btn_ai_medium.connect("toggled", self.on_button_ai_difficulty, "normal")
+        self.btn_ai_hard = Gtk.CheckButton(label=T_("Hard"))
+        self.btn_ai_hard.connect("toggled", self.on_button_ai_difficulty, "hard")
 
-    def create_ai_difficulty_buttons(self):
-        """
-        Creates the AI difficulty buttons (Easy, Medium, Hard) and sets their connections.
-        """
-        self.btn_ai_easy = self.create_ai_difficulty_button(
-            T_("Easy (default)"), "easy", True
-        )
-        self.btn_ai_medium = self.create_ai_difficulty_button(
-            T_("Medium"), "normal", False
-        )
-        self.btn_ai_hard = self.create_ai_difficulty_button(T_("Hard"), "hard", False)
+        self.btn_ai_easy.set_active(True)
 
         self.btn_ai_medium.set_group(self.btn_ai_easy)
         self.btn_ai_hard.set_group(self.btn_ai_medium)
 
-    def create_ai_difficulty_button(self, label, mode, is_active):
-        """
-        Creates a single AI difficulty radio button.
-        """
-        button = Gtk.CheckButton(label=label)
-        button.connect("toggled", self.on_button_ai_difficulty, mode)
-        button.set_active(is_active)
-        return button
-
-    def create_ai_depth_slider(self):
-        """
-        Creates the depth slider for AI difficulty.
-        """
         self.ai_option = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.depth_slider = Gtk.Scale()
         self.depth_slider.set_digits(0)
@@ -610,20 +528,35 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.depth_slider.connect("value-changed", self.slider_changed_depth)
         self.ai_option.append(self.depth_slider)
 
-    def create_radio_box(self, box):
-        """
-        Creates the radio button box and appends it to the given container.
-        """
         self.radio_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.radio_box.append(self.btn_ai_easy)
         self.radio_box.append(self.btn_ai_medium)
         self.radio_box.append(self.btn_ai_hard)
+
         self.radio_box.append(self.ai_option)
         self.radio_box.set_visible(False)  # Hide by default
         box.append(self.radio_box)
 
     def slider_changed_depth(self, slider):
         self._ai_depth = int(slider.get_value())
+
+    def on_button_ai_difficulty(self, button, mode):
+        if mode == "easy":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.RUNNER
+        elif mode == "normal":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.AGGRESSIVE
+        elif mode == "hard":
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.DEFAULT
+        else:
+            self._ai_mode = AiMode.MINIMAX
+            self._ai_depth = 1
+            self._ai_heuristic = AiHeuristic.RUNNER
 
     def create_on_off_ai_players_buttons(self, box):
         self.player_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -656,6 +589,87 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.player_box.set_visible(False)  # Hide by default
         box.append(self.player_box)
+
+    def on_new_game_clicked(self, button):
+        self.stack.set_visible_child_name("new_game")
+
+    def on_about_clicked(self, button):
+        self.stack.set_visible_child_name("about")
+
+    def clear_board_gui(self):
+        if self.state is not None:
+            for row in range(self.state.size):
+                for col in range(self.state.size):
+                    if (row, col) in self.cells:
+                        self.game_grid.remove(self.cells[(row, col)])
+        self.cells = {}
+        self.clear_all_timer()
+
+    def on_back_home(self, button):
+        self.clear_board_gui()
+        if self.state is not None:
+            self.state.history.clear()
+            self.state.redo_stack.clear()
+            self.state.current_player.is_dead = True
+        self.scrolled_window_history.set_child(None)
+        self.game_is_over = True
+        self.stack.set_visible_child_name("home")
+
+    def on_quit_game_and_save(self, button):
+        popup = SavePopup(self.state)
+        popup.connect("close-request", self.on_popup_closed)
+        popup.show()
+
+    def on_save_history(self, button):
+        SaveCommand(self.state, "outputHistory.txt").execute()
+        pass
+
+    def on_popup_closed(self, window):
+        self.on_back_home(None)
+        return False
+
+    def on_restart_clicked(self, button):
+        self.clear_all_timer()
+        self.state = GameState()
+        self.execute_command(RestartCommand(self.state, self.initial_state))
+        self.clear_board_gui()
+        if self.state.game_mode == GameMode.BLITZ:
+            self.initialise_timer()
+            self.state.current_player.timer.start_turn()
+            self.state.current_player.timer.display_lock.set()
+        self.create_board()
+        self.render_board()
+        self.handle_ai_player()
+        self.game_is_over = False
+        self.stack.set_visible_child_name("running_game")
+
+    def on_player_button_toggled(self, button, players):
+        if button.get_active():
+            self._number_of_players = int(players)
+            logging.debug(f"Number of players selected: {self._number_of_players}")
+
+    def on_game_mode_button_toggled(self, button, mode: GameMode):
+        if button.get_active():
+            self._game_mode = mode
+            logging.debug(f"Playing in {mode.display_name} Mode")
+            if mode == GameMode.BLITZ:
+                self.timer_text_box.set_visible(True)
+            else:
+                self.timer_text_box.set_visible(False)
+
+    def on_ai_switch_switched(self, switch, state):
+        logging.debug(f"The switch has been switched {'on' if state else 'off'}")
+        if state:
+            self.radio_box.set_visible(True)
+            self.player_box.set_visible(True)
+        else:
+            self.btn_ai_easy.set_active(True)
+            self.radio_box.set_visible(False)
+            self.player_box.set_visible(False)
+
+    ### Loading game
+    def on_load_game_clicked(self, button):
+        self.open_dialog.show()
 
     def open_response(self, dialog, response):
         if response == Gtk.ResponseType.ACCEPT:
@@ -753,6 +767,34 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 label.get_style_context().add_class("player-is-dead")
             box.append(label)
 
+    def on_start_game_clicked(self, button):
+        self.stack.set_visible_child_name("running_game")
+        self.game_is_over = False
+        if self._game_mode == GameMode.BLITZ:
+            self._blitz_time = self.timer_text_box.get_value_as_int()
+            logging.debug("Temps sélectionné :", self._blitz_time)
+
+        if not self.switch_ai.get_active():
+            self._ai_ids = set()
+        else:
+            if len(self._ai_ids) <= 0:
+                self._ai_ids.add(True)
+            self.manage_ai_parameters()
+
+        self.initialize_state(
+            num_players=self._number_of_players,
+            size=self._board_size,
+            num_walls=self._num_walls,
+            game_mode=self._game_mode,
+            blitz_time=self._blitz_time,
+            ai_ids=self._ai_ids,
+            history=self._history,
+            ai_mode=self._ai_mode,
+            ai_depth=self._ai_depth,
+            ai_heuristic=self._ai_heuristic,
+        )
+        self.initialize_begining_game()
+
     def initialize_begining_game(self):
         if self.state.game_mode == GameMode.BLITZ:
             self.initialise_timer()
@@ -769,6 +811,24 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.state = GameState(**filtered_kwargs)
         self.initial_state = self.state.copy_state()
 
+    def on_abandon_game(self, button):
+        self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
+        if not self.state.game_over():
+            self.update_players_box()
+            self.update_current_player_label()
+
+    def on_hint_clicked(self, button):
+        self.hint_cases.clear()
+        if self.hint_activate:
+            self.hint_activate = False
+        else:
+            self.hint_activate = True
+
+        ai_temp = GreedyAI(0, AiHeuristic.RUNNER)
+        for case in ai_temp.possible_moves(self.state):
+            self.hint_cases.append(case)
+            self.draw_hint_on_case(case)
+
     def draw_hint_on_case(self, case):
         self.cells[case].set_label(self.hint_symbole)
 
@@ -777,6 +837,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
     def remove_pass_button(self):
         self.btn_pass_turn.set_visible(False)
+
+    def on_pass_turn(self, button):
+        self.remove_pass_button()
+        self.execute_command(PassCommand(self.state))
 
     def create_board(self):
         """Create a self.board_size by self.board_size game board with self.num_players pawns"""
@@ -868,6 +932,56 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
     def nothing(self, click_target, value, z, a):
         popup = AutoClosePopup(f"Drag the piece of wall to the board", True)
         popup.show()
+        return True
+
+    def on_drag_prepare(self, drag_source, x, y, emoji, pos=None):
+        """Prepares the piece for dragging by storing its last position."""
+        data = Gdk.ContentProvider.new_for_value(emoji)
+        if emoji == "🔵":
+            self.blue_last_pos = pos
+        elif emoji == "🔴":
+            self.red_last_pos = pos
+        elif emoji == "🟢":
+            self.green_last_pos = pos
+        elif emoji == "🟡":
+            self.yellow_last_pos = pos
+        return data
+
+    def on_drop(self, drop_target, value, x, y):
+        """Handles dropping the piece and updates the board."""
+        cell = drop_target.get_widget()
+
+        row, col = None, None
+        for (r, c), button in self.cells.items():
+            if button == cell:
+                row, col = r, c
+                break
+
+        if row is None or col is None:
+            logging.debug("Error : no cell found in the grid")
+
+        if value in ["🔵", "🔴", "🟢", "🟡"]:
+            self.handle_pawn_move(row, col, value)
+
+        elif value in [Direction.H, Direction.V]:
+            self.handle_place_wall(row, col, value)
+
+        return True
+
+    def on_click(self, click_target, value, x, y):
+        cell = click_target.get_widget()
+
+        row, col = None, None
+        for (r, c), button in self.cells.items():
+            if button == cell:
+                row, col = r, c
+                break
+
+        if row is None or col is None:
+            logging.debug("Error : no cell found in the grid")
+
+        self.handle_pawn_move_click(row, col, value)
+
         return True
 
     def initialise_timer(self):
@@ -1072,7 +1186,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         )
         for turn_index, turn in enumerate(history, start=1):
             line = ""
-            line += T_("Turn {index}: ").format(index=turn_index)
+            line += T_(f"Turn {turn_index}: ")
             for move in turn:
                 line += move + " "
             text_list.append(line)
@@ -1178,202 +1292,6 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.update_current_player_label()
         self.render_board()
 
-    #### ON ACTIONS ####
-
-    def on_new_game_clicked(self, button):
-        self.stack.set_visible_child_name("new_game")
-
-    def on_about_clicked(self, button):
-        self.stack.set_visible_child_name("about")
-
-    def clear_board_gui(self):
-        if self.state is not None:
-            for row in range(self.state.size):
-                for col in range(self.state.size):
-                    if (row, col) in self.cells:
-                        self.game_grid.remove(self.cells[(row, col)])
-        self.cells = {}
-        self.clear_all_timer()
-
-    def on_back_home(self, button):
-        self.clear_board_gui()
-        if self.state is not None:
-            self.state.history.clear()
-            self.state.redo_stack.clear()
-            self.state.current_player.is_dead = True
-        self.scrolled_window_history.set_child(None)
-        self.game_is_over = True
-        self.stack.set_visible_child_name("home")
-
-    def on_quit_game_and_save(self, button):
-        popup = SavePopup(self.state)
-        popup.connect("close-request", self.on_popup_closed)
-        popup.show()
-
-    def on_save_history(self, button):
-        SaveCommand(self.state, "outputHistory.txt").execute()
-        pass
-
-    def on_popup_closed(self, window):
-        self.on_back_home(None)
-        return False
-
-    def on_restart_clicked(self, button):
-        self.state = GameState()
-        self.execute_command(RestartCommand(self.state, self.initial_state))
-        self.clear_board_gui()
-        if self.state.game_mode == GameMode.BLITZ:
-            self.initialise_timer()
-            self.state.current_player.timer.start_turn()
-            self.state.current_player.timer.display_lock.set()
-        self.create_board()
-        self.render_board()
-        self.handle_ai_player()
-        self.game_is_over = False
-        self.stack.set_visible_child_name("running_game")
-
-    def on_player_button_toggled(self, button, players):
-        if button.get_active():
-            self._number_of_players = int(players)
-            logging.debug(f"Number of players selected: {self._number_of_players}")
-
-    def on_game_mode_button_toggled(self, button, mode: GameMode):
-        if button.get_active():
-            self._game_mode = mode
-            logging.debug(f"Playing in {mode.display_name} Mode")
-            if mode == GameMode.BLITZ:
-                self.timer_text_box.set_visible(True)
-            else:
-                self.timer_text_box.set_visible(False)
-
-    def on_ai_switch_switched(self, switch, state):
-        logging.debug(f"The switch has been switched {'on' if state else 'off'}")
-        if state:
-            self.radio_box.set_visible(True)
-            self.player_box.set_visible(True)
-        else:
-            self.btn_ai_easy.set_active(True)
-            self.radio_box.set_visible(False)
-            self.player_box.set_visible(False)
-
-    ### Loading game
-    def on_load_game_clicked(self, button):
-        self.open_dialog.show()
-
-    def on_button_ai_difficulty(self, button, mode):
-        if mode == "easy":
-            self._ai_mode = AiMode.MINIMAX
-            self._ai_depth = 1
-            self._ai_heuristic = AiHeuristic.RUNNER
-        elif mode == "normal":
-            self._ai_mode = AiMode.MINIMAX
-            self._ai_depth = 1
-            self._ai_heuristic = AiHeuristic.AGGRESSIVE
-        elif mode == "hard":
-            self._ai_mode = AiMode.MINIMAX
-            self._ai_depth = 1
-            self._ai_heuristic = AiHeuristic.DEFAULT
-
-    def on_start_game_clicked(self, button):
-        self.stack.set_visible_child_name("running_game")
-        self.game_is_over = False
-        if self._game_mode == GameMode.BLITZ:
-            self._blitz_time = self.timer_text_box.get_value_as_int()
-            logging.debug("Temps sélectionné :", self._blitz_time)
-
-        if not self.switch_ai.get_active():
-            self._ai_ids = set()
-        else:
-            if len(self._ai_ids) <= 0:
-                self._ai_ids.add(True)
-            self.manage_ai_parameters()
-
-        self.initialize_state(
-            num_players=self._number_of_players,
-            size=self._board_size,
-            num_walls=self._num_walls,
-            game_mode=self._game_mode,
-            blitz_time=self._blitz_time,
-            ai_ids=self._ai_ids,
-            history=self._history,
-            ai_mode=self._ai_mode,
-            ai_depth=self._ai_depth,
-            # todo heuristic
-        )
-        self.initialize_begining_game()
-
-    def on_abandon_game(self, button):
-        self.execute_command(AbandonCommand(self.state, self.state.current_player.id))
-        if not self.state.game_over():
-            self.update_players_box()
-            self.update_current_player_label()
-
-    def on_pass_turn(self, button):
-        self.remove_pass_button()
-        self.execute_command(PassCommand(self.state))
-
-    def on_drag_prepare(self, drag_source, x, y, emoji, pos=None):
-        """Prepares the piece for dragging by storing its last position."""
-        data = Gdk.ContentProvider.new_for_value(emoji)
-        if emoji == "🔵":
-            self.blue_last_pos = pos
-        elif emoji == "🔴":
-            self.red_last_pos = pos
-        elif emoji == "🟢":
-            self.green_last_pos = pos
-        elif emoji == "🟡":
-            self.yellow_last_pos = pos
-        return data
-
-    def on_drop(self, drop_target, value, x, y):
-        """Handles dropping the piece and updates the board."""
-        cell = drop_target.get_widget()
-
-        row, col = None, None
-        for (r, c), button in self.cells.items():
-            if button == cell:
-                row, col = r, c
-                break
-
-        if row is None or col is None:
-            logging.debug("Error : no cell found in the grid")
-
-        if value in ["🔵", "🔴", "🟢", "🟡"]:
-            self.handle_pawn_move(row, col, value)
-
-        elif value in [Direction.H, Direction.V]:
-            self.handle_place_wall(row, col, value)
-
-        return True
-
-    def on_click(self, click_target, value, x, y):
-        cell = click_target.get_widget()
-
-        row, col = None, None
-        for (r, c), button in self.cells.items():
-            if button == cell:
-                row, col = r, c
-                break
-
-        if row is None or col is None:
-            logging.debug("Error : no cell found in the grid")
-
-        self.handle_pawn_move_click(row, col, value)
-
-        return True
-
-    def on_hint_clicked(self, button):
-        self.hint_cases.clear()
-        if self.hint_activate:
-            self.hint_activate = False
-        else:
-            self.hint_activate = True
-
-        ai_temp = GreedyAI(0, AiHeuristic.RUNNER)
-        for case in ai_temp.possible_moves(self.state):
-            self.hint_cases.append(case)
-            self.draw_hint_on_case(case)
-
     def on_undo_clicked(self, button):
         self.execute_command(UndoCommand(self.state))
 
@@ -1384,9 +1302,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         if self.state is not None:
             if self.state.game_mode == GameMode.BLITZ:
                 for player in self.state.players:
-                    if player.timer.turn_start_time is not None:
-                        player.timer.end_turn()
-                        player.timer.display_lock.clear()
+                    if player.timer is not None:
+                        if player.timer.turn_start_time is not None:
+                            player.timer.end_turn()
+                            player.timer.display_lock.clear()
 
 
 class AutoClosePopup(Gtk.Window):
@@ -1433,14 +1352,11 @@ class SavePopup(Gtk.Window):
         vbox.append(button_box)
         self.set_child(vbox)
 
-        # Création de la boîte de dialogue de sélection de fichier
-        self.open_dialog = Gtk.FileChooserDialog(
-            title=T_("Select a file"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            modal=True,
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.SAVE
         )
-        self.open_dialog.set_default_size(600, 400)
+
+        self.open_dialog.set_modal(True)
 
         file_filter = Gtk.FileFilter()
         file_filter.set_name("Quoridor game file")

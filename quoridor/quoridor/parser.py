@@ -1,12 +1,25 @@
+"""
+Parser module
+"""
+
 import logging
 
 from quoridor.gamestate import GameState
 from quoridor.graph import Graph
 from quoridor.player import Player
 from quoridor.gamemode import GameMode
+from quoridor.io import ReadWriteHistory
 
 
 def parse_string_to_graph(board_string: str) -> Graph:
+    """
+    Parse a string representation into a Graph object
+
+    :param board_string: The text that can be translated into a graph
+    :type board_string: str
+    :return: A graph that represent an ongoing game
+    :rtype: Graph
+    """
     graph = Graph()
 
     lines = board_string.splitlines()
@@ -96,6 +109,14 @@ def _print_graph(graph: Graph):
 
 
 def parse_string_to_state(state_string: str) -> GameState:
+    """
+    Parse a string representation into a GameState object
+
+    :param state_string: The text that can be translated into the state of a game
+    :type state_string: str
+    :return: A state that represent an ongoing game
+    :rtype: GameState
+    """
     from quoridor.io import ReadWriteHistory
 
     size = None
@@ -129,34 +150,57 @@ def parse_string_to_state(state_string: str) -> GameState:
             size = int(line.split("=")[1].strip())
         elif line.startswith("num_walls"):
             num_walls = int(line.split("=")[1].strip())
-        elif line.startswith("blitz"):
-            t_blitz = line.split("=")[1].strip()
-            if t_blitz == "True" or t_blitz == "T":
-                blitz = GameMode.BLITZ
+        elif line.startswith("game_mode"):
+            g_mode = line.split("=")[1].strip()
+            if g_mode == "GameMode.BLITZ":
+                game_mode = GameMode.BLITZ
             else:
-                blitz = GameMode.NORMAL
+                game_mode = GameMode.NORMAL
+        elif line.startswith("blitz"):
+            blitz = int(line.split("=")[1].strip())
         elif line.startswith("players"):
             players = []
             i += 1
+
+            # Loop for each player in the savefile
             while i < len(state_lines) and state_lines[i].startswith("player_"):
                 key, value = state_lines[i].split("=")
                 key, value = key.strip(), value.strip()
 
                 if key == "player_id":
                     player_id = int(value)
-                    players.append(
-                        Player(
-                            id=player_id,
-                            position=player_data.get("position", (0, 0)),
-                            size=size,
-                            walls_remaining=player_data.get("walls", 0),
+                    if game_mode == GameMode.NORMAL:
+                        players.append(
+                            Player(
+                                id=player_id,
+                                position=player_data.get("position", (0, 0)),
+                                size=size,
+                                walls_remaining=player_data.get("walls", 0),
+                            )
                         )
-                    )
+                    else:
+                        from quoridor.timer import Timer
+
+                        timer = Timer(blitz, game_mode, player_id)
+                        timer.set_time_remaining(
+                            player_data.get("timer_time", blitz * 60)
+                        )
+                        players.append(
+                            Player(
+                                id=player_id,
+                                position=player_data.get("position", (0, 0)),
+                                size=size,
+                                walls_remaining=player_data.get("walls", 0),
+                                time_remaining_blitz=timer,
+                            )
+                        )
                     player_data = {}
                 elif key == "player_position":
                     player_data["position"] = tuple(map(int, value.split(",")))
                 elif key == "player_walls":
                     player_data["walls"] = int(value)
+                elif key == "player_timer":
+                    player_data["timer_time"] = int(value)
 
                 i += 1
             continue
@@ -178,9 +222,6 @@ def parse_string_to_state(state_string: str) -> GameState:
             break
         i += 1
 
-    # TODO check error after parsing
-    # example num_players should match players[] length
-
     kwargs = {
         "size": size,
         "current_player_id": current_player_id,
@@ -189,23 +230,31 @@ def parse_string_to_state(state_string: str) -> GameState:
         "board": board,
         "num_walls": num_walls,
         "history": history,
-        "game_mode": blitz,
-        # blitz_time ?
+        "game_mode": game_mode,
+        "blitz_time": blitz,
         # ai_ids ?
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
     state = GameState(**filtered_kwargs)
-
     for pid, cmd in state.history:
         cmd.state = state
     return state
 
 
 def parse_state_to_string(state: GameState) -> str:
+    """
+    Parse a GameObject into a string representation
+
+    :param state: A state that represent an ongoing game
+    :type state: GameState
+    :return: A text that represent the state of a game
+    :rtype: str
+    """
     state_string = f"num_players = {state.num_players}\n"
     state_string += f"current_player_id = {state.current_player.id}\n"
     state_string += f"board_size = {state.size}\n"
     state_string += f"initial_num_walls = {state.initial_num_walls}\n"
+    state_string += f"game_mode = {state.game_mode}\n"
     state_string += f"blitz = {state.blitz_time}\n\n"
 
     state_string += f"players =\n\n"
@@ -213,6 +262,8 @@ def parse_state_to_string(state: GameState) -> str:
     for i in range(state.num_players):
         state_string += f"player_position = {state.players[i].position[0]}, {state.players[i].position[1]}\n"
         state_string += f"player_walls = {state.players[i].walls_remaining}\n"
+        if state.game_mode == GameMode.BLITZ:
+            state_string += f"player_timer = {state.players[i].timer.current_time}\n"
         state_string += f"player_id = {state.players[i].id}\n\n"
 
     # Add the board representation
@@ -225,7 +276,16 @@ def parse_state_to_string(state: GameState) -> str:
 
 
 def parse_history_to_str(turns: list[list[str]], num_players: int) -> str:
-    """Writes a history text with the game information in the 'turns' parameter."""
+    """
+    Writes the history of game moves to text format.
+
+    :param turns: A list of tuple (int, command) which we use as a list of list of string
+    :type turns: list[list[str]
+    :param num_players: The number of players of the game
+    :type num_players: int
+    :return: A text that represent the history of a game
+    :rtype: str
+    """
     history_string = ""
     turn_nb = 0
     turn_str = ""
@@ -246,6 +306,10 @@ def parse_history_to_str(turns: list[list[str]], num_players: int) -> str:
 def get_string_from_board(state: GameState) -> str:
     """
     Return the board in string format
+    :param state: The state of an ongoing game
+    :type state: GameState
+    :return: A string that represent the board of a game
+    :rtype: str
     """
     rows = [
         "a",

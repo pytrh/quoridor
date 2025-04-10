@@ -9,6 +9,7 @@ import importlib.metadata
 import logging
 import sys
 import os
+import traceback
 
 from quoridor.io import ReadWriteHistory
 from quoridor.cliengine import CLIEngine
@@ -34,6 +35,8 @@ from quoridor.config import (
     DEFAULT_AI_COLOR,
 )
 from quoridor.exceptions import QuitApp
+from quoridor.ai import GreedyAI, MinimaxAI, AlphaBetaAI
+from quoridor.command import Command
 
 dirname = os.path.dirname(__file__)
 DEFAULT_CONFIG_FILE = os.path.join(dirname, ".quoridorrc")
@@ -206,7 +209,6 @@ def update_config_file(
             elif line.strip().startswith("AI_HEURISTIC"):
                 line = f"AI_HEURISTIC = {ai_heuristic}\n"
             config_file.write(line)
-            # TODO: bug when putting more than one param on command line
 
 
 def restore_default_config_file() -> None:
@@ -325,6 +327,13 @@ def parse_args():
         "-r",
         "--replay",
         help="replay game from file saved during pending play",
+        required=False,
+    )
+    parser.add_argument(
+        "-c",
+        "--contest",
+        help="Load a game state from file and get AI move suggestion",
+        type=str,
         required=False,
     )
     return parser.parse_args()
@@ -509,6 +518,29 @@ def open_file(filename: str) -> GameState:
     return initial_state
 
 
+def get_ai_move_from_file(
+    filename: str, ai_depth: int, ai_heuristic: AiHeuristic
+) -> tuple[int, Command]:
+    """
+    Load a game state from a file and get an AI move.
+
+    Args:
+        filename: Path to the game state file
+        ai_depth: Depth for AI search
+        ai_heuristic: Heuristic function for AI evaluation
+
+    Returns:
+        tuple[int, Command]: Current player ID and the suggested move
+    """
+    initial_state = open_file(filename)
+    ai = GreedyAI(ai_depth, ai_heuristic)
+
+    # Get the move
+    move = ai.suggest_move(initial_state)
+
+    return initial_state.current_player.id, move
+
+
 def main():
     """
     Main function
@@ -593,6 +625,19 @@ def main():
             elif args.file:
                 engine.load_game_from_file()
             engine.run()
+        elif args.contest:
+            # Load file and get AI move
+            try:
+                player_id, move = get_ai_move_from_file(
+                    args.contest, ai_depth, ai_heuristic
+                )
+                print(f"Player {player_id+1}: {move}")
+                sys.exit(0)
+            except Exception as e:
+                logging.error(f"Error getting AI move: {str(e)}")
+                print("Traceback:", file=sys.stderr)
+                traceback.print_exc()
+                sys.exit(1)
         else:
             cli_engine = CLIEngine(initial_state)
             cli_engine.start_game()
