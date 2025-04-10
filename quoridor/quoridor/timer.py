@@ -13,9 +13,12 @@ class Timer:
         """
         Initialize a Timer object to manage countdown timing in blitz game modes.
 
-        Args:
-            blitz_time (int): The amount of time (in seconds) assigned to a player per turn.
-            game_mode (GameMode): The current game mode (e.g., BLITZ, BLITZ_LONG).
+        :param blitz_time: The amount of time (in seconds) assigned to a player per turn.
+        :type blitz_time: int
+        :param game_mode: The current game mode (e.g., BLITZ, BLITZ_LONG).
+        :type game_mode: GameMode
+        :param player_id: The ID of the player whose turn it is.
+        :type player_id: int
         """
         self.game_mode = game_mode
         self.initial_time = blitz_time
@@ -31,9 +34,8 @@ class Timer:
         """
         Start a player's turn and launch the countdown watchdog.
 
-        Args:
-            current_player (int): The ID of the player whose turn it is.
-            blitz_mode_active (bool): Whether the blitz timer should reset at each turn.
+        :param reset_timer: Whether the blitz timer should reset at each turn.
+        :type reset_timer: bool
         """
         if reset_timer:
             self.current_time = self.initial_time
@@ -64,8 +66,8 @@ class Timer:
         """
         Return the current remaining time for the player.
 
-        Returns:
-            int: Time left in seconds.
+        :return: Time left in seconds.
+        :rtype: int
         """
         return self.current_time
 
@@ -77,8 +79,6 @@ class Timer:
         Internal method run in a separate thread that monitors the countdown.
         If time runs out, it terminates the game.
 
-        Args:
-            current_player (int): The player being monitored for timeout.
         """
         while not self._stop_event.is_set():
             now = time.time()

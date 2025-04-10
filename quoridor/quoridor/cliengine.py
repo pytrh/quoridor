@@ -149,9 +149,9 @@ class CLIEngine:
         """
         Check if either of the two string that compose a move are invalid.
         :param start: String in format 'letter''number'
-        :type case: str
+        :type start: str
         :param end: String in format 'letter''number'
-        :type case: str
+        :type end: str
         :return: true if the move is invalid, false if the move is valid
         :rtype: bool
         """
@@ -269,7 +269,7 @@ class CLIEngine:
         Check if the input is a well-formed pawn move.
         :param input: String that 'should' be formatted as a pawn move
             [letter][int] both in the range of the size of the board
-        :type case: str
+        :type input: str
         :return: a bool correspond to the validy of the string
         :rtype: bool
         """
@@ -281,7 +281,7 @@ class CLIEngine:
         :param input: String that 'should' be formatted as a wall placement
             [letter][int] both in the range of the size of the board
             Folowed by [direction] (either 'v'ertical or 'h'orizontal)
-        :type case: str
+        :type input: str
         :return: a bool correspond to the validy of the string
         :rtype: bool
         """
