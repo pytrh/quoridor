@@ -638,7 +638,6 @@ def test_configure_game_valid():
     assert result[6] == "minimax"
     assert result[7] == 3
     assert result[8] == "default"
-    assert result[9] == True
 
 
 def test_configure_game_invalid_players():
@@ -694,7 +693,6 @@ def test_configure_game_size():
         result = configure_game(args)
 
     assert result[0] == 11
-    assert result[9] is True
 
 
 def test_configure_game_players():
@@ -717,7 +715,6 @@ def test_configure_game_players():
         result = configure_game(args)
 
     assert result[1] == 3
-    assert result[9] is True
 
 
 def test_configure_game_blitz():
@@ -741,7 +738,6 @@ def test_configure_game_blitz():
 
     assert result[3] == GameMode.BLITZ
     assert result[4] == 5
-    assert result[9] is True
 
 
 def test_configure_game_ai():
@@ -767,7 +763,6 @@ def test_configure_game_ai():
     assert result[6] == "minimax"
     assert result[7] == 3
     assert result[8] == AiHeuristic.RUNNER
-    assert result[9] is True
 
 
 def test_configure_game_invalid_size():
@@ -845,41 +840,34 @@ def test_configure_game_invalid_ai():
 
 def test_configure_game_with_ai_mode():
     args = MockArgs(ai_mode="ab")
-    _, _, _, _, _, _, ai_mode, _, _, changed = configure_game(args)
+    _, _, _, _, _, _, ai_mode, _, _ = configure_game(args)
     assert ai_mode == AiMode.ALPHABETA
-    assert changed
 
     args = MockArgs(ai_mode="minimax")
-    _, _, _, _, _, _, ai_mode, _, _, changed = configure_game(args)
+    _, _, _, _, _, _, ai_mode, _, _ = configure_game(args)
     assert ai_mode == AiMode.MINIMAX
-    assert changed
 
     args = MockArgs(ai_mode="greedy")
-    _, _, _, _, _, _, ai_mode, _, _, changed = configure_game(args)
+    _, _, _, _, _, _, ai_mode, _, _ = configure_game(args)
     assert ai_mode == AiMode.GREEDY
-    assert changed
 
 
 def test_configure_game_with_ai_heuristic():
     args = MockArgs(ai_heuristic="default")
-    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    _, _, _, _, _, _, _, _, ai_heuristic = configure_game(args)
     assert ai_heuristic == AiHeuristic.DEFAULT
-    assert changed
 
     args = MockArgs(ai_heuristic="runner")
-    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    _, _, _, _, _, _, _, _, ai_heuristic = configure_game(args)
     assert ai_heuristic == AiHeuristic.RUNNER
-    assert changed
 
     args = MockArgs(ai_heuristic="aggressive")
-    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    _, _, _, _, _, _, _, _, ai_heuristic = configure_game(args)
     assert ai_heuristic == AiHeuristic.AGGRESSIVE
-    assert changed
 
     args = MockArgs(ai_heuristic="central")
-    _, _, _, _, _, _, _, _, ai_heuristic, changed = configure_game(args)
+    _, _, _, _, _, _, _, _, ai_heuristic = configure_game(args)
     assert ai_heuristic == AiHeuristic.CENTRAL
-    assert changed
 
 
 def test_configure_game_with_replay(monkeypatch):
@@ -895,5 +883,5 @@ def test_configure_game_with_replay(monkeypatch):
     )
 
     args = MockArgs(replay="fake_path")
-    _, num_players, _, _, _, _, _, _, _, _ = configure_game(args)
+    _, num_players, _, _, _, _, _, _, _ = configure_game(args)
     assert num_players == max(3, load_default_config()[1])

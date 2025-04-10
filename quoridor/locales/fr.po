@@ -33,7 +33,7 @@ msgstr "Joueur "
 
 #: quoridor/cliengine.py:235
 msgid " will play? "
-msgstr " va jouer?"
+msgstr " va jouer? "
 
 #: quoridor/cliengine.py:300
 msgid " has won the game!"
