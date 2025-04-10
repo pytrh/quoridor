@@ -78,48 +78,48 @@ class Command(ABC):
             self.state.players[self.state.current_player.id].walls_remaining - 1
         )
 
-    def get_string_from_board(self) -> str: # NOTE: never used implemented elsewhere
-        """
-        Return the board in string format
-        """
-        horizontal_wall = "---"
-        vertical_wall = "|"
-        interstice = "+"
-        horizontal_space = "   "  # Must be of the same size than horizontal_wall
-        big_space = "  "
-        small_space = " "  # Must be of the size of big_space -1
-        "  +" + "---+" * self.state.size
+    # def get_string_from_board(self) -> str: # NOTE: never used implemented elsewhere
+    #     """
+    #     Return the board in string format
+    #     """
+    #     horizontal_wall = "---"
+    #     vertical_wall = "|"
+    #     interstice = "+"
+    #     horizontal_space = "   "  # Must be of the same size than horizontal_wall
+    #     big_space = "  "
+    #     small_space = " "  # Must be of the size of big_space -1
+    #     "  +" + "---+" * self.state.size
 
-        result = "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
-        result += "\n"
-        result += big_space + interstice + (horizontal_wall + interstice) * self.size
-        for row in range(self.size):
-            result += f"\n{self.rows[row]}" + small_space + vertical_wall
-            for columns in range(self.size):
-                case = "   "
-                for player in range(self.state.num_players):
-                    if (
-                        self.state.players[player].position[0] == row
-                        and self.state.players[player].position[1] == columns
-                    ):
-                        # case = " " + str(self.state.players[player].id + 1) + " "
-                        case = " " + str(player + 1) + " "
-                if columns == self.size - 1 or not self.state.board.edge_exists(
-                    (row, columns), (row, columns + 1)
-                ):
-                    result += case + vertical_wall
-                else:
-                    result += case + " "
-            result += "\n" + big_space + interstice
-            for columns in range(self.size):
-                if row == self.size - 1 or not self.state.board.edge_exists(
-                    (row, columns), (row + 1, columns)
-                ):
-                    result += horizontal_wall
-                else:
-                    result += horizontal_space
-                result += interstice
-        return result
+    #     result = "    " + horizontal_space.join(str(i + 1) for i in range(self.size))
+    #     result += "\n"
+    #     result += big_space + interstice + (horizontal_wall + interstice) * self.size
+    #     for row in range(self.size):
+    #         result += f"\n{self.rows[row]}" + small_space + vertical_wall
+    #         for columns in range(self.size):
+    #             case = "   "
+    #             for player in range(self.state.num_players):
+    #                 if (
+    #                     self.state.players[player].position[0] == row
+    #                     and self.state.players[player].position[1] == columns
+    #                 ):
+    #                     # case = " " + str(self.state.players[player].id + 1) + " "
+    #                     case = " " + str(player + 1) + " "
+    #             if columns == self.size - 1 or not self.state.board.edge_exists(
+    #                 (row, columns), (row, columns + 1)
+    #             ):
+    #                 result += case + vertical_wall
+    #             else:
+    #                 result += case + " "
+    #         result += "\n" + big_space + interstice
+    #         for columns in range(self.size):
+    #             if row == self.size - 1 or not self.state.board.edge_exists(
+    #                 (row, columns), (row + 1, columns)
+    #             ):
+    #                 result += horizontal_wall
+    #             else:
+    #                 result += horizontal_space
+    #             result += interstice
+    #     return result
 
     rows = [
         "a",
