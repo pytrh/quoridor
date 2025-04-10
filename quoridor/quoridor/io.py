@@ -22,7 +22,6 @@ from quoridor.exceptions import InvalidMoveError
 if TYPE_CHECKING:
     from quoridor.command import Command
     from quoridor.gamestate import GameState
-    from quoridor.cliengine import CLIEngine
 
 
 def write_to_file(file: str, content: str):
@@ -194,6 +193,7 @@ class ReadWriteHistory:
     def parse_list_of_str_to_history(
         state: "GameState", turns: list[list[tuple[int, str]]]
     ) -> list[tuple[int, "Command"]]:
+        from quoridor.cliengine import CLIEngine
         from quoridor.command import (
             AbandonCommand,
             MovePawnCommand,

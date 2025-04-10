@@ -1,13 +1,6 @@
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
-if TYPE_CHECKING:
-    from quoridor.heuristic import (
-            total_heuristic,
-            runner_heuristic,
-            aggressive_blocking_heuristic,
-            central_control_heuristic,
-        )
 
 class GameMode(Enum):
     NORMAL = "normal"
@@ -38,6 +31,13 @@ class AiHeuristic(Enum):
 
     @property
     def func(self) -> Callable:
+        from quoridor.heuristic import (
+            total_heuristic,
+            runner_heuristic,
+            aggressive_blocking_heuristic,
+            central_control_heuristic,
+        )
+
         return {
             "total": total_heuristic,
             "runner": runner_heuristic,

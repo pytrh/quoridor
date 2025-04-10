@@ -1,12 +1,10 @@
 import logging
 
-from typing import TYPE_CHECKING, Callable
-
-if TYPE_CHECKING:
-    from quoridor.gamestate import GameState
-    from quoridor.graph import Graph
-    from quoridor.player import Player
-    from quoridor.gamemode import GameMode
+from quoridor.gamestate import GameState
+from quoridor.graph import Graph
+from quoridor.player import Player
+from quoridor.gamemode import GameMode
+from quoridor.io import ReadWriteHistory
 
 
 def parse_string_to_graph(board_string: str) -> Graph:
@@ -99,8 +97,6 @@ def _print_graph(graph: Graph):
 
 
 def parse_string_to_state(state_string: str) -> GameState:
-    from quoridor.io import ReadWriteHistory
-
     size = None
     current_player_id = None
     players = None
