@@ -291,11 +291,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         # Information sections
         box.append(self.create_about_section(f"Version:", importlib.metadata.version("quoridor")))
-        box.append(self.create_about_section("Developers:", "Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song"))
-        box.append(self.create_about_section("Expected release date:", "April 2025"))
+        box.append(self.create_about_section(T_("Developers:"), "Mohamad Almousa, Lucy Curtis, Lucas Danglard, Bastien Rocher, Zhaoyuan Song"))
+        box.append(self.create_about_section(T_("Expected release date:"), T_("April 2025")))
         box.append(self.create_about_section("Description:", ""))
-        box.append(self.create_about_section("", "QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game."))
-        box.append(self.create_about_section("", "The aim of the game is to reach the opposite side of the grid before the other players, while simultaneously navigating through walls placed by players."))
+        box.append(self.create_about_section("", T_("QUORIDOR is a two, three (although not recommended) or four-player intuitive strategy game.")))
+        box.append(self.create_about_section("", T_("The aim of the game is to reach the opposite side of the grid before the other players, while simultaneously navigating through walls placed by players.")))
 
         return box
 
@@ -305,7 +305,10 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         title = self.create_title_label("GAME OVER", "#008000", 18000)
         box.append(title)
 
-        self.winner_label = self.create_label(f'<span size="14000" weight="bold">You won!</span>', Gtk.Align.CENTER)
+        self.winner_label = self.create_label(
+            T_('<span size="14000" weight="bold">You won!</span>'),
+            Gtk.Align.CENTER
+        )
         box.append(self.winner_label)
 
         # Buttons for game over actions

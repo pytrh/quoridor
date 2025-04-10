@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: quoridor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-10 11:06+0200\n"
+"POT-Creation-Date: 2025-04-10 13:39+0200\n"
 "PO-Revision-Date: 2025-04-08 16:34+0200\n"
 "Last-Translator:  <lulu@grasspunk.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -68,175 +68,209 @@ msgstr "Aucun coup à rejouer"
 msgid "Invalid command: "
 msgstr "Commande invalide: "
 
-#: quoridor/guiengine.py:94 quoridor/guiengine.py:1335
+#: quoridor/guiengine.py:89 quoridor/guiengine.py:1323
 msgid "Select a file"
 msgstr "Sélectionner un fichier"
 
-#: quoridor/guiengine.py:126
+#: quoridor/guiengine.py:115
 msgid "New Game"
 msgstr "Nouvelle partie"
 
-#: quoridor/guiengine.py:127
+#: quoridor/guiengine.py:116
 msgid "Load Game"
 msgstr "Charger une partie"
 
-#: quoridor/guiengine.py:128
+#: quoridor/guiengine.py:117
 msgid "About"
-msgstr "À propos de l'application"
+msgstr "À propos"
 
-#: quoridor/guiengine.py:173
-msgid "🔄 Restart"
-msgstr "🔄 Recommencer"
-
-#: quoridor/guiengine.py:176
-msgid "📥 Save"
-msgstr "📥 Sauvegarder"
-
-#: quoridor/guiengine.py:181
-msgid "🚪 Quit"
-msgstr "🚪 Quitter"
-
-#: quoridor/guiengine.py:186
-msgid "🏳️ Abandon"
-msgstr "🏳️ Abandonner"
-
-#: quoridor/guiengine.py:230
+#: quoridor/guiengine.py:174
 msgid "Current player"
 msgstr "Joueur actuel"
 
-#: quoridor/guiengine.py:232
+#: quoridor/guiengine.py:176
 msgid "Drag n Drop to play"
 msgstr "Glissez-déposez pour jouer"
 
-#: quoridor/guiengine.py:255
-msgid "⬅ Undo"
-msgstr "⬅ Annuler"
+#: quoridor/guiengine.py:231
+msgid "🔄 Restart"
+msgstr "🔄 Recommencer"
 
-#: quoridor/guiengine.py:257
-msgid "Redo ➡"
-msgstr "Rétablir ➡"
+#: quoridor/guiengine.py:232
+msgid "📥 Save"
+msgstr "📥 Sauvegarder"
 
-#: quoridor/guiengine.py:262
+#: quoridor/guiengine.py:233
+msgid "🚪 Quit"
+msgstr "🚪 Quitter"
+
+#: quoridor/guiengine.py:234
+msgid "🏳️ Abandon"
+msgstr "🏳️ Abandonner"
+
+#: quoridor/guiengine.py:254
 msgid "💡 Hint"
 msgstr "💡 Indice"
 
-#: quoridor/guiengine.py:268
+#: quoridor/guiengine.py:260
 msgid "⏭ Pass turn"
 msgstr "⏭ Passer le tour"
 
-#: quoridor/guiengine.py:364
+#: quoridor/guiengine.py:272
+msgid "⬅ Undo"
+msgstr "⬅ Annuler"
+
+#: quoridor/guiengine.py:275
+msgid "Redo ➡"
+msgstr "Rétablir ➡"
+
+#: quoridor/guiengine.py:294
+msgid "Developers:"
+msgstr "Développeurs"
+
+#: quoridor/guiengine.py:295
+msgid "Expected release date:"
+msgstr "Date de sortie prévue:"
+
+#: quoridor/guiengine.py:295
+msgid "April 2025"
+msgstr "Avril 2025"
+
+#: quoridor/guiengine.py:297
+msgid ""
+"QUORIDOR is a two, three (although not recommended) or four-player intuitive "
+"strategy game."
+msgstr ""
+"QUORIDOR est un jeu de stratégie intuitif pour deux, trois "
+"(bien que cela ne soit pas recommandé) ou quatre joueurs."
+
+#: quoridor/guiengine.py:298
+msgid ""
+"The aim of the game is to reach the opposite side of the grid before the "
+"other players, while simultaneously navigating through walls placed by "
+"players."
+msgstr ""
+"L'objectif du jeu est d'atteindre l'autre côté du plateau avant les autres "
+"joueurs,  tout en naviguant simultanément à travers les murs placés par "
+"les joueurs."
+
+#: quoridor/guiengine.py:309
+msgid "<span size=\"14000\" weight=\"bold\">You won!</span>"
+msgstr "<span size=\"14000\" weight=\"bold\">Vous avez gagné!</span>"
+
+#: quoridor/guiengine.py:318
 msgid "Play Again"
 msgstr "Rejouer"
 
-#: quoridor/guiengine.py:368
+#: quoridor/guiengine.py:321
 msgid "Go Home"
 msgstr "Revenir au menu"
 
-#: quoridor/guiengine.py:383
+#: quoridor/guiengine.py:371
 msgid "Back"
 msgstr "Retour"
 
-#: quoridor/guiengine.py:390
+#: quoridor/guiengine.py:378
 msgid "Number of players:"
 msgstr "Nombre de joueurs:"
 
-#: quoridor/guiengine.py:395
+#: quoridor/guiengine.py:383
 msgid "3 (not recommended)"
 msgstr "3 (déconseillé)"
 
-#: quoridor/guiengine.py:414
+#: quoridor/guiengine.py:402
 msgid "Board size:"
 msgstr "Taille du plateau:"
 
-#: quoridor/guiengine.py:432
+#: quoridor/guiengine.py:420
 msgid "Number of walls per player:"
 msgstr "Nombre de murs par joueur:"
 
-#: quoridor/guiengine.py:445
+#: quoridor/guiengine.py:433
 msgid "Game Mode:"
 msgstr "Mode de jeu:"
 
-#: quoridor/guiengine.py:485
+#: quoridor/guiengine.py:473
 msgid "AI Mode:"
 msgstr "Mode IA:"
 
-#: quoridor/guiengine.py:499
+#: quoridor/guiengine.py:487
 msgid "Start"
 msgstr "Commencer la partie"
 
-#: quoridor/guiengine.py:512
+#: quoridor/guiengine.py:500
 msgid "Easy (default)"
 msgstr "Facile (par défaut)"
 
-#: quoridor/guiengine.py:514
+#: quoridor/guiengine.py:502
 msgid "Medium"
 msgstr "Moyen"
 
-#: quoridor/guiengine.py:516
+#: quoridor/guiengine.py:504
 msgid "Hard"
 msgstr "Difficle"
 
-#: quoridor/guiengine.py:561
+#: quoridor/guiengine.py:549
 msgid "AI player: "
 msgstr "Joueur IA: "
 
-#: quoridor/guiengine.py:568 quoridor/guiengine.py:572
+#: quoridor/guiengine.py:556 quoridor/guiengine.py:560
 #, python-brace-format
 msgid "AI {num}"
 msgstr "IA {num}"
 
-#: quoridor/guiengine.py:749
+#: quoridor/guiengine.py:737
 #, python-format
 msgid ": walls remaining = %(walls)d"
 msgstr ": murs restant = %(walls)d"
 
-#: quoridor/guiengine.py:752
+#: quoridor/guiengine.py:740
 #, python-brace-format
 msgid "{is_ai}Player {id} {emoji} {walls}"
 msgstr "{is_ai}Joueur {id} {emoji} {walls}"
 
-#: quoridor/guiengine.py:983
+#: quoridor/guiengine.py:971
 #, python-brace-format
 msgid "Timer: {time}"
 msgstr "Temps restant: {time}"
 
-#: quoridor/guiengine.py:1111
+#: quoridor/guiengine.py:1099
 #, python-format
 msgid "<span size=\"14000\" weight=\"bold\">%(emoji)s won!</span>"
 msgstr "<span size=\"14000\" weight=\"bold\">%(emoji)s a gagné !</span>"
 
-#: quoridor/guiengine.py:1156
+#: quoridor/guiengine.py:1144
 #, python-format
 msgid "Current player: %(emoji)s"
 msgstr "Joueur actuel: %(emoji)s"
 
-#: quoridor/guiengine.py:1177
+#: quoridor/guiengine.py:1165
 #, python-brace-format
 msgid "Turn {turn_index}: "
 msgstr "Tour {turn_index}: "
 
-#: quoridor/guiengine.py:1273
+#: quoridor/guiengine.py:1261
 #, python-brace-format
 msgid "Error ({error_type}) : {e}"
 msgstr "Erreur ({error_type}) : {e}"
 
-#: quoridor/guiengine.py:1299
+#: quoridor/guiengine.py:1287
 msgid "Warning"
 msgstr "Attention"
 
-#: quoridor/guiengine.py:1310
+#: quoridor/guiengine.py:1298
 msgid "Save and quit"
 msgstr "Sauvegarder et quitter"
 
-#: quoridor/guiengine.py:1318
+#: quoridor/guiengine.py:1306
 msgid "Do you want to save your game before quitting ?"
 msgstr "Voulez-vous sauvegrader avant de quitter ?"
 
-#: quoridor/guiengine.py:1322
+#: quoridor/guiengine.py:1310
 msgid "✅ Yes"
 msgstr "✅ Oui"
 
-#: quoridor/guiengine.py:1323
+#: quoridor/guiengine.py:1311
 msgid "❌ No"
 msgstr "❌ Non"
 
