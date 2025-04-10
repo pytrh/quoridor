@@ -5,10 +5,11 @@ import pytest
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
 from quoridor.direction import Direction
+from quoridor.exceptions import InvalidMoveError
 from quoridor.gamemode import AiHeuristic, GameMode
 from quoridor.gamestate import GameState
 from quoridor.guiengine import MainWindow, SavePopup
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class FakeGtkApplication(Gtk.Application):
@@ -355,3 +356,81 @@ def test_handle_switch_player(main_window):
 
     timer2.start_turn.assert_called_once()
     timer2.display_lock.set.assert_called_once()
+
+def test_handle_pawn_move_click_valid(main_window):
+    main_window.set_parameters(GameState(num_players=4))
+    main_window.initialize_state(
+        num_players=4,
+        size=main_window._board_size,
+        num_walls=main_window._num_walls,
+        game_mode=main_window._game_mode,
+        blitz_time=main_window._blitz_time,
+        ai_ids=main_window._ai_ids,
+        history=main_window._history,
+        ai_mode=main_window._ai_mode,
+        ai_depth=main_window._ai_depth,
+    )
+    main_window.create_board()
+    main_window.state.current_player.position = (4, 0)
+    main_window.handle_pawn_move_click(4, 1, player_id=0)
+    assert main_window.state.players[0].position == (4,1)
+
+def test_handle_pawn_move_click_invalid(main_window):
+    main_window.set_parameters(GameState(num_players=4))
+    main_window.initialize_state(
+        num_players=4,
+        size=main_window._board_size,
+        num_walls=main_window._num_walls,
+        game_mode=main_window._game_mode,
+        blitz_time=main_window._blitz_time,
+        ai_ids=main_window._ai_ids,
+        history=main_window._history,
+        ai_mode=main_window._ai_mode,
+        ai_depth=main_window._ai_depth,
+    )
+    main_window.create_board()
+    main_window.state.players[1].position = (4, 8)
+    main_window.handle_pawn_move_click(0, 8, player_id=1)
+    assert main_window.state.players[1].position == (4,8)
+
+def test_handle_pawn_move_click_no_last_position(main_window, caplog):
+    main_window.set_parameters(GameState(num_players=4))
+    main_window.initialize_state(
+        num_players=4,
+        size=main_window._board_size,
+        num_walls=main_window._num_walls,
+        game_mode=main_window._game_mode,
+        blitz_time=main_window._blitz_time,
+        ai_ids=main_window._ai_ids,
+        history=main_window._history,
+        ai_mode=main_window._ai_mode,
+        ai_depth=main_window._ai_depth,
+    )
+    main_window.state.current_player.position = None
+
+    with caplog.at_level("DEBUG"):
+        main_window.handle_pawn_move_click(4, 4, player_id=1)
+
+    assert "Error: last position not found" in caplog.text
+
+def test_handle_place_wall_valid(main_window):
+    main_window.set_parameters(GameState(num_players=4))
+    main_window.initialize_state(
+        num_players=4,
+        size=main_window._board_size,
+        num_walls=main_window._num_walls,
+        game_mode=main_window._game_mode,
+        blitz_time=main_window._blitz_time,
+        ai_ids=main_window._ai_ids,
+        history=main_window._history,
+        ai_mode=main_window._ai_mode,
+        ai_depth=main_window._ai_depth,
+    )
+    main_window.create_board()
+    main_window.handle_place_wall(3, 4, Direction.V)
+    assert main_window.state.wall_exist(3, 4, Direction.V)
+    main_window.handle_place_wall(2, 5, Direction.H)
+    assert main_window.state.wall_exist(2, 5, Direction.H)
+
+    main_window.handle_place_wall(3, 4, Direction.H)
+    assert not main_window.state.wall_exist(3, 4, Direction.H)
