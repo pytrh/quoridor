@@ -74,7 +74,7 @@ class Command(ABC):
         pass
 
     # TODO: Very ugly code, these 2 functions below don't belong here
-    def switch_player(self):
+    def switch_player(self): # NOTE: never used
         """
         Change the current player to the next one
         If current player is the last one, the next one will the first
@@ -89,7 +89,7 @@ class Command(ABC):
             self.state.players[self.state.current_player.id].walls_remaining - 1
         )
 
-    def get_string_from_board(self) -> str:
+    def get_string_from_board(self) -> str: # NOTE: never used implemented elsewhere
         """
         Return the board in string format
         """

@@ -60,7 +60,7 @@ class Timer:
                 self._watchdog_thread.join()
             self._watchdog_thread = None
 
-    def get_time_remaining(self) -> int:
+    def get_time_remaining(self) -> int: # NOTE: never used
         """
         Return the current remaining time for the player.
 
