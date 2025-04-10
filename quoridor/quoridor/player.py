@@ -7,7 +7,6 @@ from quoridor.timer import Timer
 
 class Player:
     """
-    TODO: Find a less ugly way to access size of the board. Maybe import from config.py something
     IMPORTANT: Blitz time is interpreted as the traditional sense ie total time for the game.
     Different from E Fleury's requirements. Will justify in the report.
     Player class to represent a player in the game.

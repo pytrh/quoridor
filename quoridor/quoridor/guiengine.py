@@ -782,7 +782,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             history=self._history,
             ai_mode=self._ai_mode,
             ai_depth=self._ai_depth,
-            # todo heuristic
+            ai_heuristic= self._ai_heuristic,
         )
         self.initialize_begining_game()
 

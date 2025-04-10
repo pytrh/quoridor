@@ -368,8 +368,6 @@ class CLIEngine:
         while True:
             try:
                 self.print_remaining_walls()
-
-                # start blitz
                 self.start_blitz_turn()
 
                 if self.state.current_player.id not in self.state.ai_controllers:
@@ -388,8 +386,6 @@ class CLIEngine:
                 self.render_board()
                 if self.state.game_over():
                     raise GameOver
-                    # self.render_game_over()
-                    # exit()
             except InvalidMoveError as e:
                 self.end_blitz_turn()
                 print(T_("Invalid move: ") + str(e))
@@ -402,9 +398,7 @@ class CLIEngine:
                 print(T_("No command to redo"))
             except InvalidCommandError as e:
                 self.end_blitz_turn()
-                print(
-                    T_("Invalid command: ") + str(e)
-                )  # TODO: difference between invalid move and invalid command?
+                print(T_("Invalid command: ") + str(e))
             except GameOver:
                 self.render_game_over()
                 self.execute_command(QuitCommand(self.state))
