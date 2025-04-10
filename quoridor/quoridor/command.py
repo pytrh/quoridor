@@ -311,11 +311,11 @@ class MovePawnCommand(Command):
         :raises InvalidMoveError: if the parameters lead to an invalid move
         """
         if not (self.state.players[self.state.current_player.id].position == start):
-            raise InvalidMoveError(f"Try to move from {start} to {end}")
+            raise InvalidMoveError(T_("Try to move from {start} to {end}").format(start=start, end=end))
         else:
             board_temp = self.state.temp_board()
             if not board_temp.edge_exists(start, end):
-                raise InvalidMoveError(f"Try to move from {start} to {end}")
+                raise InvalidMoveError(T_("Try to move from {start} to {end}").format(start=start, end=end))
             self.state.players[self.state.current_player.id].position = end
 
     def undo(self) -> None:
@@ -460,7 +460,7 @@ class AbandonCommand(Command):
         self.state.switch_player()
 
     def __str__(self) -> str:
-        return f"Abandon game (Player {self.state.current_player.id} surrenders)"
+        return T_("Abandon game (Player {player_id} surrenders)").format(player_id=self.state.current_player.id)
 
 
 class QuitCommand(Command):

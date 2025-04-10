@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-11 01:37+0200\n"
+"POT-Creation-Date: 2025-04-11 01:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,6 +21,16 @@ msgstr ""
 #: tests/test_translations.py:17 quoridor/cliengine.py:245
 #: quoridor/cliengine.py:384
 msgid " will play? "
+msgstr ""
+
+#: quoridor/command.py:314 quoridor/command.py:318
+#, python-brace-format
+msgid "Try to move from {start} to {end}"
+msgstr ""
+
+#: quoridor/command.py:463
+#, python-brace-format
+msgid "Abandon game (Player {player_id} surrenders)"
 msgstr ""
 
 #: quoridor/command.py:510

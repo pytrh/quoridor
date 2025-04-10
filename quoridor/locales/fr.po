@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: quoridor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-11 01:37+0200\n"
+"POT-Creation-Date: 2025-04-11 01:50+0200\n"
 "PO-Revision-Date: 2025-04-08 16:34+0200\n"
 "Last-Translator:  <lulu@grasspunk.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -22,6 +22,16 @@ msgstr ""
 #: quoridor/cliengine.py:384
 msgid " will play? "
 msgstr " va jouer? "
+
+#: quoridor/command.py:314 quoridor/command.py:318
+#, python-brace-format
+msgid "Try to move from {start} to {end}"
+msgstr "Essayez de vous déplacer de {start} à {end}"
+
+#: quoridor/command.py:463
+#, python-brace-format
+msgid "Abandon game (Player {player_id} surrenders)"
+msgstr "Abandonner la partie (Le joueur {player_id} se rend)"
 
 #: quoridor/command.py:510
 #, python-brace-format
@@ -248,9 +258,9 @@ msgid "❌ No"
 msgstr "❌ Non"
 
 #: quoridor/timer.py:104
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "[⏳ Remaining: {seconds}]\n"
-msgstr "[⏳ Restant: {seconds}]"
+msgstr "[⏳ Restant: {seconds}]\n"
 
 #~ msgid "Developers:"
 #~ msgstr "Développeurs"
