@@ -1187,7 +1187,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         )
         for turn_index, turn in enumerate(history, start=1):
             line = ""
-            line += T_(f"Turn {turn_index}: ")
+            line += T_("Turn {index}: ").format(index=turn_index)
             for move in turn:
                 line += move + " "
             text_list.append(line)
