@@ -7,74 +7,58 @@ from quoridor.io import ReadWriteHistory
 from pathlib import Path
 
 current_dir = Path(__file__).resolve().parent
-path_to_history_dir = current_dir / "/io"
+path_to_history_dir = current_dir / "io"
 
 
-@pytest.mark.skip
 def test_read_history_from_file():
     history = ReadWriteHistory.read_history(path_to_history_dir / "test_history1.txt")
-    expected = [
-        ["e1-e2", "a10-a9", "e2-e3", "a9v"],
-        ["a6v", "a9-a8", "e4-e5", "a8-a7"],
-        ["e3-e4", "a7-a6", "e5-e6", "a6-a5"],
-    ]
+    expected = [[(1, 'e1-e2'), (2, 'e8v')], [(1, 'e2-d2'), (-1, '')]]
 
     assert expected == history
 
     history = ReadWriteHistory.read_history(path_to_history_dir / "test_history2.txt")
-    expected = [["e1-e2", "a10-a9", "e2-e3", "a9v"], ["a6h", "a9-a8", "e4-e5", "a8-a7"]]
+    expected = [[(1, 'e1-e2'), (2, 'a10-a9'), (3, 'e2-e3'), (4, 'a9v')], 
+                [(1, 'a6h'), (2, 'a9-a8'), (3, 'e4-e5'), (4, 'a8-a7')]]
 
     assert expected == history
 
     history = ReadWriteHistory.read_history(
         path_to_history_dir / "test_history_skip.txt"
     )
-    expected = [
-        ["e1-e2", "a10-a9", "e2-e3", "a9v"],
-        ["a6v", "a9-a8", "skip", "a8-a7"],
-        ["e3-e4", "a7-a6", "e5-e6", "a6-a5"],
-    ]
+    expected = [[(1, 'c1-c2'), (2, 'b3h'), (3, 'a3-b3'), (4, 'c2v')], [(1, 'SURRENDER'), (2, 'c5-b5'), (-1, ''), (-1, '')]]
 
     assert expected == history
 
     history = ReadWriteHistory.read_history(
-        path_to_history_dir / "test_history_two_players.txt"
+        path_to_history_dir / "test_history_with_two_players.txt"
     )
-    expected = [["e1-e2", "a10-a9"], ["a6v", "a9-a8"]]
+    expected = [[(1, 'e1-e2'), (2, 'a10-a9')], [(1, 'a6v'), (2, 'a9-a8')]]
 
     assert expected == history
 
-
-@pytest.mark.skip
 def test_write_history_into_file():
     filename = "output_history.txt"
-    expected_turns = [
-        ["e1-e2", "a10-a9", "e2-e3", "a9v"],
-        ["a6v", "a9-a8", "e4-e5", "a8-a7"],
-        ["e3-e4", "a7-a6", "e5-e6", "a6-a5"],
+    turns_to_write = [
+        ["1 e1-e2", "2 a10-a9", "3 e2-e3", "4 a9v"],
+        ["1 a6v", "2 a9-a8", "3 e4-e5", "4 a8-a7"],
+        ["1 e3-e4", "2 a7-a6", "3 e5-e6", "4 a6-a5"],
     ]
-    ReadWriteHistory.write_history(filename, expected_turns)
+    expected_turns = [[(1, 'e1-e2'), (2, 'a10-a9'), (3, 'e2-e3'), (4, 'a9v')], [(1, 'a6v'), (2, 'a9-a8'), (3, 'e4-e5'), (4, 'a8-a7')], [(1, 'e3-e4'), (2, 'a7-a6'), (3, 'e5-e6'), (4, 'a6-a5')]]
+    ReadWriteHistory.write_history(path_to_history_dir / filename, turns_to_write)
 
-    history = ReadWriteHistory.read_history(filename)
+    history = ReadWriteHistory.read_history(path_to_history_dir / filename)
     assert expected_turns == history
 
-    expected_turns = [
-        ["e1-e2", "a10-a9", "e2-e3", "a9v"],
-        ["a6v", "a9-a8", "skip", "a8-a7"],
-        ["e3-e4", "a7-a6", "e5-e6", "a6-a5"],
+    filename = "output_history2.txt"
+    turns_to_write = [
+        ["1 e1-e2", "2 a10-a9", "3 e2-e3", "4 a9v"],
+        ["1 e3-e4", "2 SURRENDER"],
     ]
-    ReadWriteHistory.write_history(filename, expected_turns)
+    expected_turns = [[(1, 'e1-e2'), (2, 'a10-a9'), (3, 'e2-e3'), (4, 'a9v')], [(1, 'e3-e4'), (2, 'SURRENDER'), (-1, ''), (-1, '')]]
+    ReadWriteHistory.write_history(path_to_history_dir / filename, turns_to_write)
 
-    history = ReadWriteHistory.read_history(filename)
+    history = ReadWriteHistory.read_history(path_to_history_dir / filename)
     assert expected_turns == history
-
-    try:
-        os.remove(filename)
-    except FileNotFoundError:
-        pass
-
-
-# Test Négatif
 
 
 def test_read_history_from_empty_file():
