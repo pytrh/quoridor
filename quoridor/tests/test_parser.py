@@ -59,7 +59,8 @@ def test_parse_string_to_state_minimal():
         "current_player_id=0",
         "board_size=5",
         "num_walls=10",
-        "blitz=False",
+        "game_mode = GameMode.NORMAL",
+        "blitz=15",
         "players=",
         "player_position=2,0",
         "player_walls=5",
@@ -101,7 +102,8 @@ def test_parse_string_to_state_with_blitz():
         "current_player_id=1",
         "board_size=5",
         "num_walls=10",
-        "blitz=True",
+        "game_mode = GameMode.BLITZ",
+        "blitz=60",
         "players=",
         "player_position=2,0",
         "player_walls=5",
@@ -188,6 +190,7 @@ def test_parse_state_to_string_basic():
         "current_player_id = 0\n"
         "board_size = 9\n"
         "initial_num_walls = 10\n"
+        "game_mode = GameMode.NORMAL\n"
         "blitz = 60\n\n"
         "players =\n\n"
         "player_position = 4, 0\n"

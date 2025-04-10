@@ -71,8 +71,8 @@ def test_default_gui_use(main_window: MainWindow):
 
     # on_button_ai_difficulty( button, mode)
     main_window.on_button_ai_difficulty(btn_temp, "easy")
-    assert main_window._ai_mode == AiHeuristic.RUNNER
+    assert main_window._ai_heuristic == AiHeuristic.RUNNER
     main_window.on_button_ai_difficulty(btn_temp, "normal")
-    assert main_window._ai_mode == AiHeuristic.AGGRESSIVE
+    assert main_window._ai_heuristic == AiHeuristic.AGGRESSIVE
     main_window.on_button_ai_difficulty(btn_temp, "hard")
-    assert main_window._ai_mode == AiHeuristic.DEFAULT
+    assert main_window._ai_heuristic == AiHeuristic.DEFAULT
