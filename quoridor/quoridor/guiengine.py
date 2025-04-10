@@ -463,11 +463,14 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.timer_text_box.set_hexpand(True)
         self.timer_box.append(self.btn_blitz)
         self.timer_box.append(self.timer_text_box)
+        self.timer_text_box.set_visible(False)
 
         hbox.append(self.btn_normal)
         hbox.append(self.timer_box)
 
         box.append(hbox)
+
+#######
 
     def create_ai_switch(self, box):
         self.create_option_label(box, T_("AI Mode:"))
@@ -497,18 +500,40 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(label)
 
     def create_ai_hidden_radio_buttons(self, box):
-        self.btn_ai_easy = Gtk.CheckButton(label=T_("Easy (default)"))
-        self.btn_ai_easy.connect("toggled", self.on_button_ai_difficulty, "easy")
-        self.btn_ai_medium = Gtk.CheckButton(label=T_("Medium"))
-        self.btn_ai_medium.connect("toggled", self.on_button_ai_difficulty, "normal")
-        self.btn_ai_hard = Gtk.CheckButton(label=T_("Hard"))
-        self.btn_ai_hard.connect("toggled", self.on_button_ai_difficulty, "hard")
+        # Create AI difficulty radio buttons
+        self.create_ai_difficulty_buttons()
 
-        self.btn_ai_easy.set_active(True)
+        # Create depth slider
+        self.create_ai_depth_slider()
 
+        # Create radio box container and append widgets
+        self.create_radio_box(box)
+
+    def create_ai_difficulty_buttons(self):
+        """
+        Creates the AI difficulty buttons (Easy, Medium, Hard) and sets their connections.
+        """
+        self.btn_ai_easy = self.create_ai_difficulty_button(T_("Easy (default)"), "easy", True)
+        self.btn_ai_medium = self.create_ai_difficulty_button(T_("Medium"), "normal", False)
+        self.btn_ai_hard = self.create_ai_difficulty_button(T_("Hard"), "hard", False)
+
+        # Group buttons together
         self.btn_ai_medium.set_group(self.btn_ai_easy)
         self.btn_ai_hard.set_group(self.btn_ai_medium)
 
+    def create_ai_difficulty_button(self, label, mode, is_active):
+        """
+        Creates a single AI difficulty radio button.
+        """
+        button = Gtk.CheckButton(label=label)
+        button.connect("toggled", self.on_button_ai_difficulty, mode)
+        button.set_active(is_active)
+        return button
+
+    def create_ai_depth_slider(self):
+        """
+        Creates the depth slider for AI difficulty.
+        """
         self.ai_option = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.depth_slider = Gtk.Scale()
         self.depth_slider.set_digits(0)
@@ -518,11 +543,14 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         self.depth_slider.connect("value-changed", self.slider_changed_depth)
         self.ai_option.append(self.depth_slider)
 
+    def create_radio_box(self, box):
+        """
+        Creates the radio button box and appends it to the given container.
+        """
         self.radio_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.radio_box.append(self.btn_ai_easy)
         self.radio_box.append(self.btn_ai_medium)
         self.radio_box.append(self.btn_ai_hard)
-
         self.radio_box.append(self.ai_option)
         self.radio_box.set_visible(False)  # Hide by default
         box.append(self.radio_box)
