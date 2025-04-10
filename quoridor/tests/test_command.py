@@ -5,12 +5,14 @@ from quoridor.command import (MovePawnCommand
                             ,UndoCommand
                             ,RedoCommand
                             ,RestartCommand
-                            ,AbandonCommand)
+                            ,AbandonCommand
+                            ,QuitCommand)
 from quoridor.direction import Direction
 from quoridor.exceptions import (InvalidMoveError
                                 ,NoUndoableCommand
                                 ,NoRedoableCommand
-                                , GameOver)
+                                , GameOver
+                                ,QuitApp)
 
 
 
@@ -248,7 +250,6 @@ def test_restart_command_str():
     assert str(restart_cmd) == "Restart game"
 
 
-
 ################### Test for AbandonCommand ####################
 
 def test_abandon_command_marks_player_dead_and_decreases_player_count():
@@ -286,3 +287,13 @@ def test_abandon_command_redo_marks_player_dead_again():
 
     assert game.players[player_id].is_dead
     assert game.num_players_remaining == 1
+
+
+################### Test for QuitCommand ###############
+
+def test_quit_command_raises_quit_app():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    cmd = QuitCommand(game)
+
+    with pytest.raises(QuitApp):
+        cmd.execute()
