@@ -135,6 +135,8 @@ def parse_string_to_state(state_string: str) -> GameState:
                 game_mode = GameMode.BLITZ
             else:
                 game_mode = GameMode.NORMAL
+        elif line.startswith("blitz"):
+            blitz = int(line.split("=")[1].strip())
         elif line.startswith("players"):
             players = []
             i += 1
@@ -144,29 +146,38 @@ def parse_string_to_state(state_string: str) -> GameState:
 
                 if key == "player_id":
                     player_id = int(value)
-                    players.append(
-                        Player(
-                            id=player_id,
-                            position=player_data.get("position", (0, 0)),
-                            size=size,
-                            walls_remaining=player_data.get("walls", 0),
+                    if game_mode == GameMode.NORMAL:
+                        players.append(
+                            Player(
+                                id=player_id,
+                                position=player_data.get("position", (0, 0)),
+                                size=size,
+                                walls_remaining=player_data.get("walls", 0),
+                            )
                         )
-                    )
+                    else:
+                        from quoridor.timer import Timer
+
+                        timer = Timer(blitz, game_mode, player_id)
+                        timer.set_time_remaining(
+                            player_data.get("timer_time", blitz * 60)
+                        )
+                        players.append(
+                            Player(
+                                id=player_id,
+                                position=player_data.get("position", (0, 0)),
+                                size=size,
+                                walls_remaining=player_data.get("walls", 0),
+                                time_remaining_blitz=timer,
+                            )
+                        )
                     player_data = {}
                 elif key == "player_position":
                     player_data["position"] = tuple(map(int, value.split(",")))
                 elif key == "player_walls":
                     player_data["walls"] = int(value)
                 elif key == "player_timer":
-                    from quoridor.timer import Timer
-
-                    if not blitz:
-                        blitz = 15 * 60
-                    if not game_mode:
-                        game_mode = GameMode.NORMAL
-                    timer = Timer(blitz, game_mode, player_id)
-                    timer.set_time_remaining(value)
-                    # Finish timer, make sure that blitz mode is enabled; Check if player_id is added
+                    player_data["timer_time"] = int(value)
 
                 i += 1
             continue
@@ -200,12 +211,12 @@ def parse_string_to_state(state_string: str) -> GameState:
         "num_walls": num_walls,
         "history": history,
         "game_mode": game_mode,
-        # blitz_time ?
+        "blitz_time": blitz,
         # ai_ids ?
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
     state = GameState(**filtered_kwargs)
-
+    print(state.current_player.timer.get_time_remaining())
     for pid, cmd in state.history:
         cmd.state = state
     return state

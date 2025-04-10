@@ -108,7 +108,8 @@ class GameState:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(blitz_time, game_mode, i)
+                if not self.players[i].timer:
+                    self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
             self.ai_controllers = {
