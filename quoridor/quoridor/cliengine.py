@@ -248,9 +248,6 @@ class CLIEngine:
         )
         buffer = ""
 
-        if "pytest" in sys.modules:
-            return "quit"
-
         while True:
             if self.state.game_mode == GameMode.BLITZ:
                 if (
