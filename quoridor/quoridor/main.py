@@ -529,15 +529,17 @@ def open_file(filename: str) -> GameState:
     return initial_state
 
 
-def get_ai_move_from_file(filename: str, ai_depth: int, ai_heuristic: AiHeuristic) -> tuple[int, Command]:
+def get_ai_move_from_file(
+    filename: str, ai_depth: int, ai_heuristic: AiHeuristic
+) -> tuple[int, Command]:
     """
     Load a game state from a file and get an AI move.
-    
+
     Args:
         filename: Path to the game state file
         ai_depth: Depth for AI search
         ai_heuristic: Heuristic function for AI evaluation
-        
+
     Returns:
         tuple[int, Command]: Current player ID and the suggested move
     """
@@ -555,11 +557,11 @@ def get_ai_move_from_file(filename: str, ai_depth: int, ai_heuristic: AiHeuristi
     # else:
     #     raise ValueError(f"Unknown AI mode: {ai_mode}")
     ai = GreedyAI(ai_depth, ai_heuristic)
-    
+
     # Get the move
     move = ai.suggest_move(initial_state)
     # next_player_id = (initial_state.current_player.id + 1) % initial_state.num_players
-    
+
     # return next_player_id, move
     return initial_state.current_player.id, move
 
@@ -654,8 +656,10 @@ def main():
         elif args.contest:
             # Load file and get AI move
             try:
-                player_id, move = get_ai_move_from_file(args.contest, ai_depth, ai_heuristic)
-                print(f"Player {player_id}: {move}")
+                player_id, move = get_ai_move_from_file(
+                    args.contest, ai_depth, ai_heuristic
+                )
+                print(f"Player {player_id+1}: {move}")
                 sys.exit(0)
             except Exception as e:
                 logging.error(f"Error getting AI move: {str(e)}")
