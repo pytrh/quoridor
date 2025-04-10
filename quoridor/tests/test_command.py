@@ -1,6 +1,6 @@
 import pytest
 from quoridor.gamestate import GameState
-from quoridor.command import MovePawnCommand, PlaceWallCommand, UndoCommand, RedoCommand
+from quoridor.command import MovePawnCommand, PlaceWallCommand, UndoCommand, RedoCommand, RestartCommand
 from quoridor.direction import Direction
 from quoridor.exceptions import InvalidMoveError, NoUndoableCommand, NoRedoableCommand
 
@@ -194,3 +194,47 @@ def test_redo_adds_to_history():
     redo_cmd.execute()
 
     assert game.history[-1][1] == cmd
+
+
+################### Test for RestartCommand ####################
+
+def test_restart_resets_to_initial_state():
+    initial_game = GameState(size=7, num_players=2, num_walls=10)
+    game = initial_game.copy_state()
+    
+    wall_cmd = PlaceWallCommand(game, (2, 2), Direction.H)
+    wall_cmd.execute()
+    
+    assert game.players[0].walls_remaining == 9
+    restart_cmd = RestartCommand(game, initial_game)
+    restart_cmd.execute()
+
+    assert game.players[0].walls_remaining == 10
+    assert game.history == []
+    assert game.redo_stack == []
+    assert game.players[0].position == initial_game.players[0].position
+
+
+def test_restart_command_clears_history_and_redo():
+    initial_game = GameState(size=7, num_players=2, num_walls=10)
+    game = initial_game.copy_state()
+
+    wall_cmd = PlaceWallCommand(game, (1, 1), Direction.H)
+    wall_cmd.execute()
+    game.history.append((game.current_player.id, wall_cmd))
+    game.redo_stack.append((game.current_player.id, wall_cmd))
+
+    assert game.history != []
+    assert game.redo_stack != []
+
+    restart_cmd = RestartCommand(game, initial_game)
+    restart_cmd.execute()
+
+    assert game.history == []
+    assert game.redo_stack == []
+
+
+def test_restart_command_str():
+    game = GameState(size=7, num_players=2, num_walls=10)
+    restart_cmd = RestartCommand(game, game)
+    assert str(restart_cmd) == "Restart game"
