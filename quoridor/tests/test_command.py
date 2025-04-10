@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import pytest
 from quoridor.gamestate import GameState
 from quoridor.command import (MovePawnCommand
@@ -6,7 +7,8 @@ from quoridor.command import (MovePawnCommand
                             ,RedoCommand
                             ,RestartCommand
                             ,AbandonCommand
-                            ,QuitCommand)
+                            ,QuitCommand
+                            ,SaveAndQuitCommand)
 from quoridor.direction import Direction
 from quoridor.exceptions import (InvalidMoveError
                                 ,NoUndoableCommand
@@ -297,3 +299,27 @@ def test_quit_command_raises_quit_app():
 
     with pytest.raises(QuitApp):
         cmd.execute()
+
+################### Test for SaveAndQuitCommand ###############
+
+@patch('quoridor.io.write_to_file')  # Mock write_to_file
+@patch('quoridor.parser.parse_state_to_string')  # Mock parse_state_to_string
+def test_save_and_quit_command_saves_and_raises_quit(mock_parse_state_to_string, mock_write_to_file):
+    game = GameState(size=7, num_players=2, num_walls=10)
+    file_name = 'save_file.txt'
+
+    # Mock the parsing function to return a dummy state
+    mock_parse_state_to_string.return_value = 'Dummy state content'
+
+    # Mock the file-writing function to simply pass without errors
+    mock_write_to_file.return_value = None
+
+    cmd = SaveAndQuitCommand(game, file_name)
+
+    # Ensure the save happens and QuitApp is raised
+    with pytest.raises(QuitApp):
+        cmd.execute()
+
+    # Check if the functions were called correctly
+    mock_parse_state_to_string.assert_called_once_with(game)
+    mock_write_to_file.assert_called_once_with(file_name, 'Dummy state content')
