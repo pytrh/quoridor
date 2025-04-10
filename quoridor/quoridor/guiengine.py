@@ -90,13 +90,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
 
         self.set_child(self.stack)
 
-        self.open_dialog = Gtk.FileChooserDialog(
-            title=T_("Select a file"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            modal=True,
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.OPEN
         )
-        self.open_dialog.set_default_size(600, 400)
+
+        self.open_dialog.set_modal(True)
 
         f = Gtk.FileFilter()
         f.set_name("Quoridor game file")
@@ -411,7 +409,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         box.append(hbox)
 
     def create_board_size_slider(self, box):
-        self.create_option_label(box, T_("Board size:")) 
+        self.create_option_label(box, T_("Board size:"))
         self.board_slider = Gtk.Scale()
         self.board_slider.set_digits(0)
         self.board_slider.set_range(MIN_GRID_SIZE, MAX_GRID_SIZE)
@@ -569,7 +567,11 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             button.get_style_context().add_class("on-off-button")
 
             def on_toggle(btn, i=i + 1):
-                btn.set_label(T_("AI {num}").format(num=i) if btn.get_active() else T_("AI {num}").format(num=i))
+                btn.set_label(
+                    T_("AI {num}").format(num=i)
+                    if btn.get_active()
+                    else T_("AI {num}").format(num=i)
+                )
                 if btn.get_active():
                     self._ai_ids.add(i - 1)
                 else:
@@ -746,7 +748,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 is_ai = "AI "
             walls = ""
             if not player.is_dead:
-                walls = T_(": walls remaining = %(walls)d") % {"walls": player.walls_remaining}
+                walls = T_(": walls remaining = %(walls)d") % {
+                    "walls": player.walls_remaining
+                }
 
             label = Gtk.Label(
                 label=T_("{is_ai}Player {id} {emoji} {walls}").format(
@@ -782,7 +786,7 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             history=self._history,
             ai_mode=self._ai_mode,
             ai_depth=self._ai_depth,
-            ai_heuristic= self._ai_heuristic,
+            ai_heuristic=self._ai_heuristic,
         )
         self.initialize_begining_game()
 
@@ -1108,7 +1112,8 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
         elif id_player == 3:
             emoji = "🟡"
         self.winner_label.set_markup(
-            T_('<span size="14000" weight="bold">%(emoji)s won!</span>') % {"emoji": emoji}
+            T_('<span size="14000" weight="bold">%(emoji)s won!</span>')
+            % {"emoji": emoji}
         )
         self.stack.set_visible_child_name("end")
 
@@ -1153,7 +1158,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
             emoji = "🟢"
         elif id_player == 3:
             emoji = "🟡"
-        self.current_player_label.set_label(T_("Current player: %(emoji)s") % {"emoji": emoji})
+        self.current_player_label.set_label(
+            T_("Current player: %(emoji)s") % {"emoji": emoji}
+        )
         logging.debug(f"Player {emoji} {id_player} must play")
 
     def update_players_box(self):
@@ -1270,7 +1277,9 @@ class MainWindow(Gtk.ApplicationWindow, Observer):
                 return False
             error_type = type(e).__name__
             logging.error(f"Error of type {error_type} while executing command: {e}")
-            popup = AutoClosePopup(T_(f"Error ({error_type}) : {e}"), self.popup_activated)
+            popup = AutoClosePopup(
+                T_(f"Error ({error_type}) : {e}"), self.popup_activated
+            )
             popup.show()
 
         self.handle_pass_player()
@@ -1306,7 +1315,7 @@ class AutoClosePopup(Gtk.Window):
 
 
 class SavePopup(Gtk.Window):
-    def __init__(self, state: 'GameState'):
+    def __init__(self, state: "GameState"):
         super().__init__(title=T_("Save and quit"))
         self.set_default_size(200, 100)
         self.set_transient_for(None)
@@ -1314,7 +1323,14 @@ class SavePopup(Gtk.Window):
 
         self.state = state
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin_top=10, margin_bottom=10, margin_start=10, margin_end=10)
+        vbox = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            margin_top=10,
+            margin_bottom=10,
+            margin_start=10,
+            margin_end=10,
+        )
         label = Gtk.Label(label=T_("Do you want to save your game before quitting ?"))
         vbox.append(label)
 
@@ -1330,14 +1346,11 @@ class SavePopup(Gtk.Window):
         vbox.append(button_box)
         self.set_child(vbox)
 
-        # Création de la boîte de dialogue de sélection de fichier
-        self.open_dialog = Gtk.FileChooserDialog(
-            title=T_("Select a file"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            modal=True,
+        self.open_dialog = Gtk.FileChooserNative.new(
+            title=T_("Select a file"), parent=self, action=Gtk.FileChooserAction.OPEN
         )
-        self.open_dialog.set_default_size(600, 400)
+
+        self.open_dialog.set_modal(True)
 
         file_filter = Gtk.FileFilter()
         file_filter.set_name("Quoridor game file")
