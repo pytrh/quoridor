@@ -108,7 +108,8 @@ class GameState:
             # conversion in seconds
             blitz_time = blitz_time * 60
             for i in range(num_players):
-                self.players[i].timer = Timer(blitz_time, game_mode, i)
+                if not self.players[i].timer:
+                    self.players[i].timer = Timer(blitz_time, game_mode, i)
 
         if len(ai_ids) > 0:
             self.ai_controllers = {
@@ -378,7 +379,7 @@ class GameState:
             num_players=self.num_players,
             board=self.create_board(self.size),
             num_walls=self.initial_num_walls,
-            history=deepcopy(self.history),
+            history=self.history,
             game_mode=self.game_mode,
             blitz_time=self.blitz_time,
             ai_ids=deepcopy(self.ai_ids),
