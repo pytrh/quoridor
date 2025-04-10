@@ -273,3 +273,90 @@ def test_get_command_invalid_format(engine):
     engine.get_input_from_human_player.return_value = "invalid move format"
     with pytest.raises(InvalidCommandError):
         engine.get_command_from_human_player()
+
+def test_end_blitz_turn(game_state):
+    engine = CLIEngine(game_state)
+    mock_timer = MagicMock()
+    game_state.current_player.timer = mock_timer
+    game_state.game_mode = GameMode.BLITZ
+    engine.end_blitz_turn()
+    mock_timer.end_turn.assert_called_once()
+    mock_timer.display_lock.clear.assert_called_once()
+
+def test_start_blitz_turn(game_state):
+    engine = CLIEngine(game_state)
+    mock_timer = MagicMock()
+    game_state.current_player.timer = mock_timer
+    game_state.game_mode = GameMode.BLITZ
+    engine.start_blitz_turn()
+    mock_timer.start_turn.assert_called_once()
+    mock_timer.display_lock.set.assert_called_once()
+
+def test_start_game_with_quit_command(game_state):
+    engine = CLIEngine(game_state)
+
+    with patch.object(engine, 'get_command_from_human_player', return_value=QuitCommand(engine.state)):
+        with pytest.raises(QuitApp):
+            engine.start_game()
+
+def test_start_game_with_invalid_move_command(game_state):
+    engine = CLIEngine(game_state)
+
+    def command_sequence():
+        yield MovePawnCommand(engine.state, (0, 0), (4, 4))
+        yield QuitCommand(engine.state)
+
+    with patch.object(engine, 'get_command_from_human_player', side_effect=command_sequence()):
+        with pytest.raises(QuitApp):
+            engine.start_game()
+
+def test_start_game_with_invalid_wall_command(game_state):
+    engine = CLIEngine(game_state)
+
+    def command_sequence():
+        yield PlaceWallCommand(engine.state, (0, 0), Direction.H)
+        yield PlaceWallCommand(engine.state, (0, 0), Direction.V)
+        yield QuitCommand(engine.state)
+
+    with patch.object(engine, 'get_command_from_human_player', side_effect=command_sequence()):
+        with pytest.raises(QuitApp):
+            engine.start_game()
+
+def test_start_game_with_undo_command(game_state):
+    engine = CLIEngine(game_state)
+
+    def command_sequence():
+        yield UndoCommand(engine.state)
+        yield QuitCommand(engine.state)
+
+    with patch.object(engine, 'get_command_from_human_player', side_effect=command_sequence()):
+        with pytest.raises(QuitApp):
+            engine.start_game()
+
+def test_start_game_with_redo_command(game_state):
+    engine = CLIEngine(game_state)
+
+    def command_sequence():
+        yield RedoCommand(engine.state)
+        yield QuitCommand(engine.state)
+
+    with patch.object(engine, 'get_command_from_human_player', side_effect=command_sequence()):
+        with pytest.raises(QuitApp):
+            engine.start_game()
+
+def test_start_game_with_redo_command(game_state):
+    engine = CLIEngine(game_state)
+
+    def command_sequence():
+        yield PlaceWallCommand(engine.state, (0, 4), Direction.V)
+        yield PlaceWallCommand(engine.state, (2, 4), Direction.V)
+        yield PlaceWallCommand(engine.state, (4, 4), Direction.V)
+        yield PlaceWallCommand(engine.state, (6, 4), Direction.V)
+        yield PlaceWallCommand(engine.state, (7, 4), Direction.H)
+        yield PlaceWallCommand(engine.state, (7, 3), Direction.V)
+
+        yield QuitCommand(engine.state)
+
+    with patch.object(engine, 'get_command_from_human_player', side_effect=command_sequence()):
+        with pytest.raises(QuitApp):
+            engine.start_game()
