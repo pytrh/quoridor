@@ -6,15 +6,16 @@
 Command module handling both game operations and undo/redo/restart/quit etc.
 List of commands:
 Commands of which execute() return True:
-- PlaceWallCommand fully implemented
-- MovePawnCommand fully implemented
+- PlaceWallCommand
+- MovePawnCommand
+- PassCommand
 Commands of which execute() return False:
-- UndoCommand fully implemented
-- RedoCommand fully implemented
+- UndoCommand
+- RedoCommand
 - RestartCommand Never started
 - AbandonCommand Lucas is working on it
 - SaveCommand in progress
-- QuitCommand fully implemented
+- QuitCommand
 """
 from abc import ABC, abstractmethod
 from copy import deepcopy
@@ -504,9 +505,9 @@ class TimeCommand(Command):
     def execute(self) -> bool:
         """Display the time remaining on the player's timer"""
         print(
-            "\r" + T_("[⏳ Remaining: %(seconds)s] ") % {
-                "seconds": f"{self.state.current_player.timer.remaining}s"
-            }
+            "\r"
+            + T_("[⏳ Remaining: %(seconds)s] ")
+            % {"seconds": f"{self.state.current_player.timer.remaining}s"}
         )
         return False
 
