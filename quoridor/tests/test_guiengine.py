@@ -4,6 +4,7 @@ import pytest
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
+from quoridor.gamemode import AiHeuristic
 from quoridor.gamestate import GameState
 from quoridor.guiengine import MainWindow
 from unittest.mock import MagicMock
@@ -59,7 +60,19 @@ def test_default_gui_use(main_window: MainWindow):
         ai_mode=main_window._ai_mode,
         ai_depth=main_window._ai_depth,
     )
-    main_window.create_about_page()
     box_temp = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    main_window.create_ai_hidden_radio_buttons(box_temp)
-    main_window.create_ai_switch(box_temp)
+    btn_temp = Gtk.Button(label=("test button"))
+    label_temp = Gtk.Label(label=("test label"))
+
+    # slider_temp = Gtk.Scale()
+    # slider_changed_board( slider)
+    # slider_changed_wall( slider)
+    # slider_changed_depth( slider)
+
+    # on_button_ai_difficulty( button, mode)
+    main_window.on_button_ai_difficulty(btn_temp, "easy")
+    assert main_window._ai_mode == AiHeuristic.RUNNER
+    main_window.on_button_ai_difficulty(btn_temp, "normal")
+    assert main_window._ai_mode == AiHeuristic.AGGRESSIVE
+    main_window.on_button_ai_difficulty(btn_temp, "hard")
+    assert main_window._ai_mode == AiHeuristic.DEFAULT
