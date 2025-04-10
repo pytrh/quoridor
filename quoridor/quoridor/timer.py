@@ -71,6 +71,15 @@ class Timer:
         """
         return self.current_time
 
+    def set_time_remaining(self, current_time: int):
+        """
+        Set the current remaining time for the player.
+
+        Args:
+            int: Time left in seconds.
+        """
+        self.current_time = current_time
+
     def set_gui_observer(self, gui: Observer):
         self.gui = gui
 

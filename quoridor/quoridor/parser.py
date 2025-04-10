@@ -149,12 +149,14 @@ def parse_string_to_state(state_string: str) -> GameState:
             size = int(line.split("=")[1].strip())
         elif line.startswith("num_walls"):
             num_walls = int(line.split("=")[1].strip())
-        elif line.startswith("blitz"):
-            t_blitz = line.split("=")[1].strip()
-            if t_blitz == "True" or t_blitz == "T":
-                blitz = GameMode.BLITZ
+        elif line.startswith("game_mode"):
+            g_mode = line.split("=")[1].strip()
+            if g_mode == "GameMode.BLITZ":
+                game_mode = GameMode.BLITZ
             else:
-                blitz = GameMode.NORMAL
+                game_mode = GameMode.NORMAL
+        elif line.startswith("blitz"):
+            blitz = int(line.split("=")[1].strip())
         elif line.startswith("players"):
             players = []
             i += 1
@@ -166,19 +168,38 @@ def parse_string_to_state(state_string: str) -> GameState:
 
                 if key == "player_id":
                     player_id = int(value)
-                    players.append(
-                        Player(
-                            id=player_id,
-                            position=player_data.get("position", (0, 0)),
-                            size=size,
-                            walls_remaining=player_data.get("walls", 0),
+                    if game_mode == GameMode.NORMAL:
+                        players.append(
+                            Player(
+                                id=player_id,
+                                position=player_data.get("position", (0, 0)),
+                                size=size,
+                                walls_remaining=player_data.get("walls", 0),
+                            )
                         )
-                    )
+                    else:
+                        from quoridor.timer import Timer
+
+                        timer = Timer(blitz, game_mode, player_id)
+                        timer.set_time_remaining(
+                            player_data.get("timer_time", blitz * 60)
+                        )
+                        players.append(
+                            Player(
+                                id=player_id,
+                                position=player_data.get("position", (0, 0)),
+                                size=size,
+                                walls_remaining=player_data.get("walls", 0),
+                                time_remaining_blitz=timer,
+                            )
+                        )
                     player_data = {}
                 elif key == "player_position":
                     player_data["position"] = tuple(map(int, value.split(",")))
                 elif key == "player_walls":
                     player_data["walls"] = int(value)
+                elif key == "player_timer":
+                    player_data["timer_time"] = int(value)
 
                 i += 1
             continue
@@ -208,13 +229,12 @@ def parse_string_to_state(state_string: str) -> GameState:
         "board": board,
         "num_walls": num_walls,
         "history": history,
-        "game_mode": blitz,
-        # blitz_time ?
+        "game_mode": game_mode,
+        "blitz_time": blitz,
         # ai_ids ?
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None}
     state = GameState(**filtered_kwargs)
-
     for pid, cmd in state.history:
         cmd.state = state
     return state
@@ -233,6 +253,7 @@ def parse_state_to_string(state: GameState) -> str:
     state_string += f"current_player_id = {state.current_player.id}\n"
     state_string += f"board_size = {state.size}\n"
     state_string += f"initial_num_walls = {state.initial_num_walls}\n"
+    state_string += f"game_mode = {state.game_mode}\n"
     state_string += f"blitz = {state.blitz_time}\n\n"
 
     state_string += f"players =\n\n"
@@ -240,6 +261,8 @@ def parse_state_to_string(state: GameState) -> str:
     for i in range(state.num_players):
         state_string += f"player_position = {state.players[i].position[0]}, {state.players[i].position[1]}\n"
         state_string += f"player_walls = {state.players[i].walls_remaining}\n"
+        if state.game_mode == GameMode.BLITZ:
+            state_string += f"player_timer = {state.players[i].timer.current_time}\n"
         state_string += f"player_id = {state.players[i].id}\n\n"
 
     # Add the board representation

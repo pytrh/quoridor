@@ -379,7 +379,7 @@ class GameState:
             num_players=self.num_players,
             board=self.create_board(self.size),
             num_walls=self.initial_num_walls,
-            history=deepcopy(self.history),
+            history=self.history,
             game_mode=self.game_mode,
             blitz_time=self.blitz_time,
             ai_ids=deepcopy(self.ai_ids),
